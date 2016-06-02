@@ -1,6 +1,8 @@
 package body Events.Clients is
 
-   use type Event_Reference;
+   use type Implementation.Event_Reference;
+
+   overriding function Is_Null (Who : Client) return Boolean is (Who.Ref.Is_Null);
 
    overriding function "=" (A, B : Client) return Boolean is (A.Ref = B.Ref);
 
@@ -29,6 +31,6 @@ package body Events.Clients is
       Who.Ref.Get.Cancel;
    end Cancel;
 
-   not overriding function Make_Client (Event : Event_Reference) return Client is ((Ref => Event));
+   not overriding function Make_Client (Event : Implementation.Event_Reference) return Client is ((Ref => Event));
 
 end Events.Clients;

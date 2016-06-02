@@ -26,7 +26,7 @@ package body Asynchronous.Executors.Implementation is
    type Task_Instance is new Ada.Finalization.Limited_Controlled with
       record
          Task_Object : Task_Access := null;
-         Completion_Event : Events.Servers.Server;
+         Completion_Event : Events.Servers.Server := Events.Servers.Make_Event;
       end record;
    pragma Preelaborable_Initialization (Task_Instance);
 

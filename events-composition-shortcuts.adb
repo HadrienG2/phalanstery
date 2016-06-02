@@ -22,7 +22,7 @@ package body Events.Composition.Shortcuts is
          return Wait_List (Wait_List'First);
       else
          declare
-            E : Servers.Server;
+            E : Servers.Server := Servers.Make_Event;
          begin
             E.Mark_Done;
             return E.Make_Client;
@@ -47,7 +47,7 @@ package body Events.Composition.Shortcuts is
       end Test_When_None;
 
       procedure Test_When_One is
-         Server : Servers.Server;
+         Server : Servers.Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((1 => Server.Make_Client));
       begin
          Assert_Truth (Check   => (E.Status = Pending),
@@ -59,7 +59,7 @@ package body Events.Composition.Shortcuts is
       end Test_When_One;
 
       procedure Test_When_Done is
-         Server1, Server2 : Servers.Server;
+         Server1, Server2 : Servers.Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Mark_Done;
@@ -72,7 +72,8 @@ package body Events.Composition.Shortcuts is
       end Test_When_Done;
 
       procedure Test_When_Canceled is
-         Server1, Server2 : Servers.Server;
+         Server1 : Servers.Server := Servers.Make_Event;
+         Server2 : constant Servers.Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Cancel;
@@ -81,7 +82,8 @@ package body Events.Composition.Shortcuts is
       end Test_When_Canceled;
 
       procedure Test_When_Error is
-         Server1, Server2 : Servers.Server;
+         Server1 : Servers.Server := Servers.Make_Event;
+         Server2 : constant Servers.Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
          Custom_Error : exception;
          Test_Error : Ada.Exceptions.Exception_Occurrence;

@@ -18,7 +18,8 @@ package Utilities.References.Nullable is
    not overriding function Is_Null (R : Reference) return Boolean;
 
    -- And explicit initialization is another nasty thing to take care of
-   not overriding function Make return Reference;
+   not overriding function Make return Reference
+     with Post => (not Make'Result.Is_Null);
 
    -- Run the unit tests for this package
    procedure Run_Tests;

@@ -4,7 +4,9 @@ pragma Elaborate_All (Utilities.Testing);
 
 package body Events.Servers is
 
-   use type Event_Reference;
+   use type Implementation.Event_Reference;
+
+   overriding function Is_Null (Who : Server) return Boolean is (Who.Ref.Is_Null);
 
    overriding function "=" (A, B : Server) return Boolean is (A.Ref = B.Ref);
 
@@ -27,11 +29,14 @@ package body Events.Servers is
    overriding function Is_Canceled (Who : Server) return Boolean is
      (Who.Ref.Get.Is_Canceled);
 
+   function Make_Event return Server is ((Ref => Implementation.Make_Event));
+
    function Make_Client (From : Server) return Clients.Client is
      (Clients.Make_Client (From.Ref));
 
 
    -- The remainder of this package is dedicated to unit tests
+   use Interfaces;
    Test_Callback_Calls : Natural := 0;
    Last_Status : Event_Status;
 
@@ -51,41 +56,65 @@ package body Events.Servers is
       Test_Error : Ada.Exceptions.Exception_Occurrence;
       Test_Callback_Listener : Callback_Listener := Make_Callback_Listener (Test_Callback'Access);
 
+      procedure Test_Creation is
+         C : Clients.Client;
+      begin
+         declare
+            S1 : Servers.Server;
+         begin
+            Assert_Truth (Check   => (S1.Is_Null and C.Is_Null),
+                          Message => "Event servers and clients should be null at creation time");
+         end;
+
+         declare
+            S2 : constant Servers.Server := Make_Event;
+         begin
+            Assert_Truth (Check   => (not S2.Is_Null),
+                          Message => "Make_Event should return non-null events");
+
+            C := S2.Make_Client;
+            Assert_Truth (Check   => (not C.Is_Null),
+                          Message => "Make_Client should return non-null events");
+         end;
+      end Test_Creation;
+
       procedure Test_Equality is
-         S1, S2 : Servers.Server;
          C1, C2 : Clients.Client;
       begin
-         Assert_Truth (Check   => (S1 /= S2) and (C1 /= C2),
-                       Message => "Independently created clients and servers should be identified as distinct");
+         declare
+            S1, S2 : Servers.Server;
+         begin
+            Assert_Truth (Check   => ((S1 = S1) and (S1 = S2) and (C1 = C1) and (C1 = C2)),
+                          Message => "Events in the null state should be considered equal");
+         end;
 
-         Assert_Truth (Check   => (S1 = S1) and (C1 = C1),
-                       Message => "Servers and clients should be considered equal to themselves");
+         declare
+            S1, S2 : constant Servers.Server := Make_Event;
+         begin
+            Assert_Truth (Check   => (S1 /= S2),
+                          Message => "Independently created servers should be identified as distinct");
 
-         C1 := C2;
-         Assert_Truth (Check   => (C1 = C2),
-                       Message => "Assignment should lead clients to be considered equal");
+            C1 := S1.Make_Client;
+            Assert_Truth (Check   => (C1 /= C2),
+                          Message => "Null and non-null events should be identified as distinct");
+
+            Assert_Truth (Check   => (S1 = S1) and (C1 = C1),
+                          Message => "Initialized servers and clients should be considered equal to themselves");
+
+            C2 := S2.Make_Client;
+            Assert_Truth (Check   => (C1 /= C2),
+                          Message => "Independently create clients should also be identified as distinct");
+
+            C2 := C1;
+            Assert_Truth (Check   => (C1 = C2),
+                          Message => "Explicitly assigned events should be considered equal.");
+
+
+         end;
       end Test_Equality;
 
-      procedure Test_Make_Client is
-         S1, S2 : Servers.Server;
-         C1 : Clients.Client;
-         C2 : Clients.Client := C1;
-      begin
-         C1 := S1.Make_Client;
-         Assert_Truth (Check   => (C1 /= C2),
-                       Message => "Assigning a client to a server should lead to non-equal clients");
-
-         C2 := S2.Make_Client;
-         Assert_Truth (Check   => (C1 /= C2),
-                       Message => "Assigning two clients to different servers should lead to non-equal clients");
-
-         C2 := S1.Make_Client;
-         Assert_Truth (Check   => (C1 = C2),
-                       Message => "Assigning two clients to the same server should lead to equal servers");
-      end Test_Make_Client;
-
       procedure Test_Pending_State is
-         S : Servers.Server;
+         S : constant Servers.Server := Make_Event;
          C : Clients.Client := S.Make_Client;
       begin
          Assert_Truth (Check   => (C.Status = Pending),
@@ -106,7 +135,7 @@ package body Events.Servers is
       end Test_Pending_State;
 
       procedure Test_Done_State is
-         S : Servers.Server;
+         S : Servers.Server := Make_Event;
          C : Clients.Client := S.Make_Client;
       begin
          C.Add_Listener (Test_Callback_Listener);
@@ -165,7 +194,7 @@ package body Events.Servers is
 
       begin
          declare
-            S : Servers.Server;
+            S : constant Servers.Server := Make_Event;
             C : Clients.Client := S.Make_Client;
          begin
             C.Add_Listener (Test_Callback_Listener);
@@ -174,7 +203,7 @@ package body Events.Servers is
          end;
 
          declare
-            S : Servers.Server;
+            S : Servers.Server := Make_Event;
             C : Clients.Client := S.Make_Client;
          begin
             C.Add_Listener (Test_Callback_Listener);
@@ -186,7 +215,7 @@ package body Events.Servers is
       procedure Test_Error_State is
          Custom_Error : exception;
          Custom_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
-         S : Servers.Server;
+         S : Servers.Server := Make_Event;
          C : Clients.Client := S.Make_Client;
       begin
          begin
@@ -223,8 +252,8 @@ package body Events.Servers is
       end Test_Error_State;
 
    begin
+      Test_Creation;
       Test_Equality;
-      Test_Make_Client;
       Test_Pending_State;
       Test_Done_State;
       Test_Canceled_State;

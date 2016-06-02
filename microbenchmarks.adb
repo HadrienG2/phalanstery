@@ -172,7 +172,8 @@ package body Microbenchmarks is
 
       procedure Benchmark_Wait_Custom is
 
-         Event_Server_P, Event_Server_S : Events.Servers.Server;
+         Event_Server_S : constant Events.Servers.Server := Events.Servers.Make_Event;
+         Event_Server_P : constant Events.Servers.Server := Events.Servers.Make_Event;
          Event_Client_P : constant Events.Clients.Client := Event_Server_P.Make_Client;
          Event_Client_S : constant Events.Clients.Client := Event_Server_S.Make_Client;
          Consumer_Task_P : constant Custom_Wait_Task := (Target => Event_Client_P);
@@ -239,21 +240,21 @@ package body Microbenchmarks is
 begin
 
    declare
-      S : Events.Servers.Server;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
    begin
       S.Mark_Done;
       Ready_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
    begin
       S.Cancel;
       Canceled_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
       Custom_Error : exception;
    begin
       begin

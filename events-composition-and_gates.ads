@@ -38,7 +38,7 @@ private
       Child_Count : Natural := 0;
       Done_Children : Natural := 0;
       Current_Status : Interfaces.Event_Status := Interfaces.Pending;
-      Event : Event_Server;
+      Event : Event_Server := Servers.Make_Event;
       procedure Propagate_Status_Change;
    end And_Gate_Implementation;
 

@@ -122,7 +122,7 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Done_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server;
+         Test_Child_Server : Event_Server := Servers.Make_Event;
          Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -149,7 +149,7 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Canceled_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server;
+         Test_Child_Server : Event_Server := Servers.Make_Event;
          Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -164,7 +164,7 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Child_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server;
+         Test_Child_Server : Event_Server := Servers.Make_Event;
          Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -184,7 +184,7 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Done_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Event_Server;
+         Test_Child_Server_1, Test_Child_Server_2 : Event_Server := Servers.Make_Event;
          Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
                                                       Test_Child_Server_2.Make_Client);
       begin
@@ -205,7 +205,8 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Canceled_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Event_Server;
+         Test_Child_Server_1 : Event_Server := Servers.Make_Event;
+         Test_Child_Server_2 : constant Event_Server := Servers.Make_Event;
          Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
                                                       Test_Child_Server_2.Make_Client);
       begin
@@ -221,7 +222,8 @@ package body Events.Composition.And_Gates is
 
       procedure Test_Children_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Event_Server;
+         Test_Child_Server_1 : Event_Server := Servers.Make_Event;
+         Test_Child_Server_2 : constant Event_Server := Servers.Make_Event;
          Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
                                                       Test_Child_Server_2.Make_Client);
       begin

@@ -9,6 +9,8 @@ package Events.Clients is
 
    type Client is new Event_Client with private;
 
+   overriding function Is_Null (Who : Client) return Boolean;
+
    overriding function "=" (A, B : Client) return Boolean;
 
    overriding function Status (Who : Client) return Event_Status;
@@ -25,8 +27,9 @@ package Events.Clients is
    overriding procedure Cancel (Who : in out Client);
 
    -- This function is needed in order to allow generating event clients from event servers
-   subtype Event_Reference is Implementation.References.Reference;
-   not overriding function Make_Client (Event : Event_Reference) return Client;
+   not overriding function Make_Client (Event : Implementation.Event_Reference) return Client
+     with Pre => (not Event.Is_Null),
+          Post => (not Make_Client'Result.Is_Null);
 
    -- NOTE : Because server and client operation is intertwined, unit tests are located in the Servers package
 
@@ -34,7 +37,7 @@ private
 
    type Client is new Event_Client with
       record
-         Ref : Event_Reference;
+         Ref : Implementation.Event_Reference;
       end record;
 
 end Events.Clients;

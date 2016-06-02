@@ -5,7 +5,7 @@ generic
 package Utilities.References is
 
    -- This package familly manages reference-counted object instances
-   type Accessor is access all Object;
+   type Accessor is not null access all Object;
 
    -- Instances are manipulated through copyable and storable references.
    -- Each reference type should define its own controlled semantics depending on the constraints it operates under.

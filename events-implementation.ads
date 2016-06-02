@@ -2,8 +2,8 @@ with Ada.Containers.Indefinite_Vectors;
 with Ada.Exceptions;
 with Events.Interfaces; use Events.Interfaces;
 with Utilities.References;
-with Utilities.References.Not_Null;
-pragma Elaborate_All (Utilities.References.Not_Null);
+with Utilities.References.Nullable;
+pragma Elaborate_All (Utilities.References.Nullable);
 
 package Events.Implementation is
 
@@ -41,8 +41,10 @@ package Events.Implementation is
 
    end Event;
 
-   package Reference_Base is new Utilities.References (Events.Implementation.Event);
-   package References is new Reference_Base.Not_Null;
+   package Event_Reference_Base is new Utilities.References (Events.Implementation.Event);
+   package Event_References is new Event_Reference_Base.Nullable;
+   subtype Event_Reference is Event_References.Reference;
+   function Make_Event return Event_Reference renames Event_References.Make;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
