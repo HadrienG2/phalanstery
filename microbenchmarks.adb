@@ -181,7 +181,7 @@ package body Microbenchmarks is
          Producer_Task_P : constant Wait_Cancelation_Task := (Target => Event_Client_P);
          Producer_Task_S : constant Wait_Cancelation_Task := (Target => Event_Client_S);
 
-         Consumer_Count : constant := 1_000;
+         Consumer_Count : constant := 100_000;
 
          Test_Event : Events.Clients.Client;
 
@@ -230,10 +230,10 @@ package body Microbenchmarks is
       end Benchmark_Wait_Custom;
 
    begin
---        Benchmark_Startup;
---        Benchmark_Yielding;
---        Benchmark_Wait_Ready;
---        Benchmark_Wait_Canceled;
+      Benchmark_Startup;
+      Benchmark_Yielding;
+      Benchmark_Wait_Ready;
+      Benchmark_Wait_Canceled;
       Benchmark_Wait_Custom;
    end Run_Benchmarks;
 
