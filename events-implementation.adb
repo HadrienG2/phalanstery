@@ -66,6 +66,7 @@ package body Events.Implementation is
          for Listener of Listeners loop
             Listener.Notify_Event_Status_Change (Current_Status);
          end loop;
+         Listeners.Clear;
       end Notify_Status_Change;
 
    end Event;
