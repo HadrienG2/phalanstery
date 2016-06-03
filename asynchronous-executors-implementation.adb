@@ -7,6 +7,7 @@ with Asynchronous.Tasks;
 with Events.Composition.Shortcuts;
 with Events.Interfaces;
 with Events.Servers;
+with Utilities.Barriers;
 with Utilities.Debug;
 with Utilities.References;
 with Utilities.References.Nullable;
@@ -71,14 +72,14 @@ package body Asynchronous.Executors.Implementation is
    -- anywhere, and react according to the final event status. This is what the following code is about.
    procedure Schedule_Pending_Task (Who   : Task_Instance_Reference;
                                     After : Async_Tasks.Event_Wait_List;
-                                    On    : in out Task_Queue_Reference);
+                                    On    : Task_Queue_Reference);
 
    -- The rest is just the underlying machinery that makes Schedule_Pending_Task work
    Wait_List_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
    procedure Schedule_Ready_Task (Who          : Task_Instance_Reference;
                                   According_To : Events.Interfaces.Finished_Event_Status;
-                                  On           : in out Task_Queue_Reference) is
+                                  On           : Task_Queue_Reference) is
    begin
       case According_To is
          when Done =>
@@ -106,7 +107,7 @@ package body Asynchronous.Executors.Implementation is
 
    procedure Schedule_Pending_Task (Who   : Task_Instance_Reference;
                                     After : Async_Tasks.Event_Wait_List;
-                                    On    : in out Task_Queue_Reference) is
+                                    On    : Task_Queue_Reference) is
       Input_Event : Interfaces.Event_Client := Events.Composition.Shortcuts.When_All (After);
    begin
       case Input_Event.Status is
@@ -129,40 +130,39 @@ package body Asynchronous.Executors.Implementation is
    --    - In batch mode, executors run tasks as long as they can, which maximizes computation performance.
    --    - In round-robin mode, executors switch between tasks in a cyclic FIFO fashion, which minimizes starvation.
    type Scheduling_Policy is (Batch, Round_Robin);
-   Active_Scheduling_Policy : constant Scheduling_Policy := Round_Robin;
+   Active_Scheduling_Policy : constant Scheduling_Policy := Batch;
 
    -- Now we can define task executors
    task body Executor_Task is
 
       -- This is the FIFO queue that should be used by this executor
-      Ready_Tasks : Task_Queue_Reference := Make_Task_Queue;
+      Ready_Tasks : constant Task_Queue_Reference := Make_Task_Queue;
 
       -- Because worker threads interact with protected objects, terminate alternatives cannot be used. Instead, we go
-      -- for a manual termination procedure, which is requested from workers using a signal object.
+      -- for a manual termination procedure, which is requested from workers using a signal object, and acknowledged
+      -- using a barrier object.
       Stop_Request : Utilities.Signals.Signal;
+      Stop_Barrier : Utilities.Barriers.Barrier (Natural (Number_Of_Workers));
 
       -- Ready tasks are executed by workers, which are defined as follows
       task type Worker;
       task body Worker is
 
-         -- The currently processed task will end up here
-         Work_Item : Task_Instance_Reference;
-
          -- This function runs incoming tasks and tells whether they are yielding or not
-         function Run_Work_Item return Boolean is
+         function Run_Work_Item (What : Task_Instance_Reference) return Boolean is
          begin
             declare
                use all type Async_Tasks.Return_Status;
-               Work_Item_Output : constant Async_Tasks.Return_Value := Work_Item.Get.Task_Object.Run;
+               Work_Item_Output : constant Async_Tasks.Return_Value := What.Get.Task_Object.Run;
                Work_Item_Yielding : Boolean := False;
             begin
                case Async_Tasks.Status (Work_Item_Output) is
                   when Finished =>
-                     Work_Item.Get.Completion_Event.Mark_Done;
+                     What.Get.Completion_Event.Mark_Done;
                   when Yielding =>
                      Work_Item_Yielding := True;
                   when Waiting =>
-                     Schedule_Pending_Task (Who   => Work_Item,
+                     Schedule_Pending_Task (Who   => What,
                                             After => Async_Tasks.Wait_List (Work_Item_Output),
                                             On    => Ready_Tasks);
                end case;
@@ -170,20 +170,20 @@ package body Asynchronous.Executors.Implementation is
             end;
          exception
             when E : others =>
-               Work_Item.Get.Completion_Event.Mark_Error (E);
+               What.Get.Completion_Event.Mark_Error (E);
                return False;
          end Run_Work_Item;
 
          -- This function processes work items according to the current scheduling policy
-         procedure Process_Work_Item is
+         procedure Process_Work_Item (What : Task_Instance_Reference) is
          begin
             case Active_Scheduling_Policy is
                when Round_Robin =>
-                  if Run_Work_Item then
-                     Ready_Tasks.Get.Enqueue (Work_Item);
+                  if Run_Work_Item (What) then
+                     Ready_Tasks.Get.Enqueue (What);
                   end if;
                when Batch =>
-                  while Run_Work_Item loop
+                  while Run_Work_Item (What) loop
                      null;
                   end loop;
             end case;
@@ -194,14 +194,20 @@ package body Asynchronous.Executors.Implementation is
 
       begin
          while Worker_Active loop
-            select
-               Ready_Tasks.Get.Dequeue (Work_Item);
-               Process_Work_Item;
-            then abort
-               Stop_Request.Wait;
-               Worker_Active := False;
-            end select;
+            declare
+               Work_Item : Task_Instance_Reference;
+            begin
+               -- Operate in an even-driven fashion during normal operation
+               select
+                  Ready_Tasks.Get.Dequeue (Work_Item);
+                  Process_Work_Item (Work_Item);
+               then abort
+                  Stop_Request.Wait;
+                  Worker_Active := False;
+               end select;
+            end;
          end loop;
+         Stop_Barrier.Join;
       exception
          when E : others =>
             Utilities.Debug.Display_Unhandled_Exception ("an asynchronous worker", E);
@@ -235,11 +241,11 @@ package body Asynchronous.Executors.Implementation is
             accept Stop do
                Stop_Request.Send;
                Executor_Active := False;
+               Stop_Barrier.Wait;
             end Stop;
-         or
-            terminate;
          end select;
       end loop;
+
    exception
       when E : others =>
          Utilities.Debug.Display_Unhandled_Exception ("an asynchronous executor", E);

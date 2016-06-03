@@ -41,6 +41,10 @@ package body Asynchronous.Executors.Objects is
       procedure Free_Executor is new Ada.Unchecked_Deallocation (Executor_Task, Executor_Access);
    begin
       Who.Executor_Task.Stop;
+      loop
+         exit when Who.Executor_Task'Terminated;
+         delay 0.02;
+      end loop;
       Free_Executor (Who.Executor_Task);
    end Finalize;
 
