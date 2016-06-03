@@ -2,8 +2,36 @@ with Ada.Unchecked_Deallocation;
 
 package body Asynchronous.Executors.Objects is
 
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What : Interfaces.Any_Async_Task) is
+      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
+                                                                  What  => What) with Unreferenced;
+   begin
+      null;
+   end Schedule_Task;
+
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What  : Interfaces.Any_Async_Task;
+                                       After : Interfaces.Event_Client) is
+      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
+                                                                  What  => What,
+                                                                  After => After) with Unreferenced;
+   begin
+      null;
+   end Schedule_Task;
+
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What  : Interfaces.Any_Async_Task;
+                                       After : Interfaces.Event_Wait_List) is
+      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
+                                                                  What  => What,
+                                                                  After => After) with Unreferenced;
+   begin
+      null;
+   end Schedule_Task;
+
    overriding function Schedule_Task (Where : in out Executor;
-                           What : Interfaces.Any_Async_Task) return Interfaces.Event_Client is
+                                      What : Interfaces.Any_Async_Task) return Interfaces.Event_Client is
       Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
    begin
       return Schedule_Task (Where => Where,

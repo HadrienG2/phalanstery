@@ -21,16 +21,30 @@ package Asynchronous.Executors.Interfaces is
    -- The interface to executors is defined as follows
    type Executor is limited interface;
 
-   -- Schedule a task which does not wait for any event
+   -- Schedule a task, do not care when it will run
+   procedure Schedule_Task (Where : in out Executor;
+                            What : Any_Async_Task) is abstract;
+
+   -- Schedule a task which waits for one event, do not synchronize
+   procedure Schedule_Task (Where : in out Executor;
+                            What  : Any_Async_Task;
+                            After : Event_Client) is abstract;
+
+   -- Schedule a task which waits for multiple events, do not synchronize
+   procedure Schedule_Task (Where : in out Executor;
+                            What  : Any_Async_Task;
+                            After : Event_Wait_List) is abstract;
+
+   -- Schedule a task immediately, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
                            What : Any_Async_Task) return Event_Client is abstract;
 
-   -- Schedule a task which waits for exactly one event
+   -- Schedule a task which waits for one event, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
                            What  : Any_Async_Task;
                            After : Event_Client) return Event_Client is abstract;
 
-   -- Schedule a tasks which waits for multiple events
+   -- Schedule a tasks which waits for multiple events, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
                            What  : Any_Async_Task;
                            After : Event_Wait_List) return Event_Client is abstract;

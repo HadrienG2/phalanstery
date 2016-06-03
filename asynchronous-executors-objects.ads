@@ -13,16 +13,30 @@ package Asynchronous.Executors.Objects is
    type Executor (Number_Of_Workers : Interfaces.Worker_Count := Interfaces.Hardware_Workers) is
      new Ada.Finalization.Limited_Controlled and Interfaces.Executor with private;
 
-   -- Schedule a task which does not wait for any event
+   -- Schedule a task, do not care when it will run
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What : Interfaces.Any_Async_Task);
+
+   -- Schedule a task which waits for one event, do not synchronize
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What  : Interfaces.Any_Async_Task;
+                                       After : Interfaces.Event_Client);
+
+   -- Schedule a task which waits for multiple events, do not synchronize
+   overriding procedure Schedule_Task (Where : in out Executor;
+                                       What  : Interfaces.Any_Async_Task;
+                                       After : Interfaces.Event_Wait_List);
+
+   -- Schedule a task immediately, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What : Interfaces.Any_Async_Task) return Interfaces.Event_Client;
 
-   -- Schedule a task which waits for exactly one event
+  -- Schedule a task which waits for one event, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Task;
                                       After : Interfaces.Event_Client) return Interfaces.Event_Client;
 
-   -- Schedule a tasks which waits for multiple events
+   -- Schedule a tasks which waits for multiple events, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Task;
                                       After : Interfaces.Event_Wait_List) return Interfaces.Event_Client;
