@@ -1,5 +1,3 @@
-with Utilities.Atomic_Counters;
-
 generic
 package Utilities.References.Nullable is
 
@@ -25,14 +23,6 @@ package Utilities.References.Nullable is
    procedure Run_Tests;
 
 private
-
-   type Packaged_Instance is limited
-      record
-         Data : aliased Object;
-         Reference_Count : Utilities.Atomic_Counters.Atomic_Counter;
-      end record;
-
-   type Instance_Access is access Packaged_Instance;
 
    type Reference is new Reference_Base with
       record

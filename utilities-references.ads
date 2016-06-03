@@ -1,4 +1,5 @@
 with Ada.Finalization;
+with Utilities.Atomic_Counters;
 
 generic
    type Object is limited private;
@@ -18,6 +19,14 @@ package Utilities.References is
    function Get (R : Reference_Base) return Accessor is abstract;
 
 private
+
+   type Packaged_Instance is limited
+      record
+         Data : aliased Object;
+         Reference_Count : Utilities.Atomic_Counters.Atomic_Counter;
+      end record;
+
+   type Instance_Access is access Packaged_Instance;
 
    type Reference_Base is abstract new Ada.Finalization.Controlled with null record;
 
