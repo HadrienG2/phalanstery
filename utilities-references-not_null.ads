@@ -10,6 +10,7 @@ package Utilities.References.Not_Null is
 
    -- Access to the underlying object must be requested explicitly
    overriding function Get (R : Reference) return Accessor;
+   overriding function Set (R : Reference) return Mutator;
 
    -- Run the unit tests for this package
    procedure Run_Tests;

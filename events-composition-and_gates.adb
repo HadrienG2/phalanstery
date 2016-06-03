@@ -66,14 +66,14 @@ package body Events.Composition.And_Gates is
    procedure Add_Child (Where : in out And_Gate;
                         Who   : in out Event_Client) is
    begin
-      Where.Ref.Get.Add_Children (1);
+      Where.Ref.Set.Add_Children (1);
       Who.Add_Listener (Where);
    end Add_Child;
 
    procedure Add_Children (Where : in out And_Gate;
                            Who   : in out Event_List) is
    begin
-      Where.Ref.Get.Add_Children (Who'Length);
+      Where.Ref.Set.Add_Children (Who'Length);
       for Event of Who loop
          Event.Add_Listener (Where);
       end loop;
@@ -82,14 +82,14 @@ package body Events.Composition.And_Gates is
    function Make_Client (From : And_Gate) return Event_Client is
    begin
       return C : Event_Client do
-        From.Ref.Get.Make_Client (C);
+        From.Ref.Set.Make_Client (C);
       end return;
    end Make_Client;
 
    overriding procedure Notify_Event_Status_Change (Where : in out And_Gate;
                                                     What  : Interfaces.Finished_Event_Status) is
    begin
-      Where.Ref.Get.Notify_Event_Status_Change (What);
+      Where.Ref.Set.Notify_Event_Status_Change (What);
    end Notify_Event_Status_Change;
 
 

@@ -11,24 +11,24 @@ package body Events.Clients is
    overriding procedure Get_Error (Who  : Client;
                                    What : out Ada.Exceptions.Exception_Occurrence) is
    begin
-      Who.Ref.Get.Get_Error (What);
+      Who.Ref.Set.Get_Error (What);
    end Get_Error;
 
    overriding procedure Wait_Completion (Who          : Client;
                                          Final_Status : out Finished_Event_Status) is
    begin
-      Who.Ref.Get.Wait_Completion (Final_Status);
+      Who.Ref.Set.Wait_Completion (Final_Status);
    end Wait_Completion;
 
    overriding procedure Add_Listener (Where : in out Client;
                                       Who   : in out Event_Listener_Reference'Class) is
    begin
-      Where.Ref.Get.Add_Listener (Who);
+      Where.Ref.Set.Add_Listener (Who);
    end Add_Listener;
 
    overriding procedure Cancel (Who : in out Client) is
    begin
-      Who.Ref.Get.Cancel;
+      Who.Ref.Set.Cancel;
    end Cancel;
 
    not overriding function Make_Client (Event : Implementation.Event_Reference) return Client is ((Ref => Event));

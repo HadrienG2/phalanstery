@@ -9,6 +9,8 @@ package body Utilities.References.Nullable is
 
    overriding function Get (R : Reference) return Accessor is (R.Instance.Data'Access);
 
+   overriding function Set (R : Reference) return Mutator is (R.Instance.Data'Access);
+
    not overriding function Is_Null (R : Reference) return Boolean is (R.Instance = null);
 
    not overriding function Make return Reference is

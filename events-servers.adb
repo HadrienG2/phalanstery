@@ -12,18 +12,18 @@ package body Events.Servers is
 
    overriding procedure Mark_Done (Who : in out Server) is
    begin
-      Who.Ref.Get.Mark_Done;
+      Who.Ref.Set.Mark_Done;
    end Mark_Done;
 
    overriding procedure Mark_Error (Who  : in out Server;
                                     What : Ada.Exceptions.Exception_Occurrence) is
    begin
-      Who.Ref.Get.Mark_Error (What);
+      Who.Ref.Set.Mark_Error (What);
    end Mark_Error;
 
    overriding procedure Cancel (Who : in out Server) is
    begin
-      Who.Ref.Get.Cancel;
+      Who.Ref.Set.Cancel;
    end Cancel;
 
    overriding function Is_Canceled (Who : Server) return Boolean is

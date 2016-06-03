@@ -49,7 +49,7 @@ package body Asynchronous.Executors.Implementation is
    function Make_Task_Instance (From : Interfaces.Any_Async_Task) return Task_Instance_Reference is
    begin
       return Ref : constant Task_Instance_Reference := Task_Instance_References.Make do
-         Ref.Get.Task_Object := new Interfaces.Any_Async_Task'(From);
+         Ref.Set.Task_Object := new Interfaces.Any_Async_Task'(From);
       end return;
    end Make_Task_Instance;
 
@@ -83,11 +83,11 @@ package body Asynchronous.Executors.Implementation is
    begin
       case According_To is
          when Done =>
-            On.Get.Enqueue (Who);
+            On.Set.Enqueue (Who);
          when Canceled =>
-            Who.Get.Completion_Event.Cancel;
+            Who.Set.Completion_Event.Cancel;
          when Error =>
-            Who.Get.Completion_Event.Mark_Error (Wait_List_Error_Occurence);
+            Who.Set.Completion_Event.Mark_Error (Wait_List_Error_Occurence);
       end case;
    end Schedule_Ready_Task;
 
@@ -158,7 +158,7 @@ package body Asynchronous.Executors.Implementation is
             begin
                case Async_Tasks.Status (Work_Item_Output) is
                   when Finished =>
-                     What.Get.Completion_Event.Mark_Done;
+                     What.Set.Completion_Event.Mark_Done;
                   when Yielding =>
                      Work_Item_Yielding := True;
                   when Waiting =>
@@ -170,7 +170,7 @@ package body Asynchronous.Executors.Implementation is
             end;
          exception
             when E : others =>
-               What.Get.Completion_Event.Mark_Error (E);
+               What.Set.Completion_Event.Mark_Error (E);
                return False;
          end Run_Work_Item;
 
@@ -180,7 +180,7 @@ package body Asynchronous.Executors.Implementation is
             case Active_Scheduling_Policy is
                when Round_Robin =>
                   if Run_Work_Item (What) then
-                     Ready_Tasks.Get.Enqueue (What);
+                     Ready_Tasks.Set.Enqueue (What);
                   end if;
                when Batch =>
                   while Run_Work_Item (What) loop
@@ -199,7 +199,7 @@ package body Asynchronous.Executors.Implementation is
             begin
                -- Operate in an even-driven fashion during normal operation
                select
-                  Ready_Tasks.Get.Dequeue (Work_Item);
+                  Ready_Tasks.Set.Dequeue (Work_Item);
                   Process_Work_Item (Work_Item);
                then abort
                   Stop_Request.Wait;

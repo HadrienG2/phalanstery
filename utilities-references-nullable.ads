@@ -11,6 +11,8 @@ package Utilities.References.Nullable is
    -- Access to the underlying object must be requested explicitly
    overriding function Get (R : Reference) return Accessor
      with Pre => (not R.Is_Null);
+   overriding function Set (R : Reference) return Mutator
+     with Pre => (not R.Is_Null);
 
    -- In the case of nullable references, we have one more caveat to take care of: the null state
    not overriding function Is_Null (R : Reference) return Boolean;

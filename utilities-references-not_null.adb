@@ -8,6 +8,8 @@ package body Utilities.References.Not_Null is
 
    function Get (R : Reference) return Accessor is (R.Instance.Data'Access);
 
+   function Set (R : Reference) return Mutator is (R.Instance.Data'Access);
+
    overriding procedure Initialize (Who : in out Reference) is
    begin
       Who.Instance := new Packaged_Instance;
