@@ -1,9 +1,8 @@
-with Events.Interfaces;
-with Events.Servers;
-with Utilities.References.Not_Null;
-pragma Elaborate_All (Utilities.References.Not_Null);
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Utilities.References.Not_Null;
+pragma Elaborate_All (Asynchronous.Utilities.References.Not_Null);
 
-package Events.Composition.And_Gates is
+package Asynchronous.Events.Composition.And_Gates is
 
    -- This is an implementation of AND gates as defined in the parent package
    type And_Gate is private;
@@ -27,8 +26,6 @@ package Events.Composition.And_Gates is
 
 private
 
-   subtype Event_Server is Servers.Server;
-
    protected type And_Gate_Implementation is
       procedure Notify_Event_Status_Change (What : Interfaces.Finished_Event_Status);
       procedure Add_Children (Count : Natural);
@@ -45,6 +42,7 @@ private
    package And_Gate_Reference_Base is new Utilities.References (And_Gate_Implementation);
    package And_Gate_References is new And_Gate_Reference_Base.Not_Null;
 
+
    type And_Gate is new Interfaces.Event_Listener_Reference with
       record
          Ref : And_Gate_References.Reference;
@@ -52,4 +50,4 @@ private
    overriding procedure Notify_Event_Status_Change (Where : in out And_Gate;
                                                     What  : Interfaces.Finished_Event_Status);
 
-end Events.Composition.And_Gates;
+end Asynchronous.Events.Composition.And_Gates;

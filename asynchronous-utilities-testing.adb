@@ -1,6 +1,7 @@
 with Ada.Assertions;
 with Ada.Text_IO;
-package body Utilities.Testing is
+
+package body Asynchronous.Utilities.Testing is
 
    procedure Startup_Test (How : access procedure) is
    begin
@@ -23,4 +24,4 @@ package body Utilities.Testing is
       raise Ada.Assertions.Assertion_Error;
    end Fail;
 
-end Utilities.Testing;
+end Asynchronous.Utilities.Testing;

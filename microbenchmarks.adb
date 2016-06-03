@@ -1,16 +1,16 @@
 with Ada.Calendar;
 with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Objects;
+with Asynchronous.Events.Composition.Shortcuts;
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
 with Ada.Text_IO;
-with Events.Composition.Shortcuts;
-with Events.Interfaces;
-with Events.Servers;
 with System.Multiprocessors;
-pragma Elaborate_All (Events.Servers);
+pragma Elaborate_All (Asynchronous.Events.Servers);
 
 package body Microbenchmarks is
 
-   Ready_Event, Canceled_Event, Error_Event : Events.Clients.Client;
+   Ready_Event, Canceled_Event, Error_Event : Event_Client;
 
    overriding function Run (Who : in out Null_Task) return Async_Tasks.Return_Value is (Async_Tasks.Return_Finished);
 
@@ -60,7 +60,7 @@ package body Microbenchmarks is
       Default_Executor : Asynchronous.Executors.Objects.Executor;
       Number_Of_CPUs : constant Positive := Positive (System.Multiprocessors.Number_Of_CPUs);
 
-      Final_Status : Events.Interfaces.Event_Status with Unreferenced;
+      Final_Status : Asynchronous.Events.Interfaces.Event_Status with Unreferenced;
 
       procedure Benchmark_Task (What                : Asynchronous.Executors.Interfaces.Any_Async_Task;
                                 How_Many            : Positive;
@@ -68,7 +68,7 @@ package body Microbenchmarks is
                                 Feature_Name        : String;
                                 Internal_Iterations : Positive := 1) is
 
-         Test_Event : Events.Clients.Client;
+         Test_Event : Event_Client;
 
          Start_Time : Ada.Calendar.Time;
          Parallel_Duration, Sequential_Duration, Direct_Run_Duration : Duration;
@@ -79,10 +79,10 @@ package body Microbenchmarks is
          Ada.Text_IO.Put_Line ("=== Testing the executor's " & Title & " performance ===");
          Start_Time := Ada.Calendar.Clock;
          declare
-            Parallel_Events : constant Events.Composition.Event_List (1 .. How_Many) :=
+            Parallel_Events : constant Asynchronous.Events.Composition.Event_List (1 .. How_Many) :=
               (others => Default_Executor.Schedule_Task (What));
          begin
-            Test_Event := Events.Composition.Shortcuts.When_All (Parallel_Events);
+            Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events);
          end;
          Test_Event.Wait_Completion (Final_Status);
          Parallel_Duration := Ada.Calendar.Clock - Start_Time;
@@ -172,10 +172,10 @@ package body Microbenchmarks is
 
       procedure Benchmark_Wait_Custom is
 
-         Event_Server_S : constant Events.Servers.Server := Events.Servers.Make_Event;
-         Event_Server_P : constant Events.Servers.Server := Events.Servers.Make_Event;
-         Event_Client_P : constant Events.Clients.Client := Event_Server_P.Make_Client;
-         Event_Client_S : constant Events.Clients.Client := Event_Server_S.Make_Client;
+         Event_Server_S : constant Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
+         Event_Server_P : constant Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
+         Event_Client_P : constant Event_Client := Event_Server_P.Make_Client;
+         Event_Client_S : constant Event_Client := Event_Server_S.Make_Client;
          Consumer_Task_P : constant Custom_Wait_Task := (Target => Event_Client_P);
          Consumer_Task_S : constant Custom_Wait_Task := (Target => Event_Client_S);
          Producer_Task_P : constant Wait_Cancelation_Task := (Target => Event_Client_P);
@@ -183,7 +183,7 @@ package body Microbenchmarks is
 
          Consumer_Count : constant := 100_000;
 
-         Test_Event : Events.Clients.Client;
+         Test_Event : Event_Client;
 
          Start_Time : Ada.Calendar.Time;
          Parallel_Duration, Sequential_Duration : Duration;
@@ -194,12 +194,12 @@ package body Microbenchmarks is
          Ada.Text_IO.Put_Line ("=== Testing the executor's custom wait performance ===");
          Start_Time := Ada.Calendar.Clock;
          declare
-            use type Events.Composition.Event_List;
-            Parallel_Events : constant Events.Composition.Event_List (1 .. Consumer_Count) :=
+            use type Asynchronous.Events.Composition.Event_List;
+            Parallel_Events : constant Asynchronous.Events.Composition.Event_List (1 .. Consumer_Count) :=
               (others => Default_Executor.Schedule_Task (Consumer_Task_P));
-            Producer_Event : constant Events.Clients.Client := Default_Executor.Schedule_Task (Producer_Task_P);
+            Producer_Event : constant Event_Client := Default_Executor.Schedule_Task (Producer_Task_P);
          begin
-            Test_Event := Events.Composition.Shortcuts.When_All (Parallel_Events & Producer_Event);
+            Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events & Producer_Event);
          end;
          Test_Event.Wait_Completion (Final_Status);
          Parallel_Duration := Ada.Calendar.Clock - Start_Time;
@@ -240,21 +240,21 @@ package body Microbenchmarks is
 begin
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
    begin
       S.Mark_Done;
       Ready_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
    begin
       S.Cancel;
       Canceled_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
       Custom_Error : exception;
    begin
       begin

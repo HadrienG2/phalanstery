@@ -1,12 +1,22 @@
-with Ada.Exceptions;
+package body Asynchronous.Utilities.Exceptions is
 
-package Asynchronous.Utilities.Exceptions is
+   use type Ada.Exceptions.Exception_Id;
 
-   -- Spawn an occurence of any exception
-   procedure Make_Occurence (What  : Ada.Exceptions.Exception_Id;
-                             Where : out Ada.Exceptions.Exception_Occurrence);
+   procedure Make_Occurrence (What  : Ada.Exceptions.Exception_Id;
+                              Where : out Ada.Exceptions.Exception_Occurrence) is
+   begin
+      Ada.Exceptions.Raise_Exception (What);
+   exception
+      when E : others =>
+         Ada.Exceptions.Save_Occurrence (Target => Where,
+                                         Source => E);
+   end Make_Occurrence;
 
-   -- Tell whether we are dealing with a null exception occurence
-   function Is_Null_Occurrence (What : Ada.Exceptions.Exception_Occurrence);
+   function Is_Occurrence_Of (Who  : Ada.Exceptions.Exception_Occurrence;
+                              What : Ada.Exceptions.Exception_Id) return Boolean is
+     (Ada.Exceptions.Exception_Identity (Who) = What);
+
+   function Is_Null_Occurrence (Who : Ada.Exceptions.Exception_Occurrence) return Boolean is
+     (Is_Occurrence_Of (Who, Ada.Exceptions.Null_Id));
 
 end Asynchronous.Utilities.Exceptions;

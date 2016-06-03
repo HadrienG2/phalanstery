@@ -1,4 +1,4 @@
-package Utilities.Testing is
+package Asynchronous.Utilities.Testing is
 
    -- This package provides unit testing facilities which facilitate spotting regressions in the system
 
@@ -17,4 +17,4 @@ private
    -- Set this flag to True in order to enable Startup_Test.
    Run_Tests_On_Startup : Boolean := True;
 
-end Utilities.Testing;
+end Asynchronous.Utilities.Testing;

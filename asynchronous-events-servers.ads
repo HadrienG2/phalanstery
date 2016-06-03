@@ -1,9 +1,9 @@
 with Ada.Exceptions;
-with Events.Clients;
-with Events.Implementation;
-with Events.Interfaces;
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Implementation;
+with Asynchronous.Events.Interfaces;
 
-package Events.Servers is
+package Asynchronous.Events.Servers is
 
    -- This is a reference-counted implementation of event servers
    type Server is limited new Interfaces.Event_Server with private;
@@ -39,4 +39,4 @@ private
          Ref : Implementation.Event_Reference;
       end record;
 
-end Events.Servers;
+end Asynchronous.Events.Servers;

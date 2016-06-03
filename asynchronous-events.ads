@@ -1,4 +1,4 @@
-package Events with Pure is
+package Asynchronous.Events with Pure is
 
    -- This package, together with its children, provides an implementation of a task synchronization primitive called
    -- the event, which is a state machine representing the underlying progress of some asynchronous operation.
@@ -22,4 +22,4 @@ package Events with Pure is
    --    - Events.Callbacks provides the simplest possible example of an event listener : a global callback procedure.
    --    - Events.Composition provides a way to compose events objects using an AND relationship.
 
-end Events;
+end Asynchronous.Events;

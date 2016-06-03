@@ -1,6 +1,6 @@
 with Ada.Exceptions;
 
-package Events.Interfaces is
+package Asynchronous.Events.Interfaces with Preelaborate is
 
    -- At its heart, the asynchronous programming model is about events. These are little state machines which represent
    -- some asynchronous operation in progress that will complete eventually. We define the following event states:
@@ -76,4 +76,4 @@ package Events.Interfaces is
    function Is_Canceled (Who : Event_Server) return Boolean is abstract
      with Pre'Class => (not Who.Is_Null);
 
-end Events.Interfaces;
+end Asynchronous.Events.Interfaces;

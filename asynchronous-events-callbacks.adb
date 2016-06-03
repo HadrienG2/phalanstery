@@ -1,13 +1,13 @@
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Events.Callbacks is
+package body Asynchronous.Events.Callbacks is
 
    not overriding function Make_Callback_Listener (From : Event_Status_Callback) return Callback_Listener is
      ((Callback => From));
 
    overriding procedure Notify_Event_Status_Change (Where : in out Callback_Listener;
-                                                    What  : Finished_Event_Status) is
+                                                    What  : Interfaces.Finished_Event_Status) is
    begin
       Where.Callback.all (What);
    end Notify_Event_Status_Change;
@@ -15,9 +15,9 @@ package body Events.Callbacks is
 
    -- The remainder of this package is dedicated to unit tests
    Test_Callback_Calls : Natural := 0;
-   Last_Status : Event_Status;
+   Last_Status : Interfaces.Event_Status;
 
-   procedure Test_Callback (Final_Status : Event_Status) is
+   procedure Test_Callback (Final_Status : Interfaces.Event_Status) is
    begin
       Test_Callback_Calls := Test_Callback_Calls + 1;
       Last_Status := Final_Status;
@@ -25,6 +25,7 @@ package body Events.Callbacks is
 
    procedure Run_Tests is
       use Utilities.Testing;
+      use all type Interfaces.Event_Status;
       Test_Callback_Listener : Callback_Listener := Make_Callback_Listener (Test_Callback'Access);
    begin
       Test_Callback_Listener.Notify_Event_Status_Change (Done);
@@ -40,4 +41,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Events.Callbacks;
+end Asynchronous.Events.Callbacks;

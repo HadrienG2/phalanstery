@@ -1,8 +1,9 @@
-with Events.Callbacks;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Events.Callbacks;
+with Asynchronous.Utilities.Exceptions;
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Events.Servers is
+package body Asynchronous.Events.Servers is
 
    use type Implementation.Event_Reference;
 
@@ -36,11 +37,10 @@ package body Events.Servers is
 
 
    -- The remainder of this package is dedicated to unit tests
-   use Interfaces;
    Test_Callback_Calls : Natural := 0;
-   Last_Status : Event_Status;
+   Last_Status : Interfaces.Event_Status;
 
-   procedure Test_Callback (Final_Status : Event_Status) is
+   procedure Test_Callback (Final_Status : Interfaces.Event_Status) is
    begin
       Test_Callback_Calls := Test_Callback_Calls + 1;
       Last_Status := Final_Status;
@@ -48,13 +48,13 @@ package body Events.Servers is
 
    procedure Run_Tests is
 
-      use Events.Callbacks;
       use Utilities.Testing;
+      use all type Interfaces.Event_Status;
       use type Ada.Exceptions.Exception_Id;
       use type Clients.Client;
 
       Test_Error : Ada.Exceptions.Exception_Occurrence;
-      Test_Callback_Listener : Callback_Listener := Make_Callback_Listener (Test_Callback'Access);
+      Test_Callback_Listener : Callbacks.Callback_Listener := Callbacks.Make_Callback_Listener (Test_Callback'Access);
 
       procedure Test_Creation is
          C : Clients.Client;
@@ -165,6 +165,7 @@ package body Events.Servers is
       end Test_Done_State;
 
       procedure Test_Canceled_State is
+
          procedure Test_Cancelation (S : Servers.Server;
                                      C : in out Clients.Client) is
          begin
@@ -218,13 +219,8 @@ package body Events.Servers is
          S : Servers.Server := Make_Event;
          C : Clients.Client := S.Make_Client;
       begin
-         begin
-            raise Custom_Error;
-         exception
-            when E : Custom_Error => Ada.Exceptions.Save_Occurrence (Target => Custom_Error_Occurence,
-                                                                     Source => E);
-         end;
-
+         Utilities.Exceptions.Make_Occurrence (What  => Custom_Error'Identity,
+                                               Where => Custom_Error_Occurence);
          C.Add_Listener (Test_Callback_Listener);
          S.Mark_Error (Custom_Error_Occurence);
          Assert_Truth (Check   => (C.Status = Error),
@@ -264,4 +260,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Events.Servers;
+end Asynchronous.Events.Servers;

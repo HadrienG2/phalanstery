@@ -1,9 +1,9 @@
 with Ada.Assertions;
 with Ada.Unchecked_Deallocation;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Utilities.References.Nullable is
+package body Asynchronous.Utilities.References.Nullable is
 
    overriding function "=" (A, B : Reference) return Boolean is (A.Instance = B.Instance);
 
@@ -141,4 +141,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Utilities.References.Nullable;
+end Asynchronous.Utilities.References.Nullable;

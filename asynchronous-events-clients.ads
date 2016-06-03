@@ -1,28 +1,28 @@
 with Ada.Exceptions;
-with Events.Implementation;
-with Events.Interfaces; use Events.Interfaces;
+with Asynchronous.Events.Implementation;
+with Asynchronous.Events.Interfaces;
 
-package Events.Clients is
+package Asynchronous.Events.Clients is
 
    -- This is an implementation of event clients. You should never need to create clients directly,
    -- but instead get event clients from an event server as appropriate.
 
-   type Client is new Event_Client with private;
+   type Client is new Interfaces.Event_Client with private;
 
    overriding function Is_Null (Who : Client) return Boolean;
 
    overriding function "=" (A, B : Client) return Boolean;
 
-   overriding function Status (Who : Client) return Event_Status;
+   overriding function Status (Who : Client) return Interfaces.Event_Status;
 
    overriding procedure Get_Error (Who  : Client;
                                    What : out Ada.Exceptions.Exception_Occurrence);
 
    overriding procedure Wait_Completion (Who          : Client;
-                                         Final_Status : out Finished_Event_Status);
+                                         Final_Status : out Interfaces.Finished_Event_Status);
 
    overriding procedure Add_Listener (Where : in out Client;
-                                      Who   : in out Event_Listener_Reference'Class);
+                                      Who   : in out Interfaces.Event_Listener_Reference'Class);
 
    overriding procedure Cancel (Who : in out Client);
 
@@ -31,13 +31,13 @@ package Events.Clients is
      with Pre => (not Event.Is_Null),
           Post => (not Make_Client'Result.Is_Null);
 
-   -- NOTE : Because server and client operation is intertwined, unit tests are located in the Servers package
+   -- NOTE : Because server and client operation is intertwined, unit tests for clients are in the Servers package
 
 private
 
-   type Client is new Event_Client with
+   type Client is new Interfaces.Event_Client with
       record
          Ref : Implementation.Event_Reference;
       end record;
 
-end Events.Clients;
+end Asynchronous.Events.Clients;

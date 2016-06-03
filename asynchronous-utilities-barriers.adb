@@ -1,7 +1,7 @@
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Utilities.Barriers is
+package body Asynchronous.Utilities.Barriers is
 
    protected body Barrier is
 
@@ -78,4 +78,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Utilities.Barriers;
+end Asynchronous.Utilities.Barriers;

@@ -1,7 +1,6 @@
 package body Asynchronous.Tasks is
 
-
-   function Return_Waiting (Cause : Events.Clients.Client) return Return_Value is
+   function Return_Waiting (Cause : Event_Client) return Return_Value is
      ((State => Waiting, Wait_List_Length => 1, Wait_List => (1 => Cause)));
 
    function Return_Waiting (Cause : Event_Wait_List) return Return_Value is

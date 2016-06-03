@@ -3,21 +3,22 @@ with Ada.Containers.Unbounded_Synchronized_Queues;
 with Ada.Exceptions;
 with Ada.Finalization;
 with Ada.Unchecked_Deallocation;
+with Asynchronous.Events.Composition.Shortcuts;
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
 with Asynchronous.Tasks;
-with Events.Composition.Shortcuts;
-with Events.Interfaces;
-with Events.Servers;
-with Utilities.Barriers;
-with Utilities.Debug;
-with Utilities.References;
-with Utilities.References.Nullable;
-with Utilities.Signals;
-pragma Elaborate_All (Utilities.References.Nullable);
+with Asynchronous.Utilities.Barriers;
+with Asynchronous.Utilities.Debug;
+with Asynchronous.Utilities.Exceptions;
+with Asynchronous.Utilities.References;
+with Asynchronous.Utilities.References.Nullable;
+with Asynchronous.Utilities.Signals;
+pragma Elaborate_All (Asynchronous.Utilities.References.Nullable);
 
 package body Asynchronous.Executors.Implementation is
 
    -- Let us define some convenience notations first
-   package Async_Tasks renames Asynchronous.Tasks;
+   subtype Finished_Event_Status is Events.Interfaces.Finished_Event_Status;
    use all type Events.Interfaces.Event_Status;
 
    -- === TASK INSTANCES ===
@@ -71,14 +72,14 @@ package body Asynchronous.Executors.Implementation is
    -- When a task has an event wait list, we want to compute the AND-conjunction of that wait list, wait for it to go
    -- anywhere, and react according to the final event status. This is what the following code is about.
    procedure Schedule_Pending_Task (Who   : Task_Instance_Reference;
-                                    After : Async_Tasks.Event_Wait_List;
+                                    After : Interfaces.Event_Wait_List;
                                     On    : Task_Queue_Reference);
 
    -- The rest is just the underlying machinery that makes Schedule_Pending_Task work
    Wait_List_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
    procedure Schedule_Ready_Task (Who          : Task_Instance_Reference;
-                                  According_To : Events.Interfaces.Finished_Event_Status;
+                                  According_To : Finished_Event_Status;
                                   On           : Task_Queue_Reference) is
    begin
       case According_To is
@@ -98,7 +99,7 @@ package body Asynchronous.Executors.Implementation is
       end record;
 
    overriding procedure Notify_Event_Status_Change (Where : in out Scheduled_Task;
-                                                    What  : Events.Interfaces.Finished_Event_Status) is
+                                                    What  : Finished_Event_Status) is
    begin
       Schedule_Ready_Task (Who          => Where.Instance,
                            According_To => What,
@@ -106,7 +107,7 @@ package body Asynchronous.Executors.Implementation is
    end Notify_Event_Status_Change;
 
    procedure Schedule_Pending_Task (Who   : Task_Instance_Reference;
-                                    After : Async_Tasks.Event_Wait_List;
+                                    After : Interfaces.Event_Wait_List;
                                     On    : Task_Queue_Reference) is
       Input_Event : Interfaces.Event_Client := Events.Composition.Shortcuts.When_All (After);
    begin
@@ -152,18 +153,18 @@ package body Asynchronous.Executors.Implementation is
          function Run_Work_Item (What : Task_Instance_Reference) return Boolean is
          begin
             declare
-               use all type Async_Tasks.Return_Status;
-               Work_Item_Output : constant Async_Tasks.Return_Value := What.Get.Task_Object.Run;
+               use all type Tasks.Return_Status;
+               Work_Item_Output : constant Tasks.Return_Value := What.Get.Task_Object.Run;
                Work_Item_Yielding : Boolean := False;
             begin
-               case Async_Tasks.Status (Work_Item_Output) is
+               case Tasks.Status (Work_Item_Output) is
                   when Finished =>
                      What.Set.Completion_Event.Mark_Done;
                   when Yielding =>
                      Work_Item_Yielding := True;
                   when Waiting =>
                      Schedule_Pending_Task (Who   => What,
-                                            After => Async_Tasks.Wait_List (Work_Item_Output),
+                                            After => Tasks.Wait_List (Work_Item_Output),
                                             On    => Ready_Tasks);
                end case;
                return Work_Item_Yielding;
@@ -256,12 +257,7 @@ package body Asynchronous.Executors.Implementation is
 begin
 
    -- Save an occurence of Error_In_Wait_List, to be propagated as needed
-   begin
-      raise Interfaces.Error_In_Wait_List;
-   exception
-      when E : Interfaces.Error_In_Wait_List =>
-         Ada.Exceptions.Save_Occurrence (Target => Wait_List_Error_Occurence,
-                                         Source => E);
-   end;
+   Utilities.Exceptions.Make_Occurrence (What  => Interfaces.Error_In_Wait_List'Identity,
+                                         Where => Wait_List_Error_Occurence);
 
 end Asynchronous.Executors.Implementation;

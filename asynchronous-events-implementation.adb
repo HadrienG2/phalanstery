@@ -1,14 +1,13 @@
-with Events.Callbacks;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Events.Callbacks;
+with Asynchronous.Utilities.Exceptions;
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Events.Implementation is
-
-   use type Ada.Exceptions.Exception_Id;
+package body Asynchronous.Events.Implementation is
 
    protected body Event is
 
-      function Status return Event_Status is (Current_Status);
+      function Status return Interfaces.Event_Status is (Current_Status);
 
       procedure Get_Error (What : out Ada.Exceptions.Exception_Occurrence) is
       begin
@@ -16,15 +15,15 @@ package body Events.Implementation is
                                          Source => Event_Error);
       end Get_Error;
 
-      entry Wait_Completion (Final_Status : out Event_Status) when Status /= Pending is
+      entry Wait_Completion (Final_Status : out Interfaces.Event_Status) when Status /= Pending is
       begin
          Final_Status := Current_Status;
-         if Ada.Exceptions.Exception_Identity (Event_Error) /= Ada.Exceptions.Null_Id then
+         if not Utilities.Exceptions.Is_Null_Occurrence (Event_Error) then
             Ada.Exceptions.Reraise_Occurrence (Event_Error);
          end if;
       end Wait_Completion;
 
-      procedure Add_Listener (Who : in out Event_Listener_Reference'Class) is
+      procedure Add_Listener (Who : in out Interfaces.Event_Listener_Reference'Class) is
       begin
          if Current_Status = Pending then
             Listeners.Append (Who);
@@ -74,9 +73,9 @@ package body Events.Implementation is
 
    -- The remainder of this package is dedicated to unit tests
    Test_Callback_Calls : Natural := 0;
-   Last_Status : Event_Status;
+   Last_Status : Interfaces.Event_Status;
 
-   procedure Test_Callback (Final_Status : Event_Status) is
+   procedure Test_Callback (Final_Status : Interfaces.Event_Status) is
    begin
       Test_Callback_Calls := Test_Callback_Calls + 1;
       Last_Status := Final_Status;
@@ -84,22 +83,21 @@ package body Events.Implementation is
 
    procedure Run_Tests is
 
-      use Events.Callbacks;
       use Utilities.Testing;
+      use type Ada.Exceptions.Exception_Id;
 
       Test_Error : Ada.Exceptions.Exception_Occurrence;
       Custom_Error : exception;
       Custom_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
-      Final_Status : Event_Status;
-      Test_Callback_Listener : Callback_Listener := Make_Callback_Listener (Test_Callback'Access);
+
+      Final_Status : Interfaces.Event_Status;
+      Test_Callback_Listener : Callbacks.Callback_Listener := Callbacks.Make_Callback_Listener (Test_Callback'Access);
 
       procedure Setup_Tests is
       begin
-         raise Custom_Error;
-      exception
-         when E : Custom_Error => Ada.Exceptions.Save_Occurrence (Target => Custom_Error_Occurence,
-                                                                  Source => E);
-      end;
+         Utilities.Exceptions.Make_Occurrence (What  => Custom_Error'Identity,
+                                               Where => Custom_Error_Occurence);
+      end Setup_Tests;
 
       procedure Test_Initial_State is
          Test_Event : Event;
@@ -124,7 +122,7 @@ package body Events.Implementation is
 
          Assert_Truth (Check   => not Test_Event.Is_Canceled,
                        Message => "Freshly initialized events should not be Canceled");
-      end;
+      end Test_Initial_State;
 
       procedure Test_Done_State is
          Test_Event : Event;
@@ -275,4 +273,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Events.Implementation;
+end Asynchronous.Events.Implementation;

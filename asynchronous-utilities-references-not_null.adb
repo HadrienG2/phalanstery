@@ -1,8 +1,8 @@
 with Ada.Unchecked_Deallocation;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Utilities.References.Not_Null is
+package body Asynchronous.Utilities.References.Not_Null is
 
    function "=" (A, B : Reference) return Boolean is (A.Instance = B.Instance);
 
@@ -96,4 +96,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Utilities.References.Not_Null;
+end Asynchronous.Utilities.References.Not_Null;

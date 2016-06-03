@@ -1,9 +1,9 @@
 with Ada.Finalization;
-with Utilities.Atomic_Counters;
+with Asynchronous.Utilities.Atomic_Counters;
 
 generic
    type Object is limited private;
-package Utilities.References is
+package Asynchronous.Utilities.References is
 
    -- This package familly manages reference-counted object instances
    type Mutator is not null access all Object;
@@ -25,11 +25,11 @@ private
    type Packaged_Instance is limited
       record
          Data : aliased Object;
-         Reference_Count : Utilities.Atomic_Counters.Atomic_Counter;
+         Reference_Count : Atomic_Counters.Atomic_Counter;
       end record;
 
    type Instance_Access is access Packaged_Instance;
 
    type Reference_Base is abstract new Ada.Finalization.Controlled with null record;
 
-end Utilities.References;
+end Asynchronous.Utilities.References;

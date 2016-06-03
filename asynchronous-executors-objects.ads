@@ -45,7 +45,7 @@ private
 
    -- Executor tasks must be heap allocated, because otherwise the Ada runtime's finalizer for Executor will wait for
    -- Executor_Task to terminate, thusly not calling the finalizer of Executor, which would send the Stop signal
-   -- to the executor task, which would in turn be needed for that task to stop.
+   -- to the executor task, which would in turn be needed for that task to stop. AKA a good old deadlock.
 
    subtype Executor_Task is Implementation.Executor_Task;
 

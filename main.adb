@@ -1,27 +1,28 @@
 pragma Warnings (Off);
 with Asynchronous;
-with Asynchronous.Tasks;
+with Asynchronous.Events;
+with Asynchronous.Events.Callbacks;
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Composition;
+with Asynchronous.Events.Composition.And_Gates;
+with Asynchronous.Events.Composition.Shortcuts;
+with Asynchronous.Events.Implementation;
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
 with Asynchronous.Executors;
-with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Implementation;
+with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Objects;
-with Events;
-with Events.Callbacks;
-with Events.Clients;
-with Events.Composition;
-with Events.Composition.And_Gates;
-with Events.Composition.Shortcuts;
-with Events.Implementation;
-with Events.Interfaces;
-with Events.Servers;
-with Utilities;
-with Utilities.Atomic_Counters;
-with Utilities.Debug;
-with Utilities.References;
-with Utilities.References.Not_Null;
-with Utilities.References.Nullable;
-with Utilities.Signals;
-with Utilities.Testing;
+with Asynchronous.Tasks;
+with Asynchronous.Utilities;
+with Asynchronous.Utilities.Atomic_Counters;
+with Asynchronous.Utilities.Barriers;
+with Asynchronous.Utilities.Debug;
+with Asynchronous.Utilities.References;
+with Asynchronous.Utilities.References.Not_Null;
+with Asynchronous.Utilities.References.Nullable;
+with Asynchronous.Utilities.Signals;
+with Asynchronous.Utilities.Testing;
 pragma Warnings (On);
 
 with Microbenchmarks;
@@ -58,6 +59,6 @@ begin
 
 exception
    when E : others =>
-      Utilities.Debug.Display_Unhandled_Exception ("the main program", E);
+      Asynchronous.Utilities.Debug.Display_Unhandled_Exception ("the main program", E);
       raise;
 end Main;

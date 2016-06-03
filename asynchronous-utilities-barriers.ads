@@ -1,4 +1,4 @@
-package Utilities.Barriers is
+package Asynchronous.Utilities.Barriers is
 
    -- The signal primitive is intended as a lightweight way for one task to wait for N tasks do something.
    -- A typical use case for it is task shutdown in scenarios where terminate alternatives cannot be used.
@@ -12,4 +12,4 @@ package Utilities.Barriers is
    -- Run the unit tests for this package
    procedure Run_Tests;
 
-end Utilities.Barriers;
+end Asynchronous.Utilities.Barriers;

@@ -1,4 +1,4 @@
-package Asynchronous.Utilities is
+package Asynchronous.Utilities with Pure is
 
    -- This package groups together a set of simple components that haven't really found their place anywhere else.
    --    - Utilities.Atomic_Counters is for now an interface to GNAT's System.Atomic_Counters, allowing us to extend it.

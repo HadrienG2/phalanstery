@@ -1,4 +1,4 @@
-package Asynchronous.Executors is
+package Asynchronous.Executors with Pure is
 
    -- To execute asynchronous tasks, one must send them to executor objects. These will take care of running the task.
    -- In the future, executors might span multiple physical machines and perform distributed load balancing.

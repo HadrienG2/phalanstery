@@ -2,7 +2,7 @@ with Ada.Characters.Latin_1;
 with Ada.Task_Identification;
 with Ada.Text_IO;
 
-package body Utilities.Debug is
+package body Asynchronous.Utilities.Debug is
 
    procedure Display (Message : String) is
    begin
@@ -18,4 +18,4 @@ package body Utilities.Debug is
                  Ada.Exceptions.Exception_Information (Error));
    end Display_Unhandled_Exception;
 
-end Utilities.Debug;
+end Asynchronous.Utilities.Debug;

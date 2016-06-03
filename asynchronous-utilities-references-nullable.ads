@@ -1,5 +1,5 @@
 generic
-package Utilities.References.Nullable is
+package Asynchronous.Utilities.References.Nullable is
 
    -- Instances are manipulated through copyable and storable references
    -- In the Nullable case, references are null at creation time and must be explicitly initialized by the user.
@@ -34,4 +34,4 @@ private
    overriding procedure Adjust (Who : in out Reference);
    overriding procedure Finalize (Who : in out Reference);
 
-end Utilities.References.Nullable;
+end Asynchronous.Utilities.References.Nullable;

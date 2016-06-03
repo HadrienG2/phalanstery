@@ -1,11 +1,11 @@
 with Ada.Exceptions;
-with Events.Composition.And_Gates;
-with Events.Servers;
-with Events.Interfaces;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Events.Composition.And_Gates;
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Utilities.Exceptions;
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Events.Composition.Shortcuts is
+package body Asynchronous.Events.Composition.Shortcuts is
 
    function When_All (Wait_List : Event_List) return Event_Client is
    begin
@@ -35,7 +35,6 @@ package body Events.Composition.Shortcuts is
    procedure Run_Tests is
 
       use Utilities.Testing;
-      use type Ada.Exceptions.Exception_Id;
       use all type Events.Interfaces.Event_Status;
 
       procedure Test_When_None is
@@ -47,7 +46,7 @@ package body Events.Composition.Shortcuts is
       end Test_When_None;
 
       procedure Test_When_One is
-         Server : Servers.Server := Servers.Make_Event;
+         Server : Event_Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((1 => Server.Make_Client));
       begin
          Assert_Truth (Check   => (E.Status = Pending),
@@ -59,7 +58,7 @@ package body Events.Composition.Shortcuts is
       end Test_When_One;
 
       procedure Test_When_Done is
-         Server1, Server2 : Servers.Server := Servers.Make_Event;
+         Server1, Server2 : Event_Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Mark_Done;
@@ -72,8 +71,8 @@ package body Events.Composition.Shortcuts is
       end Test_When_Done;
 
       procedure Test_When_Canceled is
-         Server1 : Servers.Server := Servers.Make_Event;
-         Server2 : constant Servers.Server := Servers.Make_Event;
+         Server1 : Event_Server := Servers.Make_Event;
+         Server2 : constant Event_Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Cancel;
@@ -82,23 +81,25 @@ package body Events.Composition.Shortcuts is
       end Test_When_Canceled;
 
       procedure Test_When_Error is
-         Server1 : Servers.Server := Servers.Make_Event;
-         Server2 : constant Servers.Server := Servers.Make_Event;
+
+         Server1 : Event_Server := Servers.Make_Event;
+         Server2 : constant Event_Server := Servers.Make_Event;
          E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
+
          Custom_Error : exception;
+         Custom_Error_Occurrence : Ada.Exceptions.Exception_Occurrence;
          Test_Error : Ada.Exceptions.Exception_Occurrence;
+
       begin
-         begin
-            raise Custom_Error;
-         exception
-            when Err : Custom_Error =>
-               Server1.Mark_Error (Err);
-         end;
+         Utilities.Exceptions.Make_Occurrence (What  => Custom_Error'Identity,
+                                               Where => Custom_Error_Occurrence);
+         Server1.Mark_Error (Custom_Error_Occurrence);
          Assert_Truth (Check   => (E.Status = Error),
                        Message => "The output of When_All should be erronerous when one input event is erronerous");
 
          E.Get_Error (Test_Error);
-         Assert_Truth (Check   => (Ada.Exceptions.Exception_Identity (Test_Error) = Child_Error'Identity),
+         Assert_Truth (Check   => Utilities.Exceptions.Is_Occurrence_Of (Who  => Test_Error,
+                                                                         What => Child_Error'Identity),
                        Message => "Child_Error should be propagated when one input event of When_all is erronerous");
       end Test_When_Error;
 
@@ -115,4 +116,4 @@ begin
    -- Conditionally run the unit tests on startup
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Events.Composition.Shortcuts;
+end Asynchronous.Events.Composition.Shortcuts;

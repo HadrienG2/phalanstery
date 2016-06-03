@@ -1,5 +1,5 @@
 generic
-package Utilities.References.Not_Null is
+package Asynchronous.Utilities.References.Not_Null is
 
    -- Instances are manipulated through copyable and storable references
    -- In the Not_Null variant, these references are initialized with some target object at creation time.
@@ -27,4 +27,4 @@ private
    overriding procedure Adjust (Who : in out Reference);
    overriding procedure Finalize (Who : in out Reference);
 
-end Utilities.References.Not_Null;
+end Asynchronous.Utilities.References.Not_Null;

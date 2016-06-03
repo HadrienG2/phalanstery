@@ -1,9 +1,11 @@
-with Events.Clients;
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Servers;
 
-package Events.Composition is
+package Asynchronous.Events.Composition is
 
    -- First, let us define some convenience notations
    subtype Event_Client is Clients.Client;
+   subtype Event_Server is Servers.Server;
    type Event_List is array (Positive range <>) of Event_Client;
 
    -- Events, as an asynchronous abstraction should be composable. For now, we only support AND-gate-like composition.
@@ -16,9 +18,11 @@ package Events.Composition is
    --    - If all children are Done, the AND gate is Done
    --    - If any child is Canceled, the AND gate is Canceled
    --    - If any child is Error, the AND gate is Error with the special exception Child_Error
+   --
    Child_Error : exception;
 
-   -- In many case, explicit creation of composite events is not needed, and one can use a convenience function instead.
-   -- See Events.Composition.Shortcuts for these, or Events.Composition.And_Gates for the more complete mechanism.
+   -- The children of this package are organized as follows:
+   --    - Composition.And_Gates presents a raw AND gate abstraction.
+   --    - Composition.Shortcuts presents convenience shortcuts for event composition.
 
-end Events.Composition;
+end Asynchronous.Events.Composition;

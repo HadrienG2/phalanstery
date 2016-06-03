@@ -1,11 +1,12 @@
 with Asynchronous.Tasks;
-with Events.Clients;
-pragma Elaborate_All (Events.Clients);
+with Asynchronous.Events.Clients;
+pragma Elaborate_All (Asynchronous.Events.Clients);
 
 package Microbenchmarks is
 
    -- In this package, we implement a couple of basic asynchronous tasks which double as scheduler benchmarks.
    package Async_Tasks renames Asynchronous.Tasks;
+   subtype Event_Client is Asynchronous.Events.Clients.Client;
 
    -- This task finishes immediately
    type Null_Task is new Async_Tasks.Async_Task with null record;
@@ -36,14 +37,14 @@ package Microbenchmarks is
    -- This task waits for a pending event, that will be canceled by the next task
    type Custom_Wait_Task is new Async_Tasks.Async_Task with
       record
-         Target : Events.Clients.Client;
+         Target : Event_Client;
       end record;
    overriding function Run (Who : in out Custom_Wait_Task) return Async_Tasks.Return_Value;
 
    -- This task cancels an event and returns
    type Wait_Cancelation_Task is new Async_Tasks.Async_Task with
       record
-         Target : Events.Clients.Client;
+         Target : Event_Client;
       end record;
    overriding function Run (Who : in out Wait_Cancelation_Task) return Async_Tasks.Return_Value;
 

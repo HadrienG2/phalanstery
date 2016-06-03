@@ -1,5 +1,5 @@
-with Events.Clients;
-with Events.Composition;
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Composition;
 
 package Asynchronous.Tasks is
 
@@ -7,6 +7,8 @@ package Asynchronous.Tasks is
 
    -- When I say that asynchronous tasks are event-driven, I mean that they may wait for events to occur, and in general
    -- do so from the start. Thus, we need a data structures representing a list of events for tasks to wait on.
+   --
+   subtype Event_Client is Events.Clients.Client;
    subtype Event_Wait_List is Events.Composition.Event_List;
 
    -- On every run, a task returns status information to the underlying task scheduler.
@@ -17,7 +19,7 @@ package Asynchronous.Tasks is
    -- Task return values are created in the following way...
    Return_Finished : constant Return_Value;
    Return_Yielding : constant Return_Value;
-   function Return_Waiting (Cause : Events.Clients.Client) return Return_Value;
+   function Return_Waiting (Cause : Event_Client) return Return_Value;
    function Return_Waiting (Cause : Event_Wait_List) return Return_Value;
 
    -- ...and queried in the following way
@@ -29,8 +31,9 @@ package Asynchronous.Tasks is
    -- One thing to keep in mind is that for task queueing and load balancing to be efficient, you should design task
    -- types to be cheap to copy, for example by having them host pointers or references to arrays instead of raw arrays.
    --
-   -- Another important consideration is that in order to follow Ada's accessibility rules, task types should be defined
-   -- at global scope. The reason for this rule is that asynchronous task objects might otherwise outlive their type.
+   -- Another important consideration is that in order to follow Ada's accessibility rules, task types should currently
+   -- be defined at global scope. The reason for this rule is that asynchronous task objects might otherwise outlive
+   -- their type. I will see if it is possible to lift this restriction in the future.
    --
    type Async_Task is interface;
    function Run (Who : in out Async_Task) return Return_Value is abstract;

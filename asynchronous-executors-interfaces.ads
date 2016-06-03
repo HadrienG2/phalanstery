@@ -1,14 +1,13 @@
+with Asynchronous.Events.Clients;
 with Asynchronous.Tasks;
-with Events.Clients;
 with System.Multiprocessors;
 
 package Asynchronous.Executors.Interfaces is
 
    -- Let us define some common convenience notations for executors
-   package Async_Tasks renames Asynchronous.Tasks;
-   subtype Any_Async_Task is Async_Tasks.Async_Task'Class;
+   subtype Any_Async_Task is Tasks.Async_Task'Class;
    subtype Event_Client is Events.Clients.Client;
-   subtype Event_Wait_List is Async_Tasks.Event_Wait_List;
+   subtype Event_Wait_List is Tasks.Event_Wait_List;
 
    -- Errors in an asynchronous task's wait list will be propagated to the output event with a special exception.
    Error_In_Wait_List : exception;

@@ -1,8 +1,10 @@
+with Ada.Assertions;
 with Ada.Exceptions;
-with Utilities.Testing;
-pragma Elaborate_All (Utilities.Testing);
+with Asynchronous.Utilities.Exceptions;
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
-package body Events.Composition.And_Gates is
+package body Asynchronous.Events.Composition.And_Gates is
 
    Child_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
@@ -53,7 +55,7 @@ package body Events.Composition.And_Gates is
                   Event.Mark_Done;
                end if;
             when Interfaces.Done =>
-               Event.Mark_Done;  -- NOTE : This should not happen
+               raise Ada.Assertions.Assertion_Error;  -- This case should never be reached
             when Interfaces.Canceled =>
                Event.Cancel;
             when Interfaces.Error =>
@@ -106,11 +108,9 @@ package body Events.Composition.And_Gates is
 
       procedure Setup_Tests is
       begin
-         raise Custom_Error;
-      exception
-         when E : Custom_Error => Ada.Exceptions.Save_Occurrence (Target => Custom_Error_Occurence,
-                                                                  Source => E);
-      end;
+         Utilities.Exceptions.Make_Occurrence (Custom_Error'Identity,
+                                               Custom_Error_Occurence);
+      end Setup_Tests;
 
       procedure Test_Initial_State is
          Test_Gate : And_Gate;
@@ -118,7 +118,7 @@ package body Events.Composition.And_Gates is
       begin
          Assert_Truth (Check   => (Test_Client.Status = Interfaces.Done),
                        Message => "An AND gate with no children should be Done");
-      end;
+      end Test_Initial_State;
 
       procedure Test_Done_Child is
          Test_Gate : And_Gate;
@@ -256,15 +256,10 @@ package body Events.Composition.And_Gates is
 begin
 
    -- Save an occurence of Child_Error, to be propagated as needed
-   begin
-      raise Child_Error;
-   exception
-      when E : Child_Error =>
-         Ada.Exceptions.Save_Occurrence (Target => Child_Error_Occurence,
-                                         Source => E);
-   end;
+   Utilities.Exceptions.Make_Occurrence (What  => Child_Error'Identity,
+                                         Where => Child_Error_Occurence);
 
    -- Conditionally run the unit tests on startup
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Events.Composition.And_Gates;
+end Asynchronous.Events.Composition.And_Gates;
