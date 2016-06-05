@@ -18,15 +18,21 @@ package body Asynchronous.Utilities.References.Nullable is
 
    overriding procedure Adjust (Who : in out Reference) is
    begin
-      Atomic_Counters.Increment (Who.Instance.Reference_Count);
+      if not Who.Is_Null then
+         Atomic_Counters.Increment (Who.Instance.Reference_Count);
+      end if;
    end Adjust;
 
    overriding procedure Finalize (Who : in out Reference) is
       procedure Free_Instance is new Ada.Unchecked_Deallocation (Packaged_Instance, Instance_Access);
    begin
+      -- Normal reference counting workflow
       if not Who.Is_Null and then Atomic_Counters.Decrement (Who.Instance.Reference_Count) then
          Free_Instance (Who.Instance);
       end if;
+
+      -- Account for the possibility of multiple calls to Finalize that is allowed by the Ada standard
+      Who.Instance := null;
    end Finalize;
 
 
