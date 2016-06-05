@@ -10,7 +10,6 @@ package Asynchronous.Events.Implementation is
    -- This package features an implementation of event objects as described by Events.Interfaces.
    -- It does not implement events clients and servers directly, for that see Events.Clients and Events.Servers.
 
-   use all type Interfaces.Event_Status;
    use type Interfaces.Event_Listener_Reference;
 
    package Event_Listener_Lists is

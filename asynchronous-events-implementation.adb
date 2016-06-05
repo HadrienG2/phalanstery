@@ -5,6 +5,8 @@ pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Events.Implementation is
 
+   use all type Interfaces.Event_Status;
+
    protected body Event is
 
       function Status return Interfaces.Event_Status is (Current_Status);
