@@ -4,11 +4,11 @@ pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Utilities.References.Not_Null is
 
-   function "=" (A, B : Reference) return Boolean is (A.Instance = B.Instance);
+   overriding function "=" (A, B : Reference) return Boolean is (A.Instance = B.Instance);
 
-   function Get (R : Reference) return Accessor is (R.Instance.Data'Access);
+   overriding function Get (R : Reference) return Accessor is (R.Instance.Data'Access);
 
-   function Set (R : Reference) return Mutator is (R.Instance.Data'Access);
+   overriding function Set (R : Reference) return Mutator is (R.Instance.Data'Access);
 
    overriding procedure Initialize (Who : in out Reference) is
    begin

@@ -84,7 +84,7 @@ package body Asynchronous.Events.Composition.And_Gates is
    function Make_Client (From : And_Gate) return Event_Client is
    begin
       return C : Event_Client do
-        From.Ref.Set.Make_Client (C);
+         From.Ref.Set.Make_Client (C);
       end return;
    end Make_Client;
 

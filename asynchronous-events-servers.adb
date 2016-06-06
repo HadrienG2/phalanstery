@@ -176,7 +176,7 @@ package body Asynchronous.Events.Servers is
             Assert_Truth (Check   => (Ada.Exceptions.Exception_Identity (Test_Error) = Ada.Exceptions.Null_Id),
                           Message => "Canceled clients should hold no error");
 
-            -- NOTE : Non-blocking test of Wait_Completion's blocking-ness may only be done for the Event implementation !
+            -- NOTE : Non-blocking test of Wait_Completion may only be done for the Event implementation !
 
             Assert_Truth (Check   => (Test_Callback_Calls = 1) and (Last_Status = Canceled),
                           Message => "Client callbacks should be fired when an event is canceled");

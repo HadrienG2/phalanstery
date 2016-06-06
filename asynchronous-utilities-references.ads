@@ -14,7 +14,7 @@ package Asynchronous.Utilities.References is
    type Reference_Base is abstract new Ada.Finalization.Controlled with private;
 
    -- One can check whether two references point to the same object
-   function "=" (A, B : Reference_Base) return Boolean is abstract;
+   overriding function "=" (A, B : Reference_Base) return Boolean is abstract;
 
    -- Access to the underlying object must be requested explicitly
    function Get (R : Reference_Base) return Accessor is abstract;

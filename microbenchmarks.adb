@@ -115,12 +115,14 @@ package body Microbenchmarks is
          Test_Event.Wait_Completion (Final_Status);
          Direct_Run_Duration := Ada.Calendar.Clock - Start_Time;
          Ada.Text_IO.Put_Line ("Direct run took " & Duration'Image (Direct_Run_Duration) & " s (" &
-                                 Duration'Image (Sequential_Duration/Direct_Run_Duration) & "x faster than serial async)");
+                                 Duration'Image (Sequential_Duration / Direct_Run_Duration) &
+                                 "x faster than serial async)");
 
          -- Estimate scheduling overhead
          declare
             Total_Scheduling_Duration : constant Duration := Sequential_Duration - Direct_Run_Duration;
-            Scheduling_Overhead : constant Float := Float (Total_Scheduling_Duration) / (Float (How_Many * Internal_Iterations));
+            Scheduling_Overhead : constant Float :=
+              Float (Total_Scheduling_Duration) / (Float (How_Many * Internal_Iterations));
             type Rounded_Overhead is delta 0.01 range 0.0 .. 100.0;
             Overhead_In_Microseconds : constant Rounded_Overhead := Rounded_Overhead (Scheduling_Overhead * 10.0**6);
          begin
@@ -146,7 +148,7 @@ package body Microbenchmarks is
       begin
 
          Benchmark_Task (What                => My_Task,
-                         How_Many            => 2*Number_Of_CPUs,
+                         How_Many            => 2 * Number_Of_CPUs,
                          Title               => "yielding",
                          Feature_Name        => "yielding in a task",
                          Internal_Iterations => Yielding_Iterations);
@@ -218,7 +220,7 @@ package body Microbenchmarks is
 
          -- Estimate scheduling overhead
          declare
-            Scheduling_Overhead : constant Float := Float (Sequential_Duration) / Float (Consumer_Count+1);
+            Scheduling_Overhead : constant Float := Float (Sequential_Duration) / Float (Consumer_Count + 1);
             type Rounded_Overhead is delta 0.01 range 0.0 .. 100.0;
             Overhead_In_Microseconds : constant Rounded_Overhead := Rounded_Overhead (Scheduling_Overhead * 10.0**6);
          begin

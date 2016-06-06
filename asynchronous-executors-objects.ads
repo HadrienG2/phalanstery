@@ -31,7 +31,7 @@ package Asynchronous.Executors.Objects is
    overriding function Schedule_Task (Where : in out Executor;
                                       What : Interfaces.Any_Async_Task) return Interfaces.Event_Client;
 
-  -- Schedule a task which waits for one event, get an event to synchronize on
+   -- Schedule a task which waits for one event, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Task;
                                       After : Interfaces.Event_Client) return Interfaces.Event_Client;
