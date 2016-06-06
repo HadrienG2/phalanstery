@@ -8,42 +8,34 @@ with Asynchronous.Utilities.Barriers;
 with Asynchronous.Utilities.Debug;
 with Asynchronous.Utilities.Signals;
 
-package body Asynchronous.Executors.Implementation is
+package body Asynchronous.Executors.Executor_Tasks is
 
-   -- Let us define some convenience notations first
    subtype Task_Instance_Reference is Task_Instances.References.Reference;
    subtype Task_Queue_Reference is Task_Queues.Reference;
    use all type Events.Interfaces.Event_Status;
 
-   -- Let us also define two executor scheduling policies:
-   --    - In batch mode, executors run tasks as long as they can, which maximizes computation performance.
-   --    - In round-robin mode, executors switch between tasks in a cyclic FIFO fashion, which minimizes starvation.
-   type Scheduling_Policy is (Batch, Round_Robin);
-   Active_Scheduling_Policy : constant Scheduling_Policy := Batch;
-
-   -- Now we can define task executors
    task body Executor_Task is
 
-      -- This is the FIFO queue that should be used by this executor
+      -- Executor tasks hold ready tasks (aka work items) on a FIFO queue
       Ready_Tasks : constant Task_Queue_Reference := Task_Queues.Make_Task_Queue;
 
-      -- Because worker threads interact with protected objects, terminate alternatives cannot be used. Instead, we go
-      -- for a manual termination procedure, which is requested from workers using a signal object, and acknowledged
-      -- using a barrier object.
+      -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
+      -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
+      -- termination using a signal object, and acknowledges it using a barrier object.
       Stop_Request : Utilities.Signals.Signal;
       Stop_Barrier : Utilities.Barriers.Barrier (Natural (Number_Of_Workers));
 
-      -- Ready tasks are executed by workers, which are defined as follows
+      -- Work items are executed by a flock of worker threads, which are defined as follows
       task type Worker;
       task body Worker is
 
-         -- This function runs incoming tasks and tells whether they are yielding or not
+         -- This function runs a work item and tells whether it is yielding or not
          function Run_Work_Item (What : Task_Instance_Reference) return Boolean is
+            use all type Tasks.Return_Status;
+            Work_Item_Yielding : Boolean := False;
          begin
             declare
-               use all type Tasks.Return_Status;
                Work_Item_Output : constant Tasks.Return_Value := What.Get.Task_Object.Run;
-               Work_Item_Yielding : Boolean := False;
             begin
                case Tasks.Status (Work_Item_Output) is
                   when Finished =>
@@ -63,7 +55,7 @@ package body Asynchronous.Executors.Implementation is
                return False;
          end Run_Work_Item;
 
-         -- This function processes work items according to the current scheduling policy
+         -- This function processes a work item according to the current scheduling policy
          procedure Process_Work_Item (What : Task_Instance_Reference) is
          begin
             case Active_Scheduling_Policy is
@@ -72,13 +64,13 @@ package body Asynchronous.Executors.Implementation is
                      Ready_Tasks.Set.Enqueue (What);
                   end if;
                when Batch =>
-                  while Run_Work_Item (What) loop
-                     null;
+                  loop
+                     exit when not Run_Work_Item (What);
                   end loop;
             end case;
          end Process_Work_Item;
 
-         -- Work will continue as long as this flag is active
+         -- Workers will wait for work as long as this flag is active
          Worker_Active : Boolean := True;
 
       begin
@@ -86,7 +78,6 @@ package body Asynchronous.Executors.Implementation is
             declare
                Work_Item : Task_Instance_Reference;
             begin
-               -- Operate in an even-driven fashion during normal operation
                select
                   Ready_Tasks.Set.Dequeue (Work_Item);
                   Process_Work_Item (Work_Item);
@@ -108,7 +99,7 @@ package body Asynchronous.Executors.Implementation is
       type Worker_Array is array (Interfaces.Worker_Count range <>) of Worker;
       Workers : Worker_Array (1 .. Number_Of_Workers) with Unreferenced;
 
-      -- Finally, executor activity is controlled by a shared flag
+      -- Executor tasks will wait for work until this flag goes to False
       Executor_Active : Boolean := True;
 
    begin
@@ -141,4 +132,4 @@ package body Asynchronous.Executors.Implementation is
          raise;
    end Executor_Task;
 
-end Asynchronous.Executors.Implementation;
+end Asynchronous.Executors.Executor_Tasks;

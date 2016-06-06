@@ -1,5 +1,5 @@
 with Ada.Finalization;
-with Asynchronous.Executors.Implementation;
+private with Asynchronous.Executors.Executor_Tasks;
 with Asynchronous.Executors.Interfaces;
 
 package Asynchronous.Executors.Objects is
@@ -47,7 +47,7 @@ private
    -- Executor_Task to terminate, thusly not calling the finalizer of Executor, which would send the Stop signal
    -- to the executor task, which would in turn be needed for that task to stop. AKA a good old deadlock.
 
-   subtype Executor_Task is Implementation.Executor_Task;
+   subtype Executor_Task is Executor_Tasks.Executor_Task;
 
    type Executor_Access is access Executor_Task;
 

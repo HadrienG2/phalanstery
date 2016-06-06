@@ -10,7 +10,6 @@ with Asynchronous.Events.Implementation;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors;
-with Asynchronous.Executors.Implementation;
 with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Objects;
 with Asynchronous.Tasks;
