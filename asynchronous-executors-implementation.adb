@@ -1,11 +1,10 @@
 with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
 with Ada.Exceptions;
-with Ada.Finalization;
-with Ada.Unchecked_Deallocation;
 with Asynchronous.Events.Composition.Shortcuts;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
+with Asynchronous.Executors.Task_Instances.References;
 with Asynchronous.Tasks;
 with Asynchronous.Utilities.Barriers;
 with Asynchronous.Utilities.Debug;
@@ -13,46 +12,13 @@ with Asynchronous.Utilities.Exceptions;
 with Asynchronous.Utilities.References;
 with Asynchronous.Utilities.References.Nullable;
 with Asynchronous.Utilities.Signals;
-pragma Elaborate_All (Asynchronous.Utilities.References.Nullable);
 
 package body Asynchronous.Executors.Implementation is
 
    -- Let us define some convenience notations first
    subtype Finished_Event_Status is Events.Interfaces.Finished_Event_Status;
+   subtype Task_Instance_Reference is Task_Instances.References.Task_Instance_Reference;
    use all type Events.Interfaces.Event_Status;
-
-   -- === TASK INSTANCES ===
-
-   -- An executor manipulates task instances, which are composed of a task object and some associated metadata
-   type Task_Access is access Interfaces.Any_Async_Task;
-   type Task_Instance is new Ada.Finalization.Limited_Controlled with
-      record
-         Task_Object : Task_Access := null;
-         Completion_Event : Events.Servers.Server := Events.Servers.Make_Event;
-      end record;
-   pragma Preelaborable_Initialization (Task_Instance);
-
-   -- Because instances must contain pointers, we should make sure that they are always finalized properly
-   overriding procedure Finalize (Who : in out Task_Instance) is
-      procedure Liberate_Task is new Ada.Unchecked_Deallocation (Interfaces.Any_Async_Task, Task_Access);
-   begin
-      Liberate_Task (Who.Task_Object);
-   end Finalize;
-
-   -- To be able to move task instances around, we need some kind of reference to them. In C++ terms, what we would
-   -- really like is a unique_ptr, as we only need move semantics. But a shared reference, although somewhat
-   -- inefficient from a performance point of view, will do fine as a first implementation.
-   package Task_Instance_Reference_Base is new Utilities.References (Task_Instance);
-   package Task_Instance_References is new Task_Instance_Reference_Base.Nullable;
-   subtype Task_Instance_Reference is Task_Instance_References.Reference;
-
-   -- There should be a convenient way to make a reference-counted task instance from a task object
-   function Make_Task_Instance (From : Interfaces.Any_Async_Task) return Task_Instance_Reference is
-   begin
-      return Ref : constant Task_Instance_Reference := Task_Instance_References.Make do
-         Ref.Set.Task_Object := new Interfaces.Any_Async_Task'(From);
-      end return;
-   end Make_Task_Instance;
 
    -- === TASK QUEUES ===
 
@@ -230,7 +196,7 @@ package body Asynchronous.Executors.Implementation is
                                   After : Interfaces.Event_Wait_List;
                                   Event : out Interfaces.Event_Client) do
                declare
-                  Work_Item : constant Task_Instance_Reference := Make_Task_Instance (What);
+                  Work_Item : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (What);
                begin
                   Event := Work_Item.Get.Completion_Event.Make_Client;
                   Schedule_Pending_Task (Who   => Work_Item,
