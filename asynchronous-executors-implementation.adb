@@ -1,37 +1,23 @@
-with Ada.Containers.Synchronized_Queue_Interfaces;
-with Ada.Containers.Unbounded_Synchronized_Queues;
 with Ada.Exceptions;
 with Asynchronous.Events.Composition.Shortcuts;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors.Task_Instances.References;
+with Asynchronous.Executors.Task_Queues;
 with Asynchronous.Tasks;
 with Asynchronous.Utilities.Barriers;
 with Asynchronous.Utilities.Debug;
 with Asynchronous.Utilities.Exceptions;
-with Asynchronous.Utilities.References;
-with Asynchronous.Utilities.References.Nullable;
 with Asynchronous.Utilities.Signals;
+pragma Elaborate_All (Asynchronous.Utilities.Exceptions);
 
 package body Asynchronous.Executors.Implementation is
 
    -- Let us define some convenience notations first
    subtype Finished_Event_Status is Events.Interfaces.Finished_Event_Status;
-   subtype Task_Instance_Reference is Task_Instances.References.Task_Instance_Reference;
+   subtype Task_Instance_Reference is Task_Instances.References.Reference;
+   subtype Task_Queue_Reference is Task_Queues.Reference;
    use all type Events.Interfaces.Event_Status;
-
-   -- === TASK QUEUES ===
-
-   -- Ready asynchronous tasks will be put on a FIFO queue, and executed once worker threads become available.
-   package Task_Queue_Interfaces is new Ada.Containers.Synchronized_Queue_Interfaces (Task_Instance_Reference);
-   package Task_Queues is new Ada.Containers.Unbounded_Synchronized_Queues (Task_Queue_Interfaces);
-
-   -- Because task queues must be at global scope in order to allow for asynchronous queueing, and must be
-   -- shared across multiple tasks, reference counting must be used here as well.
-   package Task_Queue_Reference_Base is new Utilities.References (Task_Queues.Queue);
-   package Task_Queue_References is new Task_Queue_Reference_Base.Nullable;
-   subtype Task_Queue_Reference is Task_Queue_References.Reference;
-   function Make_Task_Queue return Task_Queue_Reference renames Task_Queue_References.Make;
 
    -- === TASK SCHEDULING ===
 
@@ -103,7 +89,7 @@ package body Asynchronous.Executors.Implementation is
    task body Executor_Task is
 
       -- This is the FIFO queue that should be used by this executor
-      Ready_Tasks : constant Task_Queue_Reference := Make_Task_Queue;
+      Ready_Tasks : constant Task_Queue_Reference := Task_Queues.Make_Task_Queue;
 
       -- Because worker threads interact with protected objects, terminate alternatives cannot be used. Instead, we go
       -- for a manual termination procedure, which is requested from workers using a signal object, and acknowledged
