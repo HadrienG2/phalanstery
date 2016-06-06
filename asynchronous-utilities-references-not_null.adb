@@ -78,14 +78,15 @@ package body Asynchronous.Utilities.References.Not_Null is
 
       procedure Test_Finalize is
          A1 : Reference;
+         A2 : Reference := A1;
       begin
-         declare
-            A2 : constant Reference := A1 with Unreferenced;
-         begin
-            null;
-         end;
+         Finalize (A2);
          Assert_Truth (Check   => Atomic_Counters.Is_One (A1.Instance.Reference_Count),
                        Message => "Reference counts should go back to one after copy finalization");
+
+         Finalize (A2);
+         Assert_Truth (Check   => Atomic_Counters.Is_One (A1.Instance.Reference_Count),
+                       Message => "Reference counts should be unaffected by multiple finalization");
       end Test_Finalize;
 
    begin

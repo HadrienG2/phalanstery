@@ -113,10 +113,19 @@ package body Asynchronous.Utilities.References.Nullable is
 
       procedure Test_Finalize is
          R1 : constant Reference := Make;
+         R2 : Reference := R1;
       begin
+         Finalize (R2);
+         Assert_Truth (Check   => Atomic_Counters.Is_One (R1.Instance.Reference_Count),
+                       Message => "Reference counts should go back to one after copy finalization");
+
+         Finalize (R2);
+         Assert_Truth (Check   => Atomic_Counters.Is_One (R1.Instance.Reference_Count),
+                       Message => "Reference counts should be unaffected by multiple finalization");
+
          begin
             declare
-               R2 : Reference with Unreferenced;
+               R3 : Reference with Unreferenced;
             begin
                null;
             end;
@@ -124,14 +133,6 @@ package body Asynchronous.Utilities.References.Nullable is
             when others =>
                Fail ("Finalizing a null reference should not fail");
          end;
-
-         declare
-            R3 : constant Reference := R1 with Unreferenced;
-         begin
-            null;
-         end;
-         Assert_Truth (Check   => Atomic_Counters.Is_One (R1.Instance.Reference_Count),
-                       Message => "Reference counts should go back to one after copy finalization");
       end Test_Finalize;
 
    begin
