@@ -2,7 +2,8 @@ with Ada.Assertions;
 with Ada.Exceptions;
 with Asynchronous.Utilities.Exceptions;
 with Asynchronous.Utilities.Testing;
-pragma Elaborate_All (Asynchronous.Utilities.Testing);
+pragma Elaborate_All (Asynchronous.Utilities.Exceptions,
+                      Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Events.Composition.And_Gates is
 
