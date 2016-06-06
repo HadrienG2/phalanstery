@@ -64,7 +64,7 @@ package body Asynchronous.Executors.Implementation is
       Input_Event : Interfaces.Event_Client := Events.Composition.Shortcuts.When_All (After);
    begin
       case Input_Event.Status is
-         when Events.Interfaces.Finished_Event_Status =>
+         when Finished_Event_Status =>
             Schedule_Ready_Task (Who          => Who,
                                  According_To => Input_Event.Status,
                                  On           => On);
@@ -198,7 +198,6 @@ package body Asynchronous.Executors.Implementation is
             end Stop;
          end select;
       end loop;
-
    exception
       when E : others =>
          Utilities.Debug.Display_Unhandled_Exception ("an asynchronous executor", E);
