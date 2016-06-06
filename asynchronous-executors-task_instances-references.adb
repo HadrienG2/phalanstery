@@ -33,6 +33,7 @@ package body Asynchronous.Executors.Task_Instances.References is
       T_Instance : constant Reference := Make_Task_Instance (T);
 
    begin
+
       Assert_Truth (Check   => (not T_Instance.Is_Null),
                     Message => "Make_Task_Instance should return an initialized task instance ref");
       Assert_Truth (Check   => (T_Instance.Get.Task_Object /= null),
@@ -43,6 +44,11 @@ package body Asynchronous.Executors.Task_Instances.References is
                     Message => "Make_Task_Instance should copy instance data as appropriate");
       Assert_Truth (Check   => (not T_Instance.Get.Completion_Event.Is_Null),
                     Message => "Make_Task_Instance should allocate a completion event");
+
+      T_Instance.Set.Finalize;
+      Assert_Truth (Check   => (T_Instance.Get.Task_Object = null),
+                    Message => "Task instances should not leak task object storage on finalization");
+
    end Run_Tests;
 
 begin
