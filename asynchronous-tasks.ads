@@ -24,7 +24,8 @@ package Asynchronous.Tasks is
 
    -- ...and queried in the following way
    function Status (What : Return_Value) return Return_Status;
-   function Wait_List (What : Return_Value) return Event_Wait_List;
+   function Wait_List (What : Return_Value) return Event_Wait_List
+     with Pre => (Status (What) = Waiting);
 
    -- Asynchronous tasks are user-defined, by inheriting from a common interface.
    --
@@ -37,6 +38,9 @@ package Asynchronous.Tasks is
    --
    type Async_Task is interface;
    function Run (Who : in out Async_Task) return Return_Value is abstract;
+
+   -- Run the unit tests for this package
+   procedure Run_Tests;
 
 private
 

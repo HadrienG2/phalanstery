@@ -13,4 +13,7 @@ package Asynchronous.Executors.Task_Instances.References is
    -- There should be a convenient way to make a reference-counted task instance from a task object
    function Make_Task_Instance (From : Interfaces.Any_Async_Task) return Reference;
 
+   -- Run the unit tests for this package
+   procedure Run_Tests;
+
 end Asynchronous.Executors.Task_Instances.References;
