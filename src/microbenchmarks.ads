@@ -4,7 +4,7 @@ pragma Elaborate_All (Asynchronous.Events.Clients);
 
 package Microbenchmarks is
 
-   -- In this package, we implement a couple of basic asynchronous tasks which double as scheduler benchmarks.
+   -- In this package, we implement a couple of basic asynchronous tasks which provide scheduler microbenchmarks.
    package Async_Tasks renames Asynchronous.Tasks;
    subtype Event_Client is Asynchronous.Events.Clients.Client;
 
@@ -47,6 +47,7 @@ package Microbenchmarks is
          Target : Event_Client;
       end record;
    overriding function Run (Who : in out Wait_Cancelation_Task) return Async_Tasks.Return_Value;
+
 
    -- This procedure runs scheduler benchmarks based on the tasks above
    procedure Run_Benchmarks;

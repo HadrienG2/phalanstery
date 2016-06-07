@@ -18,7 +18,7 @@ private package Asynchronous.Executors.Executor_Tasks is
 private
 
    -- Task executors can currently operate according to one of two statically selected scheduling policies:
-   --    - In batch mode, executors run tasks as long as they can, which maximizes computation performance.
+   --    - In batch mode, executors run tasks as long as they can, which maximizes computational performance.
    --    - In round-robin mode, executors switch between tasks in a cyclic FIFO fashion, which minimizes starvation.
    type Scheduling_Policy is (Batch, Round_Robin);
    Active_Scheduling_Policy : constant Scheduling_Policy := Batch;
