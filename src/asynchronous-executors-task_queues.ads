@@ -48,4 +48,7 @@ package Asynchronous.Executors.Task_Queues is
    -- Because task queues will be referred to from multiple places, we need some kind of copyable reference to them.
    -- Due to Ada elaboration technicalities, these references must be implemented in a child package, called References.
 
+   -- Run the unit tests for this package
+   procedure Run_Tests;
+
 end Asynchronous.Executors.Task_Queues;
