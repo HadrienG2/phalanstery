@@ -8,7 +8,7 @@ with Ada.Text_IO;
 with System.Multiprocessors;
 pragma Elaborate_All (Asynchronous.Events.Servers);
 
-package body Microbenchmarks is
+package body Benchmarks is
 
    Ready_Event, Canceled_Event, Error_Event : Event_Client;
 
@@ -17,13 +17,9 @@ package body Microbenchmarks is
    overriding function Run (Who : in out Yielding_Task) return Async_Tasks.Return_Value is
    begin
       if Who.Counter < Who.Iterations then
-         -- Keep the CPU busy for a while in the most inefficient way we can think of
          Who.Counter := Who.Counter + 1;
-
-         -- Tell the scheduler that we still have work to do
          return Async_Tasks.Return_Yielding;
       else
-         -- Mark the task as finished
          return Async_Tasks.Return_Finished;
       end if;
    end Run;
@@ -70,7 +66,7 @@ package body Microbenchmarks is
 
          Test_Event : Event_Client;
 
-         Start_Time : Ada.Calendar.Time;
+         Start_Time, Event_Init_Time, Schedule_Time, When_All_Time, Wait_Over_Time, End_Time : Ada.Calendar.Time;
          Parallel_Duration, Sequential_Duration, Direct_Run_Duration : Duration;
 
       begin
@@ -79,24 +75,42 @@ package body Microbenchmarks is
          Ada.Text_IO.Put_Line ("=== Testing the executor's " & Title & " performance ===");
          Start_Time := Ada.Calendar.Clock;
          declare
-            Parallel_Events : constant Asynchronous.Events.Composition.Event_List (1 .. How_Many) :=
-              (others => Default_Executor.Schedule_Task (What));
+            Parallel_Events : Asynchronous.Events.Composition.Event_List (1 .. How_Many);
          begin
+            Event_Init_Time := Ada.Calendar.Clock;
+            Parallel_Events := (others => Default_Executor.Schedule_Task (What));
+            Schedule_Time := Ada.Calendar.Clock;
             Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events);
+            When_All_Time := Ada.Calendar.Clock;
+            Test_Event.Wait_Completion (Final_Status);
+            Wait_Over_Time := Ada.Calendar.Clock;
          end;
-         Test_Event.Wait_Completion (Final_Status);
-         Parallel_Duration := Ada.Calendar.Clock - Start_Time;
-         Ada.Text_IO.Put_Line ("Parallel run took " & Duration'Image (Parallel_Duration) & " s");
+         End_Time := Ada.Calendar.Clock;
+
+         -- Analyze parallel results
+         Parallel_Duration := End_Time - Start_Time;
+         Ada.Text_IO.Put_Line ("Parallel run took " & Duration'Image (Parallel_Duration) & " s:");
+         Ada.Text_IO.Put_Line ("   - Event creation took " & Duration'Image (Event_Init_Time - Start_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Scheduling took " & Duration'Image (Schedule_Time - Event_Init_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Composition took " & Duration'Image (When_All_Time - Schedule_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Synchronization took " & Duration'Image (Wait_Over_Time - When_All_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Event liberation took " & Duration'Image (End_Time - Wait_Over_Time) & " s.");
 
          -- Serial version
          Start_Time := Ada.Calendar.Clock;
          for I in 1 .. How_Many loop
             Test_Event := Default_Executor.Schedule_Task (What, Test_Event);
          end loop;
+         Schedule_Time := Ada.Calendar.Clock;
          Test_Event.Wait_Completion (Final_Status);
-         Sequential_Duration := Ada.Calendar.Clock - Start_Time;
+         End_Time := Ada.Calendar.Clock;
+
+         -- Analyze sequential results
+         Sequential_Duration := End_Time - Start_Time;
          Ada.Text_IO.Put_Line ("Serial run took " & Duration'Image (Sequential_Duration) & " s (" &
-                                 Duration'Image (Sequential_Duration / Parallel_Duration) & "x slower than parallel)");
+                                 Duration'Image (Sequential_Duration / Parallel_Duration) & "x slower than parallel):");
+         Ada.Text_IO.Put_Line ("   - Scheduling took " & Duration'Image (Schedule_Time - Start_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Synchronization took " & Duration'Image (End_Time - Schedule_Time) & " s.");
 
          -- Direct run (no executor)
          Start_Time := Ada.Calendar.Clock;
@@ -112,7 +126,6 @@ package body Microbenchmarks is
                end;
             end;
          end loop;
-         Test_Event.Wait_Completion (Final_Status);
          Direct_Run_Duration := Ada.Calendar.Clock - Start_Time;
          Ada.Text_IO.Put_Line ("Direct run took " & Duration'Image (Direct_Run_Duration) & " s (" &
                                  Duration'Image (Sequential_Duration / Direct_Run_Duration) &
@@ -139,7 +152,7 @@ package body Microbenchmarks is
          Benchmark_Task (What         => My_Task,
                          How_Many     => 150_000,
                          Title        => "startup",
-                         Feature_Name => "starting a task");
+                         Feature_Name => "running the null task");
       end Benchmark_Startup;
 
       procedure Benchmark_Yielding is
@@ -187,7 +200,7 @@ package body Microbenchmarks is
 
          Test_Event : Event_Client;
 
-         Start_Time : Ada.Calendar.Time;
+         Start_Time, Event_Init_Time, Schedule_Time, When_All_Time, Wait_Over_Time, End_Time : Ada.Calendar.Time;
          Parallel_Duration, Sequential_Duration : Duration;
 
       begin
@@ -197,15 +210,28 @@ package body Microbenchmarks is
          Start_Time := Ada.Calendar.Clock;
          declare
             use type Asynchronous.Events.Composition.Event_List;
-            Parallel_Events : constant Asynchronous.Events.Composition.Event_List (1 .. Consumer_Count) :=
-              (others => Default_Executor.Schedule_Task (Consumer_Task_P));
-            Producer_Event : constant Event_Client := Default_Executor.Schedule_Task (Producer_Task_P);
+            Parallel_Events : Asynchronous.Events.Composition.Event_List (1 .. Consumer_Count);
+            Producer_Event : Event_Client;
          begin
+            Event_Init_Time := Ada.Calendar.Clock;
+            Parallel_Events := (others => Default_Executor.Schedule_Task (Consumer_Task_P));
+            Producer_Event := Default_Executor.Schedule_Task (Producer_Task_P);
+            Schedule_Time := Ada.Calendar.Clock;
             Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events & Producer_Event);
+            When_All_Time := Ada.Calendar.Clock;
+            Test_Event.Wait_Completion (Final_Status);
+            Wait_Over_Time := Ada.Calendar.Clock;
          end;
-         Test_Event.Wait_Completion (Final_Status);
-         Parallel_Duration := Ada.Calendar.Clock - Start_Time;
-         Ada.Text_IO.Put_Line ("Parallel run took " & Duration'Image (Parallel_Duration) & " s");
+         End_Time := Ada.Calendar.Clock;
+
+         -- Analyze parallel results
+         Parallel_Duration := End_Time - Start_Time;
+         Ada.Text_IO.Put_Line ("Parallel run took " & Duration'Image (Parallel_Duration) & " s:");
+         Ada.Text_IO.Put_Line ("   - Event creation took " & Duration'Image (Event_Init_Time - Start_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Scheduling took " & Duration'Image (Schedule_Time - Event_Init_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Composition took " & Duration'Image (When_All_Time - Schedule_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Synchronization took " & Duration'Image (Wait_Over_Time - When_All_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Event liberation took " & Duration'Image (End_Time - Wait_Over_Time) & " s.");
 
          -- Serial version
          Start_Time := Ada.Calendar.Clock;
@@ -213,10 +239,16 @@ package body Microbenchmarks is
             Test_Event := Default_Executor.Schedule_Task (Consumer_Task_S, Test_Event);
          end loop;
          Test_Event := Default_Executor.Schedule_Task (Producer_Task_S, Test_Event);
+         Schedule_Time := Ada.Calendar.Clock;
          Test_Event.Wait_Completion (Final_Status);
-         Sequential_Duration := Ada.Calendar.Clock - Start_Time;
+         End_Time := Ada.Calendar.Clock;
+
+         -- Analyze sequential results
+         Sequential_Duration := End_Time - Start_Time;
          Ada.Text_IO.Put_Line ("Serial run took " & Duration'Image (Sequential_Duration) & " s (" &
-                                 Duration'Image (Sequential_Duration / Parallel_Duration) & "x slower than parallel)");
+                                 Duration'Image (Sequential_Duration / Parallel_Duration) & "x slower than parallel):");
+         Ada.Text_IO.Put_Line ("   - Scheduling took " & Duration'Image (Schedule_Time - Start_Time) & " s.");
+         Ada.Text_IO.Put_Line ("   - Synchronization took " & Duration'Image (End_Time - Schedule_Time) & " s.");
 
          -- Estimate scheduling overhead
          declare
@@ -267,4 +299,4 @@ begin
       end;
    end;
 
-end Microbenchmarks;
+end Benchmarks;

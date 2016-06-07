@@ -28,7 +28,7 @@ with Asynchronous.Utilities.Signals;
 with Asynchronous.Utilities.Testing;
 pragma Warnings (On);
 
-with Microbenchmarks;
+with Benchmarks;
 
 procedure Main is
 
@@ -59,8 +59,8 @@ procedure Main is
 
 begin
 
-   null; -- DEBUG : Remove scheduler benchmark for coverage tests
-   -- Microbenchmarks.Run_Benchmarks; -- DEBUG : Test performance using microbenchmarks
+   -- null; -- DEBUG : Remove scheduler benchmark for coverage tests
+   Benchmarks.Run_Benchmarks; -- DEBUG : Test scheduling performance using benchmarks
 
 exception
    when E : others =>

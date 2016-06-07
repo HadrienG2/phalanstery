@@ -2,9 +2,9 @@ with Asynchronous.Tasks;
 with Asynchronous.Events.Clients;
 pragma Elaborate_All (Asynchronous.Events.Clients);
 
-package Microbenchmarks is
+package Benchmarks is
 
-   -- In this package, we implement a couple of basic asynchronous tasks which provide scheduler microbenchmarks.
+   -- In this package, we implement a couple of very basic asynchronous tasks which provide scheduler benchmarks.
    package Async_Tasks renames Asynchronous.Tasks;
    subtype Event_Client is Asynchronous.Events.Clients.Client;
 
@@ -52,4 +52,4 @@ package Microbenchmarks is
    -- This procedure runs scheduler benchmarks based on the tasks above
    procedure Run_Benchmarks;
 
-end Microbenchmarks;
+end Benchmarks;
