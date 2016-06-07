@@ -2,8 +2,7 @@ with Ada.Finalization;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors.Interfaces;
 
--- TODO : Make private if possible
-private package Asynchronous.Executors.Task_Instances is
+package Asynchronous.Executors.Task_Instances is
 
    -- An asynchronous executor manipulates tasks instances, which are composed of a mutable copy of the source task and
    -- some associated scheduler metadata such as the task's output event.

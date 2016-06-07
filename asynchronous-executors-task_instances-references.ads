@@ -1,6 +1,5 @@
 with Asynchronous.Utilities.References.Nullable;
 
--- TODO : Should be made private
 package Asynchronous.Executors.Task_Instances.References is
 
    -- To be able to move task instances around, we need some kind of reference to them. In C++ terms, what we would
