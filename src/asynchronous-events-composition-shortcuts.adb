@@ -7,6 +7,8 @@ pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Events.Composition.Shortcuts is
 
+   Done_Event : Event_Client;
+
    function When_All (Wait_List : Event_List) return Event_Client is
    begin
       -- This implementation of When_All uses AND gates if needed, but takes a performance shortcut when possible.
@@ -21,12 +23,7 @@ package body Asynchronous.Events.Composition.Shortcuts is
       elsif Wait_List'Length = 1 then
          return Wait_List (Wait_List'First);
       else
-         declare
-            E : Servers.Server := Servers.Make_Event;
-         begin
-            E.Mark_Done;
-            return E.Make_Client;
-         end;
+         return Done_Event;
       end if;
    end When_All;
 
@@ -112,6 +109,14 @@ package body Asynchronous.Events.Composition.Shortcuts is
    end Run_Tests;
 
 begin
+
+   -- Generate a done event for use in When_All
+   declare
+      E : Servers.Server := Servers.Make_Event;
+   begin
+      E.Mark_Done;
+      Done_Event := E.Make_Client;
+   end;
 
    -- Conditionally run the unit tests on startup
    Utilities.Testing.Startup_Test (Run_Tests'Access);
