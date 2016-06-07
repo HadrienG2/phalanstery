@@ -23,13 +23,11 @@ package body Asynchronous.Utilities.References.Not_Null is
    overriding procedure Finalize (Who : in out Reference) is
       procedure Free_Instance is new Ada.Unchecked_Deallocation (Packaged_Instance, Instance_Access);
    begin
-      -- Normal reference counting workflow
       if Who.Instance /= null and then Atomic_Counters.Decrement (Who.Instance.Reference_Count) then
          Free_Instance (Who.Instance);
+      else
+         Who.Instance := null;  -- Handle multiple finalization (as allowed by the Ada standard)
       end if;
-
-      -- Multiple finalization management
-      Who.Instance := null;
    end Finalize;
 
 
