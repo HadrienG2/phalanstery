@@ -56,11 +56,11 @@ package body Asynchronous.Executors.Scheduling is
                                  According_To => Input_Event.Status,
                                  On           => On);
          when Pending =>
+            On.Set.Pending.Add_Task;
             declare
                Scheduled : Scheduled_Task := (Instance => Who, Target_Queue => On);
             begin
                Input_Event.Add_Listener (Scheduled);
-               On.Set.Pending.Add_Task;
             end;
       end case;
    end Schedule_Task;
