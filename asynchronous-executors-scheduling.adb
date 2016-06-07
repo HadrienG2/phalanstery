@@ -22,7 +22,7 @@ package body Asynchronous.Executors.Scheduling is
    begin
       case According_To is
          when Done =>
-            On.Set.Enqueue (Who);
+            On.Set.Ready.Enqueue (Who);
          when Canceled =>
             Who.Set.Completion_Event.Cancel;
          when Error =>
@@ -42,6 +42,7 @@ package body Asynchronous.Executors.Scheduling is
       Schedule_Ready_Task (Who          => Where.Instance,
                            According_To => What,
                            On           => Where.Target_Queue);
+      Where.Target_Queue.Set.Pending.Remove_Task;
    end Notify_Event_Status_Change;
 
    procedure Schedule_Task (Who   : Task_Instance_Reference;
@@ -59,6 +60,7 @@ package body Asynchronous.Executors.Scheduling is
                Scheduled : Scheduled_Task := (Instance => Who, Target_Queue => On);
             begin
                Input_Event.Add_Listener (Scheduled);
+               On.Set.Pending.Add_Task;
             end;
       end case;
    end Schedule_Task;
@@ -78,7 +80,7 @@ package body Asynchronous.Executors.Scheduling is
       use type Task_Instance_Reference;
 
       T : Dummy_Task;
-      Q : constant Task_Queue_Reference := Task_Queues.Make_Task_Queue;
+      Q : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       procedure Test_Finished_Wait_List is
          TI : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
@@ -88,9 +90,9 @@ package body Asynchronous.Executors.Scheduling is
          Schedule_Task (Who   => TI,
                         After => Empty_List,
                         On    => Q);
-         Assert_Truth (Check   => (Q.Get.Current_Use = 1),
+         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 1),
                        Message => "If the event wait list is ready, tasks should be enqueued immediately");
-         Q.Set.Dequeue (New_TI);
+         Q.Set.Ready.Dequeue (New_TI);
          Assert_Truth (Check   => (TI = New_TI),
                        Message => "Scheduling a ready task should enqueue the right task instance");
       end Test_Finished_Wait_List;
@@ -103,7 +105,7 @@ package body Asynchronous.Executors.Scheduling is
          Schedule_Task (Who   => TI,
                         After => (1 => C),
                         On    => Q);
-         Assert_Truth (Check   => (Q.Get.Current_Use = 0),
+         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 0),
                        Message => "Tasks with canceled input events should not be enqueued in the task queue");
          Assert_Truth (Check   => TI.Get.Completion_Event.Is_Canceled,
                        Message => "Tasks with canceled input events should be marked canceled");
@@ -124,7 +126,7 @@ package body Asynchronous.Executors.Scheduling is
          Schedule_Task (Who   => Instance,
                         After => (1 => Client),
                         On    => Q);
-         Assert_Truth (Check   => (Q.Get.Current_Use = 0),
+         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 0),
                        Message => "Tasks with erronerous input events should not be enqueued in the task queue");
          Assert_Truth (Check   => (Instance_Client.Status = Error),
                        Message => "Tasks with erronerous input events should be marked erronerous");

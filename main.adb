@@ -12,6 +12,10 @@ with Asynchronous.Events.Servers;
 with Asynchronous.Executors;
 with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Objects;
+with Asynchronous.Executors.Task_Instances;
+with Asynchronous.Executors.Task_Instances.References;
+with Asynchronous.Executors.Task_Queues;
+with Asynchronous.Executors.Task_Queues.References;
 with Asynchronous.Tasks;
 with Asynchronous.Utilities;
 with Asynchronous.Utilities.Atomic_Counters;
@@ -55,8 +59,8 @@ procedure Main is
 
 begin
 
-   -- null; -- Remove scheduler benchmark for coverage tests
-   Microbenchmarks.Run_Benchmarks;
+   null; -- DEBUG : Remove scheduler benchmark for coverage tests
+   -- Microbenchmarks.Run_Benchmarks; -- DEBUG : Test performance using microbenchmarks
 
 exception
    when E : others =>

@@ -2,7 +2,7 @@ with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors.Scheduling;
 with Asynchronous.Executors.Task_Instances.References;
-with Asynchronous.Executors.Task_Queues;
+with Asynchronous.Executors.Task_Queues.References;
 with Asynchronous.Tasks;
 with Asynchronous.Utilities.Barriers;
 with Asynchronous.Utilities.Debug;
@@ -11,13 +11,13 @@ with Asynchronous.Utilities.Signals;
 package body Asynchronous.Executors.Executor_Tasks is
 
    subtype Task_Instance_Reference is Task_Instances.References.Reference;
-   subtype Task_Queue_Reference is Task_Queues.Reference;
+   subtype Task_Queue_Reference is Task_Queues.References.Reference;
    use all type Events.Interfaces.Event_Status;
 
    task body Executor_Task is
 
       -- Executor tasks hold ready tasks (aka work items) on a FIFO queue
-      Ready_Tasks : constant Task_Queue_Reference := Task_Queues.Make_Task_Queue;
+      Task_Queue : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
@@ -45,7 +45,7 @@ package body Asynchronous.Executors.Executor_Tasks is
                   when Waiting =>
                      Scheduling.Schedule_Task (Who   => What,
                                                After => Tasks.Wait_List (Work_Item_Output),
-                                               On    => Ready_Tasks);
+                                               On    => Task_Queue);
                end case;
                return Work_Item_Yielding;
             end;
@@ -61,7 +61,7 @@ package body Asynchronous.Executors.Executor_Tasks is
             case Active_Scheduling_Policy is
                when Round_Robin =>
                   if Run_Work_Item (What) then
-                     Ready_Tasks.Set.Enqueue (What);
+                     Task_Queue.Set.Ready.Enqueue (What);
                   end if;
                when Batch =>
                   loop
@@ -74,12 +74,14 @@ package body Asynchronous.Executors.Executor_Tasks is
          Worker_Active : Boolean := True;
 
       begin
+
+         -- Process ready tasks, and wait for them unless the stop signal is set
          while Worker_Active loop
             declare
                Work_Item : Task_Instance_Reference;
             begin
                select
-                  Ready_Tasks.Set.Dequeue (Work_Item);
+                  Task_Queue.Set.Ready.Dequeue (Work_Item);
                   Process_Work_Item (Work_Item);
                then abort
                   Stop_Request.Wait;
@@ -87,7 +89,10 @@ package body Asynchronous.Executors.Executor_Tasks is
                end select;
             end;
          end loop;
+
+         -- Signal the underlying executor task that all work is complete
          Stop_Barrier.Join;
+
       exception
          when E : others =>
             Utilities.Debug.Display_Unhandled_Exception ("an asynchronous worker", E);
@@ -114,11 +119,12 @@ package body Asynchronous.Executors.Executor_Tasks is
                   Event := Work_Item.Get.Completion_Event.Make_Client;
                   Scheduling.Schedule_Task (Who   => Work_Item,
                                             After => After,
-                                            On    => Ready_Tasks);
+                                            On    => Task_Queue);
                end;
             end Schedule_Task;
          or
             accept Stop do
+               Task_Queue.Set.Pending.Flush_Pending;
                Stop_Request.Send;
                Executor_Active := False;
                Stop_Barrier.Wait;

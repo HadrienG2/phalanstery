@@ -1,12 +1,12 @@
 with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Task_Instances.References;
-with Asynchronous.Executors.Task_Queues;
+with Asynchronous.Executors.Task_Queues.References;
 
 private package Asynchronous.Executors.Scheduling is
 
    -- Let us define some convenience notations first
    subtype Task_Instance_Reference is Task_Instances.References.Reference;
-   subtype Task_Queue_Reference is Task_Queues.Reference;
+   subtype Task_Queue_Reference is Task_Queues.References.Reference;
 
    -- This function handles blocking tasks by allowing a task instance to be scheduled for execution (through queueing
    -- on an executor's ready task queue) after an event wait list has been completed. It also handles all the non-Done
