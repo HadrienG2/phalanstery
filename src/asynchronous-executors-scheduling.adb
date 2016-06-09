@@ -1,6 +1,7 @@
 with Ada.Containers;
 with Ada.Exceptions;
 with Asynchronous.Events.Composition.Shortcuts;
+with Asynchronous.Events.Contracts;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Tasks;
@@ -17,9 +18,9 @@ package body Asynchronous.Executors.Scheduling is
 
    Wait_List_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
-   procedure Schedule_Ready_Task (Who          : Task_Instance_Reference;
+   procedure Schedule_Ready_Task (Who          : Valid_Task_Instance_Reference;
                                   According_To : Finished_Event_Status;
-                                  On           : Task_Queue_Reference) is
+                                  On           : Valid_Task_Queue_Reference) is
    begin
       case According_To is
          when Done =>
@@ -33,8 +34,8 @@ package body Asynchronous.Executors.Scheduling is
 
    type Scheduled_Task is new Events.Interfaces.Event_Listener_Reference with
       record
-         Instance : Task_Instance_Reference;
-         Target_Queue : Task_Queue_Reference;
+         Instance : Valid_Task_Instance_Reference;
+         Target_Queue : Valid_Task_Queue_Reference;
       end record;
 
    overriding procedure Notify_Event_Status_Change (Where : in out Scheduled_Task;
@@ -46,10 +47,10 @@ package body Asynchronous.Executors.Scheduling is
       Where.Target_Queue.Set.Pending.Remove_Task;
    end Notify_Event_Status_Change;
 
-   procedure Schedule_Task (Who   : Task_Instance_Reference;
+   procedure Schedule_Task (Who   : Valid_Task_Instance_Reference;
                             After : Interfaces.Event_Wait_List;
-                            On    : Task_Queue_Reference) is
-      Input_Event : Interfaces.Event_Client := Events.Composition.Shortcuts.When_All (After);
+                            On    : Valid_Task_Queue_Reference) is
+      Input_Event : Interfaces.Valid_Event_Client := Events.Composition.Shortcuts.When_All (After);
    begin
       case Input_Event.Status is
          when Finished_Event_Status =>
@@ -72,15 +73,16 @@ package body Asynchronous.Executors.Scheduling is
 
       use Utilities.Testing;
       use type Ada.Containers.Count_Type;
-      use type Task_Instance_Reference;
+      use type Valid_Task_Instance_Reference;
+      subtype Valid_Event_Server is Events.Contracts.Valid_Event_Server;
 
       T : Tasks.Trivial.Null_Task;
-      Queue : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
+      Queue : constant Valid_Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       procedure Test_Finished_Wait_List is
-         Instance : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Instance : constant Valid_Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
          Empty_List : Interfaces.Event_Wait_List (2 .. 1);
-         New_Instance : Task_Instance_Reference;
+         New_Instance : Task_Instances.References.Reference;
       begin
 
          Schedule_Task (Who   => Instance,
@@ -98,8 +100,8 @@ package body Asynchronous.Executors.Scheduling is
       end Test_Finished_Wait_List;
 
       procedure Test_Canceled_Wait_List is
-         Instance : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
-         Client : Interfaces.Event_Client := Events.Servers.Make_Event.Make_Client;
+         Instance : constant Valid_Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Client : Interfaces.Valid_Event_Client := Events.Servers.Make_Event.Make_Client;
       begin
          Client.Cancel;
          Schedule_Task (Who   => Instance,
@@ -116,10 +118,10 @@ package body Asynchronous.Executors.Scheduling is
       procedure Test_Erronerous_Wait_List is
          Custom_Error : exception;
          Custom_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
-         Instance : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
-         Server : Events.Servers.Server := Events.Servers.Make_Event;
-         Client : constant Interfaces.Event_Client := Server.Make_Client;
-         Instance_Client : constant Interfaces.Event_Client := Instance.Get.Completion_Event.Make_Client;
+         Instance : constant Valid_Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Server : Valid_Event_Server := Events.Servers.Make_Event;
+         Client : constant Interfaces.Valid_Event_Client := Server.Make_Client;
+         Instance_Client : constant Interfaces.Valid_Event_Client := Instance.Get.Completion_Event.Make_Client;
       begin
 
          Utilities.Exceptions.Make_Occurrence (What  => Custom_Error'Identity,
@@ -149,10 +151,10 @@ package body Asynchronous.Executors.Scheduling is
       end Test_Erronerous_Wait_List;
 
       procedure Test_Pending_Wait_List is
-         Instance : Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
-         Server : Events.Servers.Server := Events.Servers.Make_Event;
-         Client : constant Interfaces.Event_Client := Server.Make_Client;
-         Instance_Client : constant Interfaces.Event_Client := Instance.Get.Completion_Event.Make_Client;
+         Instance : Valid_Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Server : Valid_Event_Server := Events.Servers.Make_Event;
+         Client : constant Interfaces.Valid_Event_Client := Server.Make_Client;
+         Instance_Client : constant Interfaces.Valid_Event_Client := Instance.Get.Completion_Event.Make_Client;
       begin
 
          Schedule_Task (Who   => Instance,
