@@ -9,6 +9,7 @@ package Asynchronous.Executors.Task_Queues.References is
    package Implementation is new Implementation_Base.Nullable;
 
    subtype Reference is Implementation.Reference;
-   function Make_Task_Queue return Reference renames Implementation.Make;
+   subtype Valid_Reference is Reference with Dynamic_Predicate => (not Valid_Reference.Is_Null);
+   function Make_Task_Queue return Valid_Reference renames Implementation.Make;
 
 end Asynchronous.Executors.Task_Queues.References;
