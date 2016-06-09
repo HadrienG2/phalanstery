@@ -1,4 +1,4 @@
-with Asynchronous.Events.Clients;
+with Asynchronous.Events.Contracts;
 with Asynchronous.Tasks;
 with System.Multiprocessors;
 
@@ -6,7 +6,7 @@ package Asynchronous.Executors.Interfaces is
 
    -- Let us define some common convenience notations for executors
    subtype Any_Async_Task is Tasks.Async_Task'Class;
-   subtype Event_Client is Events.Clients.Client;
+   subtype Valid_Event_Client is Events.Contracts.Valid_Event_Client;
    subtype Event_Wait_List is Tasks.Event_Wait_List;
 
    -- Errors in an asynchronous task's wait list will be propagated to the output event with a special exception.
@@ -27,7 +27,7 @@ package Asynchronous.Executors.Interfaces is
    -- Schedule a task which waits for one event, do not synchronize
    procedure Schedule_Task (Where : in out Executor;
                             What  : Any_Async_Task;
-                            After : Event_Client) is abstract;
+                            After : Valid_Event_Client) is abstract;
 
    -- Schedule a task which waits for multiple events, do not synchronize
    procedure Schedule_Task (Where : in out Executor;
@@ -36,16 +36,16 @@ package Asynchronous.Executors.Interfaces is
 
    -- Schedule a task immediately, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
-                           What : Any_Async_Task) return Event_Client is abstract;
+                           What : Any_Async_Task) return Valid_Event_Client is abstract;
 
    -- Schedule a task which waits for one event, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
                            What  : Any_Async_Task;
-                           After : Event_Client) return Event_Client is abstract;
+                           After : Valid_Event_Client) return Valid_Event_Client is abstract;
 
    -- Schedule a tasks which waits for multiple events, get an event to synchronize on
    function Schedule_Task (Where : in out Executor;
                            What  : Any_Async_Task;
-                           After : Event_Wait_List) return Event_Client is abstract;
+                           After : Event_Wait_List) return Valid_Event_Client is abstract;
 
 end Asynchronous.Executors.Interfaces;
