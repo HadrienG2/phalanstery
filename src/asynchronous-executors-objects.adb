@@ -1,4 +1,7 @@
 with Ada.Unchecked_Deallocation;
+with Asynchronous.Utilities.Testing;
+with System.Multiprocessors;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Executors.Objects is
 
@@ -77,5 +80,40 @@ package body Asynchronous.Executors.Objects is
          Free_Executor (Who.Executor_Task);
       end if;
    end Finalize;
+
+
+   -- The remainder of this package is dedicated to unit tests
+   procedure Run_Tests is
+
+      use Utilities.Testing;
+      use type System.Multiprocessors.CPU_Range;
+
+      Number_Of_Workers : constant := 2;
+      Test_Executor : Executor (Number_Of_Workers);
+
+      procedure Test_Initial_State is
+      begin
+         Assert_Truth (Check   => (Test_Executor.Executor_Task /= null),
+                       Message => "An executor task should be spawned on executor object creation");
+         Assert_Truth (Check   => (Test_Executor.Executor_Task.Number_Of_Workers = Number_Of_Workers),
+                       Message => "The executor task of an executor should have the right number of workers");
+      end Test_Initial_State;
+
+      procedure Test_Finalization is
+      begin
+         -- Executors should be resilient to multiple finalization
+         Test_Executor.Finalize;
+         Test_Executor.Finalize;
+      end Test_Finalization;
+
+   begin
+      Test_Initial_State;
+      -- TODO
+      Test_Finalization;
+   end Run_Tests;
+
+begin
+
+   Utilities.Testing.Startup_Test (Run_Tests'Access);
 
 end Asynchronous.Executors.Objects;

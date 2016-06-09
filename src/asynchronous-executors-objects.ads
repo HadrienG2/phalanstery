@@ -1,6 +1,7 @@
 with Ada.Finalization;
 private with Asynchronous.Executors.Executor_Tasks;
 with Asynchronous.Executors.Interfaces;
+pragma Elaborate_All (Asynchronous.Executors.Executor_Tasks);
 
 package Asynchronous.Executors.Objects is
 
@@ -41,6 +42,9 @@ package Asynchronous.Executors.Objects is
                                       What  : Interfaces.Any_Async_Task;
                                       After : Interfaces.Event_Wait_List) return Interfaces.Event_Client;
 
+   -- Run the unit tests for this package
+   procedure Run_Tests;
+
 private
 
    -- Executor tasks must be heap allocated, because otherwise the Ada runtime's finalizer for Executor will wait for
@@ -57,7 +61,9 @@ private
          Executor_Task : Executor_Access := null;
       end record;
 
-   overriding procedure Initialize (Who : in out Executor);
+   overriding procedure Initialize (Who : in out Executor)
+     with Post => (Who.Executor_Task /= null);
+
    overriding procedure Finalize (Who : in out Executor);
 
 end Asynchronous.Executors.Objects;
