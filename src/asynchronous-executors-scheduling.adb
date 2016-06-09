@@ -2,7 +2,6 @@ with Ada.Containers;
 with Ada.Exceptions;
 with Asynchronous.Events.Composition.Shortcuts;
 with Asynchronous.Events.Contracts;
-with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Tasks;
 with Asynchronous.Tasks.Trivial;
@@ -14,7 +13,6 @@ pragma Elaborate_All (Asynchronous.Utilities.Exceptions,
 package body Asynchronous.Executors.Scheduling is
 
    use all type Events.Interfaces.Event_Status;
-   subtype Finished_Event_Status is Events.Interfaces.Finished_Event_Status;
 
    Wait_List_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
@@ -31,12 +29,6 @@ package body Asynchronous.Executors.Scheduling is
             Who.Set.Completion_Event.Mark_Error (Wait_List_Error_Occurence);
       end case;
    end Schedule_Ready_Task;
-
-   type Scheduled_Task is new Events.Interfaces.Event_Listener_Reference with
-      record
-         Instance : Valid_Task_Instance_Reference;
-         Target_Queue : Valid_Task_Queue_Reference;
-      end record;
 
    overriding procedure Notify_Event_Status_Change (Where : in out Scheduled_Task;
                                                     What  : Finished_Event_Status) is
