@@ -8,7 +8,10 @@ package Asynchronous.Executors.Task_Instances.References is
    package Implementation_Base is new Utilities.References (Task_Instance);
    package Implementation is new Implementation_Base.Nullable;
    subtype Reference is Implementation.Reference;
-   subtype Valid_Reference is Reference with Dynamic_Predicate => (not Valid_Reference.Is_Null);
+
+   -- Among all possible task instance references, only a subset is suitable for everyday use
+   subtype Valid_Reference is Reference with
+     Dynamic_Predicate => ((not Valid_Reference.Is_Null) and then not (Valid_Reference.Get.Task_Object = null));
 
    -- There should be a convenient way to make a reference-counted task instance from a task object
    function Make_Task_Instance (From : Interfaces.Any_Async_Task) return Reference;

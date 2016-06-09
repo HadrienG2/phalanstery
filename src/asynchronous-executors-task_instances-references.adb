@@ -5,11 +5,12 @@ pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Executors.Task_Instances.References is
 
+   -- DEBUG : I would like this to return a Valid_Reference, but it leads to finalization issues for unclear reasons
    function Make_Task_Instance (From : Interfaces.Any_Async_Task) return Reference is
+      Result : constant Reference := Implementation.Make;
    begin
-      return Ref : constant Reference := Implementation.Make do
-         Ref.Set.Task_Object := new Interfaces.Any_Async_Task'(From);
-      end return;
+      Result.Set.Task_Object := new Interfaces.Any_Async_Task'(From);
+      return Result;
    end Make_Task_Instance;
 
 
@@ -28,7 +29,7 @@ package body Asynchronous.Executors.Task_Instances.References is
 
       T : constant State_Holding_Task := (Dummy_Int => 42);
       T_Any : constant Interfaces.Any_Async_Task := T;
-      T_Instance : constant Reference := Make_Task_Instance (T);
+      T_Instance : constant Valid_Reference := Make_Task_Instance (T);
 
    begin
 
