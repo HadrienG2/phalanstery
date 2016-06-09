@@ -14,19 +14,19 @@ package body Asynchronous.Executors.Task_Instances.References is
 
 
    -- The remainder of this package is dedicated to unit tests
-   type Dummy_Task is new Tasks.Async_Task with
+   type State_Holding_Task is new Tasks.Async_Task with
       record
          Dummy_Int : Natural;
       end record;
 
-   overriding function Run (T : in out Dummy_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
+   overriding function Run (T : in out State_Holding_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
 
    procedure Run_Tests is
 
       use Utilities.Testing;
       use type Ada.Tags.Tag;
 
-      T : constant Dummy_Task := (Dummy_Int => 42);
+      T : constant State_Holding_Task := (Dummy_Int => 42);
       T_Any : constant Interfaces.Any_Async_Task := T;
       T_Instance : constant Reference := Make_Task_Instance (T);
 
@@ -38,7 +38,7 @@ package body Asynchronous.Executors.Task_Instances.References is
                     Message => "Make_Task_Instance should allocate task storage as appropriate");
       Assert_Truth (Check   => (T_Instance.Get.Task_Object'Tag = T_Any'Tag),
                     Message => "Make_Task_Instance should allocate task objects of the right type");
-      Assert_Truth (Check   => (Dummy_Task (T_Instance.Get.Task_Object.all).Dummy_Int = 42),
+      Assert_Truth (Check   => (State_Holding_Task (T_Instance.Get.Task_Object.all).Dummy_Int = 42),
                     Message => "Make_Task_Instance should copy instance data as appropriate");
       Assert_Truth (Check   => (not T_Instance.Get.Completion_Event.Is_Null),
                     Message => "Make_Task_Instance should allocate a completion event");

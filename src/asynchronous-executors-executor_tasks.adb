@@ -4,9 +4,12 @@ with Asynchronous.Executors.Scheduling;
 with Asynchronous.Executors.Task_Instances.References;
 with Asynchronous.Executors.Task_Queues.References;
 with Asynchronous.Tasks;
+with Asynchronous.Tasks.Trivial;
 with Asynchronous.Utilities.Barriers;
 with Asynchronous.Utilities.Debug;
 with Asynchronous.Utilities.Signals;
+with Asynchronous.Utilities.Testing;
+pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Executors.Executor_Tasks is
 
@@ -137,5 +140,34 @@ package body Asynchronous.Executors.Executor_Tasks is
          Stop_Request.Send;
          raise;
    end Executor_Task;
+
+
+   -- The remainder of this package is dedicated to unit tests
+   procedure Run_Tests is
+
+      use Utilities.Testing;
+
+      T : Tasks.Trivial.Null_Task;
+      Executor : Executor_Task (2);
+
+      procedure Test_Schedule_Task is
+         Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
+         Client : Interfaces.Event_Client;
+      begin
+         Executor.Schedule_Task (What  => T,
+                                 After => Empty_Wait_List,
+                                 Event => Client);
+         Executor.Stop;
+         Assert_Truth (Check   => (Client.Status = Done),
+                       Message => "A task should be completed after its executor terminates");
+      end Test_Schedule_Task;
+
+   begin
+      Test_Schedule_Task;
+   end Run_Tests;
+
+begin
+
+   Utilities.Testing.Startup_Test (Run_Tests'Access);
 
 end Asynchronous.Executors.Executor_Tasks;

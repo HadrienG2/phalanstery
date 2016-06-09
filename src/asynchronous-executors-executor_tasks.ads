@@ -15,6 +15,9 @@ private package Asynchronous.Executors.Executor_Tasks is
 
    end Executor_Task;
 
+   -- Run the unit tests for this package
+   procedure Run_Tests;
+
 private
 
    -- Task executors can currently operate according to one of two statically selected scheduling policies:

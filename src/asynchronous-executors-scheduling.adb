@@ -4,6 +4,7 @@ with Asynchronous.Events.Composition.Shortcuts;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Tasks;
+with Asynchronous.Tasks.Trivial;
 with Asynchronous.Utilities.Exceptions;
 with Asynchronous.Utilities.Testing;
 pragma Elaborate_All (Asynchronous.Utilities.Exceptions,
@@ -67,17 +68,13 @@ package body Asynchronous.Executors.Scheduling is
 
 
    -- The remainder of this package is dedicated to unit tests
-   type Dummy_Task is new Tasks.Async_Task with null record;
-
-   overriding function Run (T : in out Dummy_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
-
    procedure Run_Tests is
 
       use Utilities.Testing;
       use type Ada.Containers.Count_Type;
       use type Task_Instance_Reference;
 
-      T : Dummy_Task;
+      T : Tasks.Trivial.Null_Task;
       Queue : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       procedure Test_Finished_Wait_List is
