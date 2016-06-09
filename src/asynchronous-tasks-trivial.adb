@@ -1,9 +1,13 @@
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Contracts;
 with Asynchronous.Events.Servers;
 pragma Elaborate_All (Asynchronous.Events.Servers);
 
 package body Asynchronous.Tasks.Trivial is
 
-   Ready_Event, Canceled_Event, Error_Event : Event_Client;
+   subtype Valid_Event_Server is Events.Contracts.Valid_Event_Server;
+
+   Ready_Event, Canceled_Event, Error_Event : Events.Clients.Client;
 
    overriding function Run (Who : in out Null_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
 
@@ -51,21 +55,21 @@ package body Asynchronous.Tasks.Trivial is
 begin
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Valid_Event_Server := Events.Servers.Make_Event;
    begin
       S.Mark_Done;
       Ready_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Valid_Event_Server := Events.Servers.Make_Event;
    begin
       S.Cancel;
       Canceled_Event := S.Make_Client;
    end;
 
    declare
-      S : Events.Servers.Server := Events.Servers.Make_Event;
+      S : Valid_Event_Server := Events.Servers.Make_Event;
    begin
       begin
          raise Expected_Error;

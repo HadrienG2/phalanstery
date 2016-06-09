@@ -1,5 +1,5 @@
-with Asynchronous.Events.Clients;
 with Asynchronous.Events.Composition;
+with Asynchronous.Events.Contracts;
 
 package Asynchronous.Tasks is
 
@@ -8,8 +8,8 @@ package Asynchronous.Tasks is
    -- When I say that asynchronous tasks are event-driven, I mean that they may wait for events to occur, and in general
    -- do so from the start. Thus, we need a data structures representing a list of events for tasks to wait on.
    --
-   subtype Event_Client is Events.Clients.Client;
-   subtype Event_Wait_List is Events.Composition.Event_List;
+   subtype Valid_Event_Client is Events.Contracts.Valid_Event_Client;
+   subtype Event_Wait_List is Events.Composition.Valid_Event_List;
 
    -- On every run, a task returns status information to the underlying task scheduler.
    -- If a task cannot complete normally, it should raise an exception instead, and the runtime will handle it.
@@ -19,7 +19,7 @@ package Asynchronous.Tasks is
    -- Task return values are created in the following way...
    Return_Finished : constant Return_Value;
    Return_Yielding : constant Return_Value;
-   function Return_Waiting (Cause : Event_Client) return Return_Value;
+   function Return_Waiting (Cause : Valid_Event_Client) return Return_Value;
    function Return_Waiting (Cause : Event_Wait_List) return Return_Value;
 
    -- ...and queried in the following way

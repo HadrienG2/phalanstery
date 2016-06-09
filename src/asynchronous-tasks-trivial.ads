@@ -39,14 +39,14 @@ package Asynchronous.Tasks.Trivial is
    -- This task waits for an arbitrary event, to be triggered by another task
    type Custom_Wait_Task is new Tasks.Async_Task with
       record
-         Target : Event_Client;
+         Target : Valid_Event_Client;
       end record;
    overriding function Run (Who : in out Custom_Wait_Task) return Tasks.Return_Value;
 
    -- This task cancels an event and returns, it may be used in conjunction with the previous task
    type Event_Cancelation_Task is new Tasks.Async_Task with
       record
-         Target : Event_Client;
+         Target : Valid_Event_Client;
       end record;
    overriding function Run (Who : in out Event_Cancelation_Task) return Tasks.Return_Value;
 
