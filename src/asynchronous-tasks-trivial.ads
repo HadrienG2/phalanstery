@@ -3,6 +3,9 @@ package Asynchronous.Tasks.Trivial is
    -- This package defines some trivial examples of asynchronous tasks, which may be used in unit tests or and
    -- executor benchmarks.
 
+   -- Anytime one of these trivial tasks voluntarily raises an exception, it will be this one
+   Expected_Error : exception;
+
    -- This task finishes immediately
    type Null_Task is new Tasks.Async_Task with null record;
    overriding function Run (Who : in out Null_Task) return Tasks.Return_Value;
@@ -13,6 +16,10 @@ package Asynchronous.Tasks.Trivial is
          Counter : Natural := 0;
       end record;
    overriding function Run (Who : in out Yielding_Task) return Tasks.Return_Value;
+
+   -- This task aborts with an exception
+   type Erronerous_Task is new Tasks.Async_Task with null record;
+   overriding function Run (Who : in out Erronerous_Task) return Tasks.Return_Value;
 
    -- This task waits for a finished event, then finishes
    type Ready_Wait_Task is new Tasks.Async_Task with
@@ -26,7 +33,6 @@ package Asynchronous.Tasks.Trivial is
    overriding function Run (Who : in out Canceled_Wait_Task) return Tasks.Return_Value;
 
    -- This task waits for an erronerous event, and will never finish
-   Expected_Error : exception;
    type Error_Wait_Task is new Tasks.Async_Task with null record;
    overriding function Run (Who : in out Error_Wait_Task) return Tasks.Return_Value;
 

@@ -147,11 +147,12 @@ package body Asynchronous.Executors.Executor_Tasks is
 
       use Utilities.Testing;
 
-      T : Tasks.Trivial.Null_Task;
-      Executor : Executor_Task (2);
+      Number_Of_Workers : constant := 2;
       Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
 
       procedure Test_Null_Task is
+         Executor : Executor_Task (Number_Of_Workers);
+         T : Tasks.Trivial.Null_Task;
          Client : Interfaces.Event_Client;
       begin
          select
@@ -172,9 +173,65 @@ package body Asynchronous.Executors.Executor_Tasks is
                        Message => "The null task should appear completed after its executor has terminated");
       end Test_Null_Task;
 
+      procedure Test_Yielding_Task is
+         Executor : Executor_Task (Number_Of_Workers);
+         T : Tasks.Trivial.Yielding_Task (1);
+         Client : Interfaces.Event_Client;
+      begin
+         Executor.Schedule_Task (What  => T,
+                                 After => Empty_Wait_List,
+                                 Event => Client);
+         select
+            Executor.Stop;
+         or
+            delay 0.02;
+            Fail ("A simple yielding task should execute instantly");
+         end select;
+         Assert_Truth (Check   => (Client.Status = Done),
+                       Message => "The yielding task should appear completed after its executor has terminated");
+      end Test_Yielding_Task;
+
+      procedure Test_Erronerous_Task is
+         Executor : Executor_Task (Number_Of_Workers);
+         T : Tasks.Trivial.Erronerous_Task;
+         Client : Interfaces.Event_Client;
+      begin
+         Executor.Schedule_Task (What  => T,
+                                 After => Empty_Wait_List,
+                                 Event => Client);
+         select
+            Executor.Stop;
+         or
+            delay 0.02;
+            Fail ("The erronerous task should execute instantly");
+         end select;
+         Assert_Truth (Check   => (Client.Status = Error),
+                       Message => "The erronerous task should go to the Error state after its executor has terminated");
+      end Test_Erronerous_Task;
+
+      procedure Test_Canceled_Wait_Task is
+         Executor : Executor_Task (Number_Of_Workers);
+         T : Tasks.Trivial.Canceled_Wait_Task;
+         Client : Interfaces.Event_Client;
+      begin
+         Executor.Schedule_Task (What  => T,
+                                 After => Empty_Wait_List,
+                                 Event => Client);
+         select
+            Executor.Stop;
+         or
+            delay 0.02;
+            Fail ("A task waiting for a canceled event should execute instantly");
+         end select;
+         Assert_Truth (Check   => (Client.Status = Canceled),
+                       Message => "The canceled-wait task should appear canceled after its executor has terminated");
+      end Test_Canceled_Wait_Task;
+
    begin
       Test_Null_Task;
-      -- Test_Yielding_Task;
+      Test_Yielding_Task;
+      Test_Erronerous_Task;
+      Test_Canceled_Wait_Task;
    end Run_Tests;
 
 begin

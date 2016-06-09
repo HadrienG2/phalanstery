@@ -16,6 +16,12 @@ package body Asynchronous.Tasks.Trivial is
       end if;
    end Run;
 
+   overriding function Run (Who : in out Erronerous_Task) return Tasks.Return_Value is
+   begin
+      raise Expected_Error;
+      return Tasks.Return_Finished;  -- This line will never be reached
+   end Run;
+
    overriding function Run (Who : in out Ready_Wait_Task) return Tasks.Return_Value is
    begin
       if not Who.Has_Waited then
