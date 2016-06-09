@@ -6,7 +6,7 @@ package Asynchronous.Events.Callbacks is
 
    type Event_Status_Callback is not null access procedure (What : Interfaces.Finished_Event_Status);
 
-   type Callback_Listener is new Interfaces.Event_Listener_Reference with private;
+   type Callback_Listener (<>) is new Interfaces.Event_Listener_Reference with private;
 
    not overriding function Make_Callback_Listener (From : Event_Status_Callback) return Callback_Listener;
 
