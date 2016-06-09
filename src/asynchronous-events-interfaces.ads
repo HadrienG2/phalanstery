@@ -52,6 +52,7 @@ package Asynchronous.Events.Interfaces with Preelaborate is
    -- To cut a long story short, we want a copyable reference to a thread-safe object, which may be assumed to be
    -- at least as long lived as the references that we hold. The client can ensure this property in a number of
    -- ways, from reference counting to careful scoping, and we neither need to care, nor are able to.
+   --
    type Event_Listener is limited interface;
    procedure Notify_Event_Status_Change (Where : in out Event_Listener;
                                          What  : Finished_Event_Status) is abstract;
