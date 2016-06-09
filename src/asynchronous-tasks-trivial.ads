@@ -1,7 +1,7 @@
 package Asynchronous.Tasks.Trivial is
 
-   -- This package defines some trivial examples of asynchronous tasks, which may be used in unit tests or and
-   -- executor benchmarks.
+   -- This package defines some trivial examples of asynchronous tasks, which may be used in unit tests or as a
+   -- component of executor performance benchmarks.
 
    -- Anytime one of these trivial tasks voluntarily raises an exception, it will be this one
    Expected_Error : exception;
