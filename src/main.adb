@@ -17,6 +17,7 @@ with Asynchronous.Executors.Task_Instances.References;
 with Asynchronous.Executors.Task_Queues;
 with Asynchronous.Executors.Task_Queues.References;
 with Asynchronous.Tasks;
+with Asynchronous.Tasks.Trivial;
 with Asynchronous.Utilities;
 with Asynchronous.Utilities.Atomic_Counters;
 with Asynchronous.Utilities.Barriers;

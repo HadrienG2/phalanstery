@@ -1,57 +1,22 @@
 with Ada.Calendar;
 with Asynchronous.Executors.Interfaces;
 with Asynchronous.Executors.Objects;
+with Asynchronous.Events.Clients;
 with Asynchronous.Events.Composition.Shortcuts;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
+with Asynchronous.Tasks.Trivial;
 with Ada.Text_IO;
 with System.Multiprocessors;
 pragma Elaborate_All (Asynchronous.Events.Servers);
 
 package body Benchmarks is
 
-   Ready_Event, Canceled_Event, Error_Event : Event_Client;
-
-   overriding function Run (Who : in out Null_Task) return Async_Tasks.Return_Value is (Async_Tasks.Return_Finished);
-
-   overriding function Run (Who : in out Yielding_Task) return Async_Tasks.Return_Value is
-   begin
-      if Who.Counter < Who.Iterations then
-         Who.Counter := Who.Counter + 1;
-         return Async_Tasks.Return_Yielding;
-      else
-         return Async_Tasks.Return_Finished;
-      end if;
-   end Run;
-
-   overriding function Run (Who : in out Ready_Wait_Task) return Async_Tasks.Return_Value is
-   begin
-      if not Who.Has_Waited then
-         Who.Has_Waited := True;
-         return Async_Tasks.Return_Waiting (Ready_Event);
-      else
-         return Async_Tasks.Return_Finished;
-      end if;
-   end Run;
-
-   overriding function Run (Who : in out Canceled_Wait_Task) return Async_Tasks.Return_Value is
-     (Async_Tasks.Return_Waiting (Canceled_Event));
-
-   overriding function Run (Who : in out Error_Wait_Task) return Async_Tasks.Return_Value is
-     (Async_Tasks.Return_Waiting (Error_Event));
-
-   overriding function Run (Who : in out Custom_Wait_Task) return Async_Tasks.Return_Value is
-     (Async_Tasks.Return_Waiting (Who.Target));
-
-   overriding function Run (Who : in out Wait_Cancelation_Task) return Async_Tasks.Return_Value is
-   begin
-      Who.Target.Cancel;
-      return Async_Tasks.Return_Finished;
-   end Run;
-
    procedure Run_Benchmarks is
 
       use type Ada.Calendar.Time;
+      package Async_Tasks renames Asynchronous.Tasks;
+      subtype Event_Client is Asynchronous.Events.Clients.Client;
 
       Parallel_Executor : Asynchronous.Executors.Objects.Executor;
       Serial_Executor : Asynchronous.Executors.Objects.Executor (1);
@@ -156,7 +121,7 @@ package body Benchmarks is
       end Benchmark_Task;
 
       procedure Benchmark_Startup is
-         My_Task : Null_Task;
+         My_Task : Async_Tasks.Trivial.Null_Task;
       begin
          Benchmark_Task (What         => My_Task,
                          How_Many     => 150_000,
@@ -166,7 +131,7 @@ package body Benchmarks is
 
       procedure Benchmark_Yielding is
          Yielding_Iterations : constant := 50_000;
-         My_Task : Yielding_Task (Yielding_Iterations);
+         My_Task : Async_Tasks.Trivial.Yielding_Task (Yielding_Iterations);
       begin
 
          Benchmark_Task (What                => My_Task,
@@ -177,7 +142,7 @@ package body Benchmarks is
       end Benchmark_Yielding;
 
       procedure Benchmark_Wait_Ready is
-         My_Task : Ready_Wait_Task;
+         My_Task : Async_Tasks.Trivial.Ready_Wait_Task;
       begin
          Benchmark_Task (What         => My_Task,
                          How_Many     => 150_000,
@@ -186,7 +151,7 @@ package body Benchmarks is
       end Benchmark_Wait_Ready;
 
       procedure Benchmark_Wait_Canceled is
-         My_Task : Canceled_Wait_Task;
+         My_Task : Async_Tasks.Trivial.Canceled_Wait_Task;
       begin
          Benchmark_Task (What         => My_Task,
                          How_Many     => 150_000,
@@ -200,10 +165,10 @@ package body Benchmarks is
          Event_Server_P : constant Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
          Event_Client_P : constant Event_Client := Event_Server_P.Make_Client;
          Event_Client_S : constant Event_Client := Event_Server_S.Make_Client;
-         Consumer_Task_P : constant Custom_Wait_Task := (Target => Event_Client_P);
-         Consumer_Task_S : constant Custom_Wait_Task := (Target => Event_Client_S);
-         Producer_Task_P : constant Wait_Cancelation_Task := (Target => Event_Client_P);
-         Producer_Task_S : constant Wait_Cancelation_Task := (Target => Event_Client_S);
+         Consumer_Task_P : constant Async_Tasks.Trivial.Custom_Wait_Task := (Target => Event_Client_P);
+         Consumer_Task_S : constant Async_Tasks.Trivial.Custom_Wait_Task := (Target => Event_Client_S);
+         Producer_Task_P : constant Async_Tasks.Trivial.Event_Cancelation_Task := (Target => Event_Client_P);
+         Producer_Task_S : constant Async_Tasks.Trivial.Event_Cancelation_Task := (Target => Event_Client_S);
 
          Consumer_Count : constant := 100_000;
 
@@ -287,33 +252,5 @@ package body Benchmarks is
       Benchmark_Wait_Canceled;
       Benchmark_Wait_Custom;
    end Run_Benchmarks;
-
-begin
-
-   declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
-   begin
-      S.Mark_Done;
-      Ready_Event := S.Make_Client;
-   end;
-
-   declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
-   begin
-      S.Cancel;
-      Canceled_Event := S.Make_Client;
-   end;
-
-   declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
-      Custom_Error : exception;
-   begin
-      begin
-         raise Custom_Error;
-      exception
-         when E : Custom_Error =>
-            S.Mark_Error (E);
-      end;
-   end;
 
 end Benchmarks;
