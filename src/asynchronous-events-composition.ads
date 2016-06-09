@@ -1,13 +1,16 @@
 with Asynchronous.Events.Clients;
-with Asynchronous.Events.Servers;
-pragma Elaborate_All (Asynchronous.Events.Servers);
+with Asynchronous.Events.Contracts;
 
 package Asynchronous.Events.Composition is
 
-   -- First, let us define some convenience notations
-   subtype Event_Client is Clients.Client;
-   subtype Event_Server is Servers.Server;
-   type Event_List is array (Positive range <>) of Event_Client;
+   -- Let us define some convenience notation for lists of events first
+   type Nullable_Event_List is array (Positive range <>) of Clients.Client;
+
+   -- In this package, we will only want to deal with event handles in a valid state
+   subtype Valid_Event_Client is Contracts.Valid_Event_Client;
+   subtype Valid_Event_Server is Contracts.Valid_Event_Server;
+   subtype Valid_Event_List is Nullable_Event_List with
+     Dynamic_Predicate => (for all E of Valid_Event_List => E in Valid_Event_Client);
 
    -- Events, as an asynchronous abstraction should be composable. For now, we only support AND-gate-like composition.
    -- The design of Ada protected types makes it somewhat hard to support other kinds of composition, but if a clear

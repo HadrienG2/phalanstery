@@ -26,7 +26,7 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Add_Children (Count : Natural) is
       begin
-         if not Is_Frozen then
+         if not Frozen then
             Child_Count := Child_Count + Count;
             -- NOTE : Cannot add ourselves as listener here, this will be a job for the reference
          else
@@ -34,17 +34,19 @@ package body Asynchronous.Events.Composition.And_Gates is
          end if;
       end Add_Children;
 
-      procedure Make_Client (Where : out Event_Client) is
+      procedure Make_Client (Where : out Valid_Event_Client) is
       begin
-         Is_Frozen := True;
+         Frozen := True;
          Where := Event.Make_Client;
          Propagate_Status_Change;
       end Make_Client;
 
+      function Is_Frozen return Boolean is (Frozen);
+
       procedure Propagate_Status_Change is
       begin
          -- Do not propagate event status if clients may still be added
-         if not Is_Frozen then
+         if not Frozen then
             return;
          end if;
 
@@ -67,14 +69,14 @@ package body Asynchronous.Events.Composition.And_Gates is
    end And_Gate_Implementation;
 
    procedure Add_Child (Where : in out And_Gate;
-                        Who   : in out Event_Client) is
+                        Who   : in out Valid_Event_Client) is
    begin
       Where.Ref.Set.Add_Children (1);
       Who.Add_Listener (Where);
    end Add_Child;
 
    procedure Add_Children (Where : in out And_Gate;
-                           Who   : in out Event_List) is
+                           Who   : in out Valid_Event_List) is
    begin
       Where.Ref.Set.Add_Children (Who'Length);
       for Event of Who loop
@@ -82,12 +84,14 @@ package body Asynchronous.Events.Composition.And_Gates is
       end loop;
    end Add_Children;
 
-   function Make_Client (From : And_Gate) return Event_Client is
+   function Make_Client (From : in out And_Gate) return Valid_Event_Client is
+      C : Events.Clients.Client;
    begin
-      return C : Event_Client do
-         From.Ref.Set.Make_Client (C);
-      end return;
+      From.Ref.Set.Make_Client (C);
+      return C;
    end Make_Client;
+
+   function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
 
    overriding procedure Notify_Event_Status_Change (Where : in out And_Gate;
                                                     What  : Interfaces.Finished_Event_Status) is
@@ -115,7 +119,7 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Initial_State is
          Test_Gate : And_Gate;
-         Test_Client : constant Event_Client := Test_Gate.Make_Client;
+         Test_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
       begin
          Assert_Truth (Check   => (Test_Client.Status = Interfaces.Done),
                        Message => "An AND gate with no children should be Done");
@@ -123,13 +127,13 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Done_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server := Servers.Make_Event;
-         Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
 
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Pending),
                           Message => "An AND gate with one pending child should be Pending");
@@ -138,7 +142,7 @@ package body Asynchronous.Events.Composition.And_Gates is
                Test_Gate.Add_Child (Test_Child_Client);
                Fail ("Adding clients to a frozen AND gate should be forbidden");
             exception
-               when Composite_Event_Already_Frozen =>
+               when Ada.Assertions.Assertion_Error | Composite_Event_Already_Frozen =>
                   null;
             end;
 
@@ -150,12 +154,12 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Canceled_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server := Servers.Make_Event;
-         Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Cancel;
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Canceled),
@@ -165,13 +169,13 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Child_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server : Event_Server := Servers.Make_Event;
-         Test_Child_Client : Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
 
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Mark_Error (Custom_Error_Occurence);
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Error),
@@ -185,15 +189,15 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Done_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                      Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1, Test_Child_Server_2 : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                            Test_Child_Server_2.Make_Client);
       begin
          Test_Child_Server_1.Mark_Done;
          Test_Gate.Add_Children (Test_Child_Clients);
 
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Pending),
                           Message => "An AND gate with only some Done children should still be Pending");
@@ -206,14 +210,14 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Canceled_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Event_Server := Servers.Make_Event;
-         Test_Child_Server_2 : constant Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                      Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Server_2 : constant Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                            Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Cancel;
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Canceled),
@@ -223,15 +227,15 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       procedure Test_Children_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Event_Server := Servers.Make_Event;
-         Test_Child_Server_2 : constant Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                      Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Server_2 : constant Valid_Event_Server := Servers.Make_Event;
+         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                            Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
 
          declare
-            Test_Gate_Client : constant Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Mark_Error (Custom_Error_Occurence);
             Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Error),

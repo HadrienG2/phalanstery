@@ -1,21 +1,24 @@
 with Ada.Exceptions;
+with Asynchronous.Events.Clients;
 with Asynchronous.Events.Composition.And_Gates;
 with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
 with Asynchronous.Utilities.Exceptions;
 with Asynchronous.Utilities.Testing;
-pragma Elaborate_All (Asynchronous.Utilities.Testing);
+pragma Elaborate_All (Asynchronous.Events.Servers,
+                      Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Events.Composition.Shortcuts is
 
-   Done_Event : Event_Client;
+   Done_Event : Events.Clients.Client;
 
-   function When_All (Wait_List : Event_List) return Event_Client is
+   function When_All (Wait_List : Valid_Event_List) return Valid_Event_Client is
    begin
       -- This implementation of When_All uses AND gates if needed, but takes a performance shortcut when possible.
       if Wait_List'Length > 1 then
          declare
             Gate : And_Gates.And_Gate;
-            Wait_List_Copy : Event_List := Wait_List;
+            Wait_List_Copy : Valid_Event_List := Wait_List;
          begin
             And_Gates.Add_Children (Gate, Wait_List_Copy);
             return And_Gates.Make_Client (Gate);
@@ -35,16 +38,16 @@ package body Asynchronous.Events.Composition.Shortcuts is
       use all type Events.Interfaces.Event_Status;
 
       procedure Test_When_None is
-         Empty_List : Event_List (2 .. 1);
-         E : constant Event_Client := When_All (Empty_List);
+         Empty_List : Valid_Event_List (2 .. 1);
+         E : constant Valid_Event_Client := When_All (Empty_List);
       begin
          Assert_Truth (Check   => (E.Status = Done),
                        Message => "When_All should report a done event when waiting for no event");
       end Test_When_None;
 
       procedure Test_When_One is
-         Server : Event_Server := Servers.Make_Event;
-         E : constant Event_Client := When_All ((1 => Server.Make_Client));
+         Server : Valid_Event_Server := Servers.Make_Event;
+         E : constant Valid_Event_Client := When_All ((1 => Server.Make_Client));
       begin
          Assert_Truth (Check   => (E.Status = Pending),
                        Message => "When_All should report a pending event when waiting for one event");
@@ -55,8 +58,8 @@ package body Asynchronous.Events.Composition.Shortcuts is
       end Test_When_One;
 
       procedure Test_When_Done is
-         Server1, Server2 : Event_Server := Servers.Make_Event;
-         E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
+         Server1, Server2 : Valid_Event_Server := Servers.Make_Event;
+         E : constant Valid_Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Mark_Done;
          Assert_Truth (Check   => (E.Status = Pending),
@@ -68,9 +71,9 @@ package body Asynchronous.Events.Composition.Shortcuts is
       end Test_When_Done;
 
       procedure Test_When_Canceled is
-         Server1 : Event_Server := Servers.Make_Event;
-         Server2 : constant Event_Server := Servers.Make_Event;
-         E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
+         Server1 : Valid_Event_Server := Servers.Make_Event;
+         Server2 : constant Valid_Event_Server := Servers.Make_Event;
+         E : constant Valid_Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
       begin
          Server1.Cancel;
          Assert_Truth (Check   => (E.Status = Canceled),
@@ -79,9 +82,9 @@ package body Asynchronous.Events.Composition.Shortcuts is
 
       procedure Test_When_Error is
 
-         Server1 : Event_Server := Servers.Make_Event;
-         Server2 : constant Event_Server := Servers.Make_Event;
-         E : constant Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
+         Server1 : Valid_Event_Server := Servers.Make_Event;
+         Server2 : constant Valid_Event_Server := Servers.Make_Event;
+         E : constant Valid_Event_Client := When_All ((Server1.Make_Client, Server2.Make_Client));
 
          Custom_Error : exception;
          Custom_Error_Occurrence : Ada.Exceptions.Exception_Occurrence;
@@ -112,7 +115,7 @@ begin
 
    -- Generate a done event for use in When_All
    declare
-      E : Servers.Server := Servers.Make_Event;
+      E : Valid_Event_Server := Servers.Make_Event;
    begin
       E.Mark_Done;
       Done_Event := E.Make_Client;

@@ -1,4 +1,5 @@
 with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
 with Asynchronous.Utilities.References.Not_Null;
 pragma Elaborate_All (Asynchronous.Utilities.References.Not_Null);
 
@@ -9,16 +10,21 @@ package Asynchronous.Events.Composition.And_Gates is
 
    -- Composite events are created by composing multiple events with one another
    procedure Add_Child (Where : in out And_Gate;
-                        Who   : in out Event_Client);
+                        Who   : in out Valid_Event_Client)
+     with Pre => (not Is_Frozen (Where));
 
    -- Children may be added in a bulk fashion for increased efficiency
    procedure Add_Children (Where : in out And_Gate;
-                           Who   : in out Event_List);
+                           Who   : in out Valid_Event_List)
+     with Pre => (not Is_Frozen (Where));
 
-   -- Composite events produce an event which is semantically equivalent to the sum of its parts.
+   -- At some point, one may produce a client event which is equivalent to the AND-sum of the children of the gate
+   function Make_Client (From : in out And_Gate) return Valid_Event_Client
+     with Post => (Is_Frozen (From));
+
    -- After producing such a client, the composite event is considered to be frozen, in the sense that it is a run-time
    -- error to attempt to add more clients to it.
-   function Make_Client (From : And_Gate) return Event_Client;
+   function Is_Frozen (What : And_Gate) return Boolean;
    Composite_Event_Already_Frozen : exception;
 
    -- Run the unit tests for this package
@@ -29,13 +35,14 @@ private
    protected type And_Gate_Implementation is
       procedure Notify_Event_Status_Change (What : Interfaces.Finished_Event_Status);
       procedure Add_Children (Count : Natural);
-      procedure Make_Client (Where : out Event_Client);
+      procedure Make_Client (Where : out Valid_Event_Client);
+      function Is_Frozen return Boolean;
    private
-      Is_Frozen : Boolean := False;
+      Frozen : Boolean := False;
       Child_Count : Natural := 0;
       Done_Children : Natural := 0;
       Current_Status : Interfaces.Event_Status := Interfaces.Pending;
-      Event : Event_Server := Servers.Make_Event;
+      Event : Valid_Event_Server := Servers.Make_Event;
       procedure Propagate_Status_Change;
    end And_Gate_Implementation;
 
