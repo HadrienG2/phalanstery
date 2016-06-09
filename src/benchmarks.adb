@@ -61,7 +61,7 @@ package body Benchmarks is
          Ada.Text_IO.Put_Line ("=== Testing the executor's " & Title & " performance ===");
          Start_Time := Ada.Calendar.Clock;
          declare
-            Parallel_Events : Asynchronous.Events.Composition.Event_List (1 .. How_Many);
+            Parallel_Events : Asynchronous.Events.Composition.Nullable_Event_List (1 .. How_Many);
          begin
             Event_Init_Time := Ada.Calendar.Clock;
             Parallel_Events := (others => Parallel_Executor.Schedule_Task (What));
@@ -204,8 +204,8 @@ package body Benchmarks is
          Ada.Text_IO.Put_Line ("=== Testing the executor's custom wait performance ===");
          Start_Time := Ada.Calendar.Clock;
          declare
-            use type Asynchronous.Events.Composition.Event_List;
-            Parallel_Events : Asynchronous.Events.Composition.Event_List (1 .. Consumer_Count);
+            use type Asynchronous.Events.Composition.Nullable_Event_List;
+            Parallel_Events : Asynchronous.Events.Composition.Nullable_Event_List (1 .. Consumer_Count);
             Producer_Event : Event_Client;
          begin
             Event_Init_Time := Ada.Calendar.Clock;
