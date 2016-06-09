@@ -14,14 +14,12 @@ package body Asynchronous.Executors.Task_Instances.References is
 
 
    -- The remainder of this package is dedicated to unit tests
-   package Async_Tasks renames Asynchronous.Tasks;
-
-   type Dummy_Task is new Async_Tasks.Async_Task with
+   type Dummy_Task is new Tasks.Async_Task with
       record
          Dummy_Int : Natural;
       end record;
 
-   overriding function Run (T : in out Dummy_Task) return Async_Tasks.Return_Value is (Async_Tasks.Return_Finished);
+   overriding function Run (T : in out Dummy_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
 
    procedure Run_Tests is
 
