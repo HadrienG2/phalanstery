@@ -1,5 +1,6 @@
 with Asynchronous.Events.Clients;
 with Asynchronous.Events.Servers;
+pragma Elaborate_All (Asynchronous.Events.Servers);
 
 package Asynchronous.Events.Composition is
 

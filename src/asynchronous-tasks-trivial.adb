@@ -1,4 +1,5 @@
 with Asynchronous.Events.Servers;
+pragma Elaborate_All (Asynchronous.Events.Servers);
 
 package body Asynchronous.Tasks.Trivial is
 
@@ -50,21 +51,21 @@ package body Asynchronous.Tasks.Trivial is
 begin
 
    declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
    begin
       S.Mark_Done;
       Ready_Event := S.Make_Client;
    end;
 
    declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
    begin
       S.Cancel;
       Canceled_Event := S.Make_Client;
    end;
 
    declare
-      S : Asynchronous.Events.Servers.Server := Asynchronous.Events.Servers.Make_Event;
+      S : Events.Servers.Server := Events.Servers.Make_Event;
    begin
       begin
          raise Expected_Error;
