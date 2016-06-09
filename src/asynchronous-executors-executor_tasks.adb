@@ -149,32 +149,32 @@ package body Asynchronous.Executors.Executor_Tasks is
 
       T : Tasks.Trivial.Null_Task;
       Executor : Executor_Task (2);
+      Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
 
       procedure Test_Null_Task is
-         Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
          Client : Interfaces.Event_Client;
       begin
          select
             Executor.Schedule_Task (What  => T,
                                     After => Empty_Wait_List,
                                     Event => Client);
-         else
-            Fail ("An executor should initially accept tasks");
+         or
+            delay 0.02;
+            Fail ("An executor should accept tasks quickly");
          end select;
          select
             Executor.Stop;
          or
-            delay 0.1;
+            delay 0.02;
             Fail ("The null task should execute instantly");
          end select;
          Assert_Truth (Check   => (Client.Status = Done),
                        Message => "The null task should appear completed after its executor has terminated");
-      end Test_Schedule_Task;
-
-      procedure Test_Waiting_Task
+      end Test_Null_Task;
 
    begin
       Test_Null_Task;
+      -- Test_Yielding_Task;
    end Run_Tests;
 
 begin
