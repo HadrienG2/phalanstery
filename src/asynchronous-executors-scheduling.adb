@@ -67,11 +67,9 @@ package body Asynchronous.Executors.Scheduling is
 
 
    -- The remainder of this package is dedicated to unit tests
-   package Async_Tasks renames Asynchronous.Tasks;
+   type Dummy_Task is new Tasks.Async_Task with null record;
 
-   type Dummy_Task is new Async_Tasks.Async_Task with null record;
-
-   overriding function Run (T : in out Dummy_Task) return Async_Tasks.Return_Value is (Async_Tasks.Return_Finished);
+   overriding function Run (T : in out Dummy_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
 
    procedure Run_Tests is
 
@@ -80,34 +78,41 @@ package body Asynchronous.Executors.Scheduling is
       use type Task_Instance_Reference;
 
       T : Dummy_Task;
-      Q : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
+      Queue : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       procedure Test_Finished_Wait_List is
-         TI : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Instance : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
          Empty_List : Interfaces.Event_Wait_List (2 .. 1);
-         New_TI : Task_Instance_Reference;
+         New_Instance : Task_Instance_Reference;
       begin
-         Schedule_Task (Who   => TI,
+
+         Schedule_Task (Who   => Instance,
                         After => Empty_List,
-                        On    => Q);
-         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 1),
+                        On    => Queue);
+         Assert_Truth (Check   => (Queue.Get.Ready.Current_Use = 1),
                        Message => "If the event wait list is ready, tasks should be enqueued immediately");
-         Q.Set.Ready.Dequeue (New_TI);
-         Assert_Truth (Check   => (TI = New_TI),
+         Assert_Truth (Check   => Queue.Get.Pending.No_Pending_Task,
+                       Message => "Ready tasks should not be marked as pending");
+
+         Queue.Set.Ready.Dequeue (New_Instance);
+         Assert_Truth (Check   => (New_Instance = Instance),
                        Message => "Scheduling a ready task should enqueue the right task instance");
+
       end Test_Finished_Wait_List;
 
       procedure Test_Canceled_Wait_List is
-         TI : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
-         C : Interfaces.Event_Client := Events.Servers.Make_Event.Make_Client;
+         Instance : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Client : Interfaces.Event_Client := Events.Servers.Make_Event.Make_Client;
       begin
-         C.Cancel;
-         Schedule_Task (Who   => TI,
-                        After => (1 => C),
-                        On    => Q);
-         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 0),
+         Client.Cancel;
+         Schedule_Task (Who   => Instance,
+                        After => (1 => Client),
+                        On    => Queue);
+         Assert_Truth (Check   => (Queue.Get.Ready.Current_Use = 0),
                        Message => "Tasks with canceled input events should not be enqueued in the task queue");
-         Assert_Truth (Check   => TI.Get.Completion_Event.Is_Canceled,
+         Assert_Truth (Check   => Queue.Get.Pending.No_Pending_Task,
+                       Message => "Canceled tasks should not be marked as pending");
+         Assert_Truth (Check   => Instance.Get.Completion_Event.Is_Canceled,
                        Message => "Tasks with canceled input events should be marked canceled");
       end Test_Canceled_Wait_List;
 
@@ -125,9 +130,11 @@ package body Asynchronous.Executors.Scheduling is
          Server.Mark_Error (Custom_Error_Occurence);
          Schedule_Task (Who   => Instance,
                         After => (1 => Client),
-                        On    => Q);
-         Assert_Truth (Check   => (Q.Get.Ready.Current_Use = 0),
+                        On    => Queue);
+         Assert_Truth (Check   => (Queue.Get.Ready.Current_Use = 0),
                        Message => "Tasks with erronerous input events should not be enqueued in the task queue");
+         Assert_Truth (Check   => Queue.Get.Pending.No_Pending_Task,
+                       Message => "Erronerous tasks should not be marked as pending");
          Assert_Truth (Check   => (Instance_Client.Status = Error),
                        Message => "Tasks with erronerous input events should be marked erronerous");
 
@@ -144,12 +151,38 @@ package body Asynchronous.Executors.Scheduling is
 
       end Test_Erronerous_Wait_List;
 
+      procedure Test_Pending_Wait_List is
+         Instance : Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (T);
+         Server : Events.Servers.Server := Events.Servers.Make_Event;
+         Client : constant Interfaces.Event_Client := Server.Make_Client;
+         Instance_Client : constant Interfaces.Event_Client := Instance.Get.Completion_Event.Make_Client;
+      begin
+
+         Schedule_Task (Who   => Instance,
+                        After => (1 => Client),
+                        On    => Queue);
+         Assert_Truth (Check   => (Queue.Get.Ready.Current_Use = 0),
+                       Message => "Pending tasks should not be put on the ready queue");
+         Assert_Truth (Check   => (not Queue.Get.Pending.No_Pending_Task),
+                       Message => "Pending tasks should be accounted as appropriate");
+
+         Server.Mark_Done;
+         Assert_Truth (Check   => (Queue.Get.Ready.Current_Use = 1),
+                       Message => "Tasks should go to the ready queue when ready");
+         Assert_Truth (Check   => Queue.Get.Pending.No_Pending_Task,
+                       Message => "Tasks should not remain on the pending queue after becoming ready.");
+         Assert_Truth (Check   => (Instance_Client.Status = Pending),
+                       Message => "Pending tasks should still be pending after being enqueued");
+
+         Queue.Set.Ready.Dequeue (Instance);
+
+      end Test_Pending_Wait_List;
+
    begin
       Test_Finished_Wait_List;
       Test_Canceled_Wait_List;
       Test_Erronerous_Wait_List;
-      -- TODO : Make the scheduling mechanism of pending tasks less opaque, so that we can test it and wait for it
-      --        during executor finalization
+      Test_Pending_Wait_List;
    end Run_Tests;
 
 begin
