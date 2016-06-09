@@ -59,8 +59,8 @@ procedure Main is
 
 begin
 
-   -- null; -- DEBUG : Remove scheduler benchmark for coverage tests
-   Benchmarks.Run_Benchmarks; -- DEBUG : Test scheduling performance using benchmarks
+   null; -- DEBUG : Remove scheduler benchmark for coverage tests
+   -- Benchmarks.Run_Benchmarks; -- DEBUG : Test scheduling performance using benchmarks
 
 exception
    when E : others =>
