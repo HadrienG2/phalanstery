@@ -1,4 +1,9 @@
 with Ada.Unchecked_Deallocation;
+with Asynchronous.Events.Clients;
+with Asynchronous.Events.Contracts;
+with Asynchronous.Events.Interfaces;
+with Asynchronous.Events.Servers;
+with Asynchronous.Tasks.Trivial;
 with Asynchronous.Utilities.Testing;
 with System.Multiprocessors;
 pragma Elaborate_All (Asynchronous.Utilities.Testing);
@@ -7,18 +12,18 @@ package body Asynchronous.Executors.Objects is
 
    overriding procedure Schedule_Task (Where : in out Executor;
                                        What : Interfaces.Any_Async_Task) is
-      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
-                                                                  What  => What) with Unreferenced;
+      Unused : constant Interfaces.Valid_Event_Client := Schedule_Task (Where => Where,
+                                                                        What  => What) with Unreferenced;
    begin
       null;
    end Schedule_Task;
 
    overriding procedure Schedule_Task (Where : in out Executor;
                                        What  : Interfaces.Any_Async_Task;
-                                       After : Interfaces.Event_Client) is
-      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
-                                                                  What  => What,
-                                                                  After => After) with Unreferenced;
+                                       After : Interfaces.Valid_Event_Client) is
+      Unused : constant Interfaces.Valid_Event_Client := Schedule_Task (Where => Where,
+                                                                        What  => What,
+                                                                        After => After) with Unreferenced;
    begin
       null;
    end Schedule_Task;
@@ -26,15 +31,15 @@ package body Asynchronous.Executors.Objects is
    overriding procedure Schedule_Task (Where : in out Executor;
                                        What  : Interfaces.Any_Async_Task;
                                        After : Interfaces.Event_Wait_List) is
-      Unused : constant Interfaces.Event_Client := Schedule_Task (Where => Where,
-                                                                  What  => What,
-                                                                  After => After) with Unreferenced;
+      Unused : constant Interfaces.Valid_Event_Client := Schedule_Task (Where => Where,
+                                                                        What  => What,
+                                                                        After => After) with Unreferenced;
    begin
       null;
    end Schedule_Task;
 
    overriding function Schedule_Task (Where : in out Executor;
-                                      What : Interfaces.Any_Async_Task) return Interfaces.Event_Client is
+                                      What : Interfaces.Any_Async_Task) return Interfaces.Valid_Event_Client is
       Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
    begin
       return Schedule_Task (Where => Where,
@@ -43,8 +48,8 @@ package body Asynchronous.Executors.Objects is
    end Schedule_Task;
 
    overriding function Schedule_Task (Where : in out Executor;
-                           What  : Interfaces.Any_Async_Task;
-                           After : Interfaces.Event_Client) return Interfaces.Event_Client is
+                                      What  : Interfaces.Any_Async_Task;
+                                      After : Interfaces.Valid_Event_Client) return Interfaces.Valid_Event_Client is
    begin
       return Schedule_Task (Where => Where,
                             What  => What,
@@ -52,14 +57,14 @@ package body Asynchronous.Executors.Objects is
    end Schedule_Task;
 
    overriding function Schedule_Task (Where : in out Executor;
-                           What  : Interfaces.Any_Async_Task;
-                           After : Interfaces.Event_Wait_List) return Interfaces.Event_Client is
+                                      What  : Interfaces.Any_Async_Task;
+                                      After : Interfaces.Event_Wait_List) return Interfaces.Valid_Event_Client is
+      Result : Events.Clients.Client;
    begin
-      return Result : Interfaces.Event_Client do
-         Where.Executor_Task.Schedule_Task (What  => What,
-                                            After => After,
-                                            Event => Result);
-      end return;
+      Where.Executor_Task.Schedule_Task (What  => What,
+                                         After => After,
+                                         Event => Result);
+      return Result;
    end Schedule_Task;
 
    overriding procedure Initialize (Who : in out Executor) is
@@ -87,9 +92,11 @@ package body Asynchronous.Executors.Objects is
 
       use Utilities.Testing;
       use type System.Multiprocessors.CPU_Range;
+      use all type Events.Interfaces.Finished_Event_Status;
 
       Number_Of_Workers : constant := 2;
       Test_Executor : Executor (Number_Of_Workers);
+      T : Tasks.Trivial.Null_Task;
 
       procedure Test_Initial_State is
       begin
@@ -98,6 +105,66 @@ package body Asynchronous.Executors.Objects is
          Assert_Truth (Check   => (Test_Executor.Executor_Task.Number_Of_Workers = Number_Of_Workers),
                        Message => "The executor task of an executor should have the right number of workers");
       end Test_Initial_State;
+
+      procedure Test_Functions is
+         Final_Status : Events.Interfaces.Finished_Event_Status;
+         Dep1_S, Dep2_S : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
+         Dep1_C : constant Events.Contracts.Valid_Event_Client := Dep1_S.Make_Client;
+         Dep2_C : constant Events.Contracts.Valid_Event_Client := Dep2_S.Make_Client;
+      begin
+
+         declare
+            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Task (What => T);
+         begin
+            C.Wait_Completion (Final_Status);
+            Assert_Truth (Check   => (Final_Status = Done),
+                          Message => "The null task should complete properly after being scheduled");
+         end;
+
+         declare
+            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Task (What  => T,
+                                                                                       After => Dep1_C);
+         begin
+            Assert_Truth (Check   => (C.Status = Pending),
+                          Message => "The null task should not start until its dependencies are satisfied");
+
+            Dep1_S.Mark_Done;
+            C.Wait_Completion (Final_Status);
+            Assert_Truth (Check   => (Final_Status = Done),
+                          Message => "The null task should complete properly after its dependencies are met");
+         end;
+
+         declare
+            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Task (What  => T,
+                                                                                       After => (Dep1_C, Dep2_C));
+         begin
+            Assert_Truth (Check   => (C.Status = Pending),
+                          Message => "The null task should not start until all its dependencies are satisfied");
+
+            Dep2_S.Mark_Done;
+            C.Wait_Completion (Final_Status);
+            Assert_Truth (Check   => (Final_Status = Done),
+                          Message => "The null task should complete properly after its dependencies are met");
+         end;
+
+      end Test_Functions;
+
+      procedure Test_Procedures is
+         Alternate_Executor : Executor (Number_Of_Workers);
+         S1, S2 : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
+         C1 : constant Interfaces.Valid_Event_Client := S1.Make_Client;
+         C2 : constant Interfaces.Valid_Event_Client := S2.Make_Client;
+      begin
+         -- Fire-and forget execution is particularly challenging to test, as we have no idea when it will occur and
+         -- have no way to synchronize with it. Consequently, we only test that it does not hang or crash.
+         Alternate_Executor.Schedule_Task (What => T);
+         Alternate_Executor.Schedule_Task (What  => T,
+                                           After => C1);
+         Alternate_Executor.Schedule_Task (What  => T,
+                                           After => (C1, C2));
+         S1.Mark_Done;
+         S2.Mark_Done;
+      end Test_Procedures;
 
       procedure Test_Finalization is
       begin
@@ -108,7 +175,8 @@ package body Asynchronous.Executors.Objects is
 
    begin
       Test_Initial_State;
-      -- TODO
+      Test_Functions;
+      Test_Procedures;
       Test_Finalization;
    end Run_Tests;
 

@@ -21,7 +21,7 @@ package Asynchronous.Executors.Objects is
    -- Schedule a task which waits for one event, do not synchronize
    overriding procedure Schedule_Task (Where : in out Executor;
                                        What  : Interfaces.Any_Async_Task;
-                                       After : Interfaces.Event_Client);
+                                       After : Interfaces.Valid_Event_Client);
 
    -- Schedule a task which waits for multiple events, do not synchronize
    overriding procedure Schedule_Task (Where : in out Executor;
@@ -30,17 +30,17 @@ package Asynchronous.Executors.Objects is
 
    -- Schedule a task immediately, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
-                                      What : Interfaces.Any_Async_Task) return Interfaces.Event_Client;
+                                      What : Interfaces.Any_Async_Task) return Interfaces.Valid_Event_Client;
 
    -- Schedule a task which waits for one event, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Task;
-                                      After : Interfaces.Event_Client) return Interfaces.Event_Client;
+                                      After : Interfaces.Valid_Event_Client) return Interfaces.Valid_Event_Client;
 
    -- Schedule a tasks which waits for multiple events, get an event to synchronize on
    overriding function Schedule_Task (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Task;
-                                      After : Interfaces.Event_Wait_List) return Interfaces.Event_Client;
+                                      After : Interfaces.Event_Wait_List) return Interfaces.Valid_Event_Client;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
