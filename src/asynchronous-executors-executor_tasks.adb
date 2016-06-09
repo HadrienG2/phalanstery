@@ -1,3 +1,4 @@
+with Asynchronous.Events.Clients;
 with Asynchronous.Events.Interfaces;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors.Scheduling;
@@ -13,14 +14,14 @@ pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
 package body Asynchronous.Executors.Executor_Tasks is
 
-   subtype Task_Instance_Reference is Task_Instances.References.Reference;
-   subtype Task_Queue_Reference is Task_Queues.References.Reference;
+   subtype Valid_Task_Instance_Reference is Task_Instances.References.Valid_Reference;
+   subtype Valid_Task_Queue_Reference is Task_Queues.References.Valid_Reference;
    use all type Events.Interfaces.Event_Status;
 
    task body Executor_Task is
 
       -- Executor tasks hold ready tasks (aka work items) on a FIFO queue
-      Task_Queue : constant Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
+      Task_Queue : constant Valid_Task_Queue_Reference := Task_Queues.References.Make_Task_Queue;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
@@ -33,7 +34,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       task body Worker is
 
          -- This function runs a work item and tells whether it is yielding or not
-         function Run_Work_Item (What : Task_Instance_Reference) return Boolean is
+         function Run_Work_Item (What : Valid_Task_Instance_Reference) return Boolean is
             use all type Tasks.Return_Status;
             Work_Item_Yielding : Boolean := False;
          begin
@@ -59,7 +60,7 @@ package body Asynchronous.Executors.Executor_Tasks is
          end Run_Work_Item;
 
          -- This function processes a work item according to the current scheduling policy
-         procedure Process_Work_Item (What : Task_Instance_Reference) is
+         procedure Process_Work_Item (What : Valid_Task_Instance_Reference) is
          begin
             case Active_Scheduling_Policy is
                when Round_Robin =>
@@ -81,7 +82,7 @@ package body Asynchronous.Executors.Executor_Tasks is
          -- Process ready tasks, and wait for them unless the stop signal is set
          while Worker_Active loop
             declare
-               Work_Item : Task_Instance_Reference;
+               Work_Item : Task_Instances.References.Reference;
             begin
                select
                   Task_Queue.Set.Ready.Dequeue (Work_Item);
@@ -115,9 +116,10 @@ package body Asynchronous.Executors.Executor_Tasks is
          select
             accept Schedule_Task (What  : Interfaces.Any_Async_Task;
                                   After : Interfaces.Event_Wait_List;
-                                  Event : out Interfaces.Event_Client) do
+                                  Event : out Interfaces.Valid_Event_Client) do
                declare
-                  Work_Item : constant Task_Instance_Reference := Task_Instances.References.Make_Task_Instance (What);
+                  Work_Item : constant Valid_Task_Instance_Reference :=
+                    Task_Instances.References.Make_Task_Instance (What);
                begin
                   Event := Work_Item.Get.Completion_Event.Make_Client;
                   Scheduling.Schedule_Task (Who   => Work_Item,
@@ -146,6 +148,7 @@ package body Asynchronous.Executors.Executor_Tasks is
    procedure Run_Tests is
 
       use Utilities.Testing;
+      subtype Event_Client is Events.Clients.Client;
 
       Number_Of_Workers : constant := 2;
       Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
@@ -153,7 +156,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       procedure Test_Null_Task is
          Executor : Executor_Task (Number_Of_Workers);
          T : Tasks.Trivial.Null_Task;
-         Client : Interfaces.Event_Client;
+         Client : Event_Client;
       begin
          select
             Executor.Schedule_Task (What  => T,
@@ -176,7 +179,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       procedure Test_Yielding_Task is
          Executor : Executor_Task (Number_Of_Workers);
          T : Tasks.Trivial.Yielding_Task (1);
-         Client : Interfaces.Event_Client;
+         Client : Event_Client;
       begin
          Executor.Schedule_Task (What  => T,
                                  After => Empty_Wait_List,
@@ -194,7 +197,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       procedure Test_Erronerous_Task is
          Executor : Executor_Task (Number_Of_Workers);
          T : Tasks.Trivial.Erronerous_Task;
-         Client : Interfaces.Event_Client;
+         Client : Event_Client;
       begin
          Executor.Schedule_Task (What  => T,
                                  After => Empty_Wait_List,
@@ -212,7 +215,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       procedure Test_Canceled_Wait_Task is
          Executor : Executor_Task (Number_Of_Workers);
          T : Tasks.Trivial.Canceled_Wait_Task;
-         Client : Interfaces.Event_Client;
+         Client : Event_Client;
       begin
          Executor.Schedule_Task (What  => T,
                                  After => Empty_Wait_List,

@@ -8,7 +8,7 @@ private package Asynchronous.Executors.Executor_Tasks is
       -- Queue a new asynchronous task
       entry Schedule_Task (What  : Interfaces.Any_Async_Task;
                            After : Interfaces.Event_Wait_List;
-                           Event : out Interfaces.Event_Client);
+                           Event : out Interfaces.Valid_Event_Client);
 
       -- Schedule executor termination
       entry Stop;
