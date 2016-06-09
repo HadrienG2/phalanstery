@@ -4,7 +4,7 @@ package Asynchronous.Events.Callbacks is
 
    -- As an example of an event listener object, we support a thin wrapper for global callbacks.
 
-   type Event_Status_Callback is access procedure (What : Interfaces.Event_Status);
+   type Event_Status_Callback is not null access procedure (What : Interfaces.Finished_Event_Status);
 
    type Callback_Listener is new Interfaces.Event_Listener_Reference with private;
 
