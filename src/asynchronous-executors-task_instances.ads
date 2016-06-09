@@ -1,4 +1,5 @@
 with Ada.Finalization;
+with Asynchronous.Events.Contracts;
 with Asynchronous.Events.Servers;
 with Asynchronous.Executors.Interfaces;
 
@@ -11,10 +12,11 @@ package Asynchronous.Executors.Task_Instances is
    type Task_Access is access Interfaces.Any_Async_Task;
 
    -- Task instances are currently composed of a task copy and an event used for signaling task completion.
+   subtype Valid_Event_Server is Events.Contracts.Valid_Event_Server;
    type Task_Instance is new Ada.Finalization.Limited_Controlled with
       record
          Task_Object : Task_Access := null;
-         Completion_Event : Events.Servers.Server := Events.Servers.Make_Event;
+         Completion_Event : Valid_Event_Server := Events.Servers.Make_Event;
       end record;
 
    -- Because instances must contain pointers, we should make sure that they are always finalized properly
