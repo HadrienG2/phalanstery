@@ -38,9 +38,9 @@ package body Asynchronous.Events.Servers is
 
    -- The remainder of this package is dedicated to unit tests
    Test_Callback_Calls : Natural := 0;
-   Last_Status : Interfaces.Event_Status;
+   Last_Status : Interfaces.Finished_Event_Status;
 
-   procedure Test_Callback (Final_Status : Interfaces.Event_Status) is
+   procedure Test_Callback (Final_Status : Interfaces.Finished_Event_Status) is
    begin
       Test_Callback_Calls := Test_Callback_Calls + 1;
       Last_Status := Final_Status;

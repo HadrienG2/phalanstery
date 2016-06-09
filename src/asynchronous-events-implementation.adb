@@ -17,7 +17,7 @@ package body Asynchronous.Events.Implementation is
                                          Source => Event_Error);
       end Get_Error;
 
-      entry Wait_Completion (Final_Status : out Interfaces.Event_Status) when Status /= Pending is
+      entry Wait_Completion (Final_Status : out Interfaces.Finished_Event_Status) when Status /= Pending is
       begin
          Final_Status := Current_Status;
          if not Utilities.Exceptions.Is_Null_Occurrence (Event_Error) then
@@ -75,9 +75,9 @@ package body Asynchronous.Events.Implementation is
 
    -- The remainder of this package is dedicated to unit tests
    Test_Callback_Calls : Natural := 0;
-   Last_Status : Interfaces.Event_Status;
+   Last_Status : Interfaces.Finished_Event_Status;
 
-   procedure Test_Callback (Final_Status : Interfaces.Event_Status) is
+   procedure Test_Callback (Final_Status : Interfaces.Finished_Event_Status) is
    begin
       Test_Callback_Calls := Test_Callback_Calls + 1;
       Last_Status := Final_Status;
