@@ -32,6 +32,8 @@ package Asynchronous.Events.Composition.And_Gates is
 
 private
 
+   use all type Interfaces.Event_Status;
+
    protected type And_Gate_Implementation is
       procedure Notify_Event_Status_Change (What : Interfaces.Finished_Event_Status);
       procedure Add_Children (Count : Natural);
@@ -41,7 +43,7 @@ private
       Frozen : Boolean := False;
       Child_Count : Natural := 0;
       Done_Children : Natural := 0;
-      Current_Status : Interfaces.Event_Status := Interfaces.Pending;
+      Current_Status : Interfaces.Event_Status := Pending;
       Event : Valid_Event_Server := Servers.Make_Event;
       procedure Propagate_Status_Change;
    end And_Gate_Implementation;

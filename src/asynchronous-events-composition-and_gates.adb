@@ -14,12 +14,12 @@ package body Asynchronous.Events.Composition.And_Gates is
       procedure Notify_Event_Status_Change (What : Interfaces.Finished_Event_Status) is
       begin
          case What is
-            when Interfaces.Done =>
+            when Done =>
                Done_Children := Done_Children + 1;
-            when Interfaces.Canceled =>
-               Current_Status := Interfaces.Canceled;
-            when Interfaces.Error =>
-               Current_Status := Interfaces.Error;
+            when Canceled =>
+               Current_Status := Canceled;
+            when Error =>
+               Current_Status := Error;
          end case;
          Propagate_Status_Change;
       end Notify_Event_Status_Change;
@@ -52,16 +52,16 @@ package body Asynchronous.Events.Composition.And_Gates is
 
          -- Propagate the current event status
          case Current_Status is
-            when Interfaces.Pending =>
+            when Pending =>
                if Done_Children = Child_Count then
-                  Current_Status := Interfaces.Done;
+                  Current_Status := Done;
                   Event.Mark_Done;
                end if;
-            when Interfaces.Done =>
+            when Done =>
                raise Ada.Assertions.Assertion_Error;  -- This case should never be reached
-            when Interfaces.Canceled =>
+            when Canceled =>
                Event.Cancel;
-            when Interfaces.Error =>
+            when Error =>
                Event.Mark_Error (Child_Error_Occurence);
          end case;
       end Propagate_Status_Change;
@@ -105,7 +105,6 @@ package body Asynchronous.Events.Composition.And_Gates is
 
       use Utilities.Testing;
       use type Ada.Exceptions.Exception_Id;
-      use type Events.Interfaces.Event_Status;
 
       Test_Error : Ada.Exceptions.Exception_Occurrence;
       Custom_Error : exception;
@@ -121,7 +120,7 @@ package body Asynchronous.Events.Composition.And_Gates is
          Test_Gate : And_Gate;
          Test_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
       begin
-         Assert_Truth (Check   => (Test_Client.Status = Interfaces.Done),
+         Assert_Truth (Check   => (Test_Client.Status = Done),
                        Message => "An AND gate with no children should be Done");
       end Test_Initial_State;
 
@@ -135,7 +134,7 @@ package body Asynchronous.Events.Composition.And_Gates is
          declare
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Pending),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Pending),
                           Message => "An AND gate with one pending child should be Pending");
 
             begin
@@ -147,7 +146,7 @@ package body Asynchronous.Events.Composition.And_Gates is
             end;
 
             Test_Child_Server.Mark_Done;
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Done),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Done),
                           Message => "An AND gate whose children are Done should be Done");
          end;
       end Test_Done_Child;
@@ -162,7 +161,7 @@ package body Asynchronous.Events.Composition.And_Gates is
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Cancel;
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Canceled),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Canceled),
                           Message => "An AND gate with a canceled child should be Canceled");
          end;
       end Test_Canceled_Child;
@@ -178,7 +177,7 @@ package body Asynchronous.Events.Composition.And_Gates is
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Mark_Error (Custom_Error_Occurence);
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Error),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Error),
                           Message => "An AND gate with an erronerous child should be in the Error state");
 
             Test_Gate_Client.Get_Error (Test_Error);
@@ -199,11 +198,11 @@ package body Asynchronous.Events.Composition.And_Gates is
          declare
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Pending),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Pending),
                           Message => "An AND gate with only some Done children should still be Pending");
 
             Test_Child_Server_2.Mark_Done;
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Done),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Done),
                           Message => "An AND gate with only Done children should be Done");
          end;
       end Test_Done_Children;
@@ -220,7 +219,7 @@ package body Asynchronous.Events.Composition.And_Gates is
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Cancel;
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Canceled),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Canceled),
                           Message => "An AND gate with one canceled child should be Canceled");
          end;
       end Test_Canceled_Children;
@@ -238,7 +237,7 @@ package body Asynchronous.Events.Composition.And_Gates is
             Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Mark_Error (Custom_Error_Occurence);
-            Assert_Truth (Check   => (Test_Gate_Client.Status = Interfaces.Error),
+            Assert_Truth (Check   => (Test_Gate_Client.Status = Error),
                           Message => "An AND gate with one erronerous child should be in the Error state");
 
             Test_Gate_Client.Get_Error (Test_Error);
