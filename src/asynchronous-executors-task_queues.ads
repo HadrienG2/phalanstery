@@ -2,6 +2,7 @@ with Ada.Containers.Synchronized_Queue_Interfaces;
 with Ada.Containers.Unbounded_Synchronized_Queues;
 with Ada.Finalization;
 with Asynchronous.Executors.Task_Instances.References;
+with Asynchronous.Utilities.Atomic_Counters;
 
 package Asynchronous.Executors.Task_Queues is
 
@@ -11,32 +12,35 @@ package Asynchronous.Executors.Task_Queues is
    package Ready_Queue_Implementation is new Ada.Containers.Unbounded_Synchronized_Queues (Ready_Queue_Interfaces);
 
    -- Pending tasks do not really follow an organized data structure: a task may become pending at any time, and resume
-   -- execution at any other time, regardless of what any other task is doing. Thus, pending tasks will be stored on the
-   -- heap (see Executors.Scheduling for more details), and we only track how many there are in a centralized manner.
-   protected type Pending_Counter is
+   -- execution at any other time, regardless of what any other task is doing.
+   --
+   -- For this reason, pending tasks will be stored on the heap (see Executors.Scheduling for more details), and the
+   -- task queue will only keep track of their amount using an atomic conter.
+   --
+   type Pending_Counter is tagged limited private;
 
-      -- Increment or decrement the pending task counter
-      procedure Add_Task;
-      procedure Remove_Task;
+   procedure Add_Task (Where : in out Pending_Counter);
 
-      -- Tell whether all pending tasks have completed
-      function No_Pending_Task return Boolean;
+   procedure Remove_Task (Where : in out Pending_Counter);
 
-      -- Wait until all pending tasks have completed
-      entry Flush_Pending;
+   function No_Pending_Task (Where : Pending_Counter) return Boolean;
 
-   private
-      Count : Natural := 0;
-   end Pending_Counter;
 
-   -- A task queue is a combination of a ready task queue and a pending task counter. Task queue users should make sure
-   -- that all pending tasks have completed before finalizing a queue. The task queue implementation will attempt to
-   -- detect this error and report it as an exception.
+   -- A task queue is a combination of a ready task queue and a pending task counter. These two accounting facilities
+   -- are kept separate and un-encapsulated so that a client may synchronize with either part of the queue separately,
+   -- which should reduce lock contention as the pending counter and the ready queue are rarely accessed simultaneously.
+   --
+   -- Task queue users should make sure that all pending and ready tasks have completed before finalizing a queue,
+   -- otherwise disaster will ensue. The task queue implementation will attempt to detect this error and report it.
+   -- Unfortunately, due to Ada's policy on finalization exceptions, this means Program_Error will be raised.
+   --
    type Task_Queue is new Ada.Finalization.Limited_Controlled with
       record
          Ready : Ready_Queue_Implementation.Queue;
          Pending : Pending_Counter;
       end record;
+
+   not overriding procedure Flush (What : Task_Queue);
 
    not overriding function Is_Empty (What : Task_Queue) return Boolean;
 
@@ -50,5 +54,14 @@ package Asynchronous.Executors.Task_Queues is
 
    -- Run the unit tests for this package
    procedure Run_Tests;
+
+private
+
+   package Atomic_Counters renames Utilities.Atomic_Counters;
+
+   type Pending_Counter is tagged limited
+      record
+         Implementation : Atomic_Counters.Atomic_Counter;
+      end record;
 
 end Asynchronous.Executors.Task_Queues;

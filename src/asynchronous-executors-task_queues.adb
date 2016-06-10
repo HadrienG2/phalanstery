@@ -1,3 +1,4 @@
+with Asynchronous.Utilities.Debug;
 with Asynchronous.Utilities.Testing;
 pragma Elaborate_All (Asynchronous.Utilities.Testing);
 
@@ -5,26 +6,26 @@ package body Asynchronous.Executors.Task_Queues is
 
    use type Ada.Containers.Count_Type;
 
-   protected body Pending_Counter is
+   procedure Add_Task (Where : in out Pending_Counter) is
+   begin
+      Atomic_Counters.Increment (Where.Implementation);
+   end Add_Task;
 
-      procedure Add_Task is
-      begin
-         Count := Count + 1;
-      end Add_Task;
+   procedure Remove_Task (Where : in out Pending_Counter) is
+      Negative_Pending_Count : constant Boolean := Atomic_Counters.Decrement (Where.Implementation);
+   begin
+      pragma Assert (not Negative_Pending_Count, "The amount of pending tasks should never become negative!");
+   end Remove_Task;
 
-      procedure Remove_Task is
-      begin
-         Count := Count - 1;
-      end Remove_Task;
+   function No_Pending_Task (Where : Pending_Counter) return Boolean is
+      (Atomic_Counters.Is_One (Where.Implementation));
 
-      function No_Pending_Task return Boolean is (Count = 0);
-
-      entry Flush_Pending when No_Pending_Task is
-      begin
-         null;
-      end Flush_Pending;
-
-   end Pending_Counter;
+   procedure Flush (What : Task_Queue) is
+   begin
+      while not What.Is_Empty loop
+         delay 0.05;
+      end loop;
+   end Flush;
 
    not overriding function Is_Empty (What : Task_Queue) return Boolean is
      ((What.Ready.Current_Use = 0) and (What.Pending.No_Pending_Task));
@@ -32,6 +33,7 @@ package body Asynchronous.Executors.Task_Queues is
    overriding procedure Finalize (What : in out Task_Queue) is
    begin
       if not What.Is_Empty then
+         Utilities.Debug.Display ("A task queue was discarded as it still had tasks in it!");
          raise Queue_Usage_Error;
       end if;
    end Finalize;
@@ -48,32 +50,13 @@ package body Asynchronous.Executors.Task_Queues is
          Assert_Truth (Check   => C.No_Pending_Task,
                        Message => "Pending counters should initially feature no pending task");
 
-         select
-            C.Flush_Pending;
-         else
-            Fail ("Flush_Pending should not be initially blocking");
-         end select;
-
          C.Add_Task;
          Assert_Truth (Check   => (not C.No_Pending_Task),
                        Message => "After adding a pending task, counters should not signal it");
 
-         select
-            C.Flush_Pending;
-            Fail ("Flushing a non-empty pending counter should be blocking");
-         else
-            null;
-         end select;
-
          C.Remove_Task;
          Assert_Truth (Check   => C.No_Pending_Task,
                        Message => "After deleting the pending tasks, counters, should go back to the empty state");
-
-         select
-            C.Flush_Pending;
-         else
-            Fail ("After an add/remove round trip, flushing pending task counters should go back to non-blocking");
-         end select;
 
       end Test_Pending_Counter;
 

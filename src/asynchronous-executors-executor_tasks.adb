@@ -129,7 +129,7 @@ package body Asynchronous.Executors.Executor_Tasks is
             end Schedule_Task;
          or
             accept Stop do
-               Task_Queue.Set.Pending.Flush_Pending;
+               Task_Queue.Set.Flush;
                Stop_Request.Send;
                Executor_Active := False;
                Stop_Barrier.Wait;
