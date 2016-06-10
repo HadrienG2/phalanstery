@@ -101,9 +101,7 @@ package body Benchmarks is
             end;
          end loop;
          Direct_Run_Duration := Ada.Calendar.Clock - Start_Time;
-         Ada.Text_IO.Put_Line ("Direct run took " & Duration'Image (Direct_Run_Duration) & " s (" &
-                                 Duration'Image (Sequential_Duration / Direct_Run_Duration) &
-                                 "x faster than serial async)");
+         Ada.Text_IO.Put_Line ("Direct run took " & Duration'Image (Direct_Run_Duration) & " s");
 
          -- Estimate scheduling overhead
          declare
