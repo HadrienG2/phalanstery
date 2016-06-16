@@ -30,7 +30,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       Stop_Barrier : Utilities.Barriers.Barrier (Natural (Number_Of_Workers));
 
       -- Work items are executed by a flock of worker threads, which are defined as follows
-      task type Worker;
+      task type Worker with Priority => 0;
       task body Worker is
 
          -- This function runs a work item and tells whether it is yielding or not
@@ -39,13 +39,17 @@ package body Asynchronous.Executors.Executor_Tasks is
             Work_Item_Yielding : Boolean := False;
          begin
             declare
-               Work_Item_Output : constant Tasks.Return_Value := What.Get.Task_Object.Run;
+               Task_Canceled : constant Boolean := What.Get.Completion_Event.Is_Canceled;
+               Work_Item_Output : constant Tasks.Return_Value :=
+                 What.Get.Task_Object.Run (Was_Canceled => Task_Canceled);
             begin
                case Tasks.Status (Work_Item_Output) is
                   when Finished =>
                      What.Set.Completion_Event.Mark_Done;
                   when Yielding =>
                      Work_Item_Yielding := True;
+                  when Canceled =>
+                     What.Set.Completion_Event.Cancel;
                   when Waiting =>
                      Scheduling.Schedule_Task (Who   => What,
                                                After => Tasks.Wait_List (Work_Item_Output),
@@ -196,7 +200,7 @@ package body Asynchronous.Executors.Executor_Tasks is
 
       procedure Test_Erronerous_Task is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Tasks.Trivial.Erronerous_Task;
+         T : Tasks.Trivial.Erronerous_Task (1);
          Client : Event_Client;
       begin
          Executor.Schedule_Task (What  => T,
@@ -214,7 +218,7 @@ package body Asynchronous.Executors.Executor_Tasks is
 
       procedure Test_Canceled_Wait_Task is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Tasks.Trivial.Canceled_Wait_Task;
+         T : Tasks.Trivial.Canceled_Wait_Task (1);
          Client : Event_Client;
       begin
          Executor.Schedule_Task (What  => T,
