@@ -13,12 +13,13 @@ package Asynchronous.Tasks is
 
    -- On every run, a task returns status information to the underlying task scheduler.
    -- If a task cannot complete normally, it should raise an exception instead, and the runtime will handle it.
-   type Return_Status is (Finished, Yielding, Waiting);
+   type Return_Status is (Finished, Yielding, Waiting, Canceled);
    type Return_Value (<>) is private;
 
    -- Task return values are created in the following way...
    Return_Finished : constant Return_Value;
    Return_Yielding : constant Return_Value;
+   Return_Canceled : constant Return_Value;
    function Return_Waiting (Cause : Valid_Event_Client) return Return_Value;
    function Return_Waiting (Cause : Event_Wait_List) return Return_Value;
 
@@ -33,11 +34,15 @@ package Asynchronous.Tasks is
    -- types to be cheap to copy, for example by having them host pointers or references to arrays instead of raw arrays.
    --
    -- Another important consideration is that in order to follow Ada's accessibility rules, task types should currently
-   -- be defined at global scope. The reason for this rule is that asynchronous task objects might otherwise outlive
-   -- their type. I will see if it is possible to lift this restriction in the future.
+   -- be defined at global scope. The reason is that asynchronous task objects might otherwise outlive their type.
+   --
+   -- Task cancelation is handled as follows: dependents of the canceled task are canceled immediately, and the task
+   -- itself gets notified about the cancelation through a parameter to Run. A task may also choose to cancel itself,
+   -- along with its dependents, by returning Return_Canceled.
    --
    type Async_Task is interface;
-   function Run (Who : in out Async_Task) return Return_Value is abstract;
+   function Run (Who          : in out Async_Task;
+                 Was_Canceled : Boolean) return Return_Value is abstract;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
@@ -47,7 +52,7 @@ private
    type Return_Value (State : Return_Status; Wait_List_Length : Natural) is
       record
          case State is
-            when Finished | Yielding =>
+            when Finished | Yielding | Canceled =>
                null;
             when Waiting =>
                Wait_List : Event_Wait_List (1 .. Wait_List_Length);
@@ -56,5 +61,6 @@ private
 
    Return_Finished : constant Return_Value := (State => Finished, Wait_List_Length => 0);
    Return_Yielding : constant Return_Value := (State => Yielding, Wait_List_Length => 0);
+   Return_Canceled : constant Return_Value := (State => Canceled, Wait_List_Length => 0);
 
 end Asynchronous.Tasks;

@@ -89,11 +89,28 @@ package body Asynchronous.Tasks is
          end;
       end Test_Waiting_Multiple;
 
+      procedure Test_Canceled is
+      begin
+         Assert_Truth (Check   => (Status (Return_Canceled) = Canceled),
+                       Message => "The status of a task returning Return_Canceled should be Canceled");
+         begin
+            declare
+               Unused : constant Event_Wait_List := Wait_List (Return_Canceled) with Unreferenced;
+            begin
+               Fail ("Querying the wait list of a canceled task should be an error");
+            end;
+         exception
+            when Ada.Assertions.Assertion_Error | Constraint_Error =>
+               null;
+         end;
+      end Test_Canceled;
+
    begin
       Test_Finished;
       Test_Yielding;
       Test_Waiting_One;
       Test_Waiting_Multiple;
+      Test_Canceled;
    end Run_Tests;
 
 begin
