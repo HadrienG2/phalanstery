@@ -20,7 +20,8 @@ package body Asynchronous.Executors.Task_Instances.References is
          Dummy_Int : Natural;
       end record;
 
-   overriding function Run (T : in out State_Holding_Task) return Tasks.Return_Value is (Tasks.Return_Finished);
+   overriding function Run (T        : in out State_Holding_Task;
+                            Canceled : Boolean) return Tasks.Return_Value is (Tasks.Return_Finished);
 
    procedure Run_Tests is
 
