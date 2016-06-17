@@ -24,9 +24,9 @@ be portable to a very wide range of hardware configurations. A higher-level sour
 
 ### Events
 
-Events, in our model, are a 1-N intertask communication primitive which represent an asynchronous process.
-They are little state machines which, over their lifetime, transition exactly once from a pending state to one
-of several completion state. Currently, the following event states are defined:
+An event, in this library, is a 1-N intertask communication primitive which represents an asynchronous process.
+It is essentially a little state machine which, over its lifetime, transitions once from a pending state to
+one of several completion state. Currently, the following event states are defined:
 
 - **Pending**: Process is ongoing
 - **Done**: Process completed normally
@@ -50,7 +50,7 @@ that cannot be worked around if a clear use case for such composition is demonst
 Cancelation of events is also supported, in the sense that any entity with a reference to an event can request
 the cancelation of the underlying asynchronous process. How quickly the underlying process will actually stop
 is implementation-dependent, but it is guaranteed that all pending dependents of the event will also be
-stopped, since otherwise their execution would be erronerous as they would incorrectly assume that all their
+stopped, since otherwise their execution might be erronerous as they would incorrectly assume that all their
 dependencies have completed successfully.
 
 This is an area where I need feedback on use cases: this cancelation model is not as general as a model where
