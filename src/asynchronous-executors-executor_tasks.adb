@@ -30,7 +30,7 @@ package body Asynchronous.Executors.Executor_Tasks is
       Stop_Barrier : Utilities.Barriers.Barrier (Natural (Number_Of_Workers));
 
       -- Work items are executed by a flock of worker threads, which are defined as follows
-      task type Worker with Priority => 0;
+      task type Worker with Priority => System.Priority'Last;
       task body Worker is
 
          -- This function runs a work item and tells whether it is yielding or not

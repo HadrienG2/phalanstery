@@ -18,9 +18,9 @@ a program, in order to expose internal concurrency and allow latency hiding of I
 the number of underlying OS threads to a reasonable amount (typically more or less the amount of CPU cores or
 hardware threads on the host).
 
-The low-level interface to this specific library is heavily influenced by the design of out-of-order OpenCL
+The low-level interface to this specific library was heavily influenced by the design of out-of-order OpenCL
 command queues, which I feel provide a very elegant model for asynchronous computation, that has proven to be
-portable to a very wide range of hardware configurations. Another major source of inspiration is HPX.
+portable to a very wide range of hardware configurations. A higher-level source of inspiration is HPX.
 
 ### Events
 

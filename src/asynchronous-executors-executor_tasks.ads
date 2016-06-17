@@ -1,9 +1,10 @@
 with Asynchronous.Executors.Interfaces;
+with System;
 
 private package Asynchronous.Executors.Executor_Tasks is
 
    -- Under the hood, executor objects spawn and manage an Ada task, which is called the executor task.
-   task type Executor_Task (Number_Of_Workers : Interfaces.Worker_Count) with Priority => 1 is
+   task type Executor_Task (Number_Of_Workers : Interfaces.Worker_Count) with Priority => System.Priority'First is
 
       -- Queue a new asynchronous task
       entry Schedule_Task (What  : Interfaces.Any_Async_Task;
