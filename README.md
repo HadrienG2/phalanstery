@@ -36,8 +36,8 @@ one of several completion state. Currently, the following event states are defin
 Event state may be tracked in one of three ways:
 
 - Polling (Easy to use, not suitable for waiting)
-- Blocking wait for completion (CPU-efficient but not scalable to many waiters, only intended for the main
-  program)
+- Blocking wait for completion (CPU-efficient but not scalable to many waiters, preferably only use in the
+  main program)
 - Callback objects (Preferred solution for most waiting scenarios. Unlike regular callbacks, these objects are
   stateful, and can thus be easily made context aware. Moreover, because any suitably tagged Ada type may be
   used, thread-safety can be achieved quite easily using protected types.)
