@@ -2,8 +2,8 @@
 
 ## What is this?
 
-This is an attempt to bring the kind of user-mode asynchronous tasking facilities that can be seen in C++
-libraries such as Intel TBB or HPX to a native Ada package.
+This project is an attempt to bring the kind of user-mode asynchronous tasking facilities that can be seen in
+C++ libraries such as Intel TBB or HPX to a native Ada package.
 
 At the moment, it is very much experimental, and even the general design is still open for discussion. I would
 thus strongly recommend against basing any work on this library yet.
@@ -14,9 +14,9 @@ thus strongly recommend against basing any work on this library yet.
 ### Introduction
 
 The goal of any user mode tasking library is to permit the existence of a large amount of cooperative tasks in
-a program, in order to expose internal concurrency and allow latency hiding of IO operations, while bounding
-the number of underlying OS threads to a reasonable amount (typically more or less the amount of CPU cores or
-hardware threads on the host).
+a program, in order to expose the internal concurrency of a program and allow latency hiding of IO operations,
+while bounding the number of underlying OS threads to a reasonable amount (typically more or less the amount
+of CPU cores or hardware threads on the host).
 
 The low-level interface to this specific library was heavily influenced by the design of out-of-order OpenCL
 command queues, a model for asynchronous computation and I/O which I think is very elegant and has proven to
