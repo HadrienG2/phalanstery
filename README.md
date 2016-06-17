@@ -31,7 +31,7 @@ one of several completion state. Currently, the following event states are defin
 - **Pending**: Process is ongoing
 - **Done**: Process completed normally
 - **Error**: Process was erronerous (additional exception information may be retrieved from the event object)
-- **Canceled**: Process was aborted, generally on user request
+- **Canceled**: Process was aborted, typically on user request
 
 Event state may be tracked in one of three ways:
 
