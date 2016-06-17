@@ -19,14 +19,14 @@ the number of underlying OS threads to a reasonable amount (typically more or le
 hardware threads on the host).
 
 The low-level interface to this specific library was heavily influenced by the design of out-of-order OpenCL
-command queues, which I feel provide a very elegant model for asynchronous computation, that has proven to be
-portable to a very wide range of hardware configurations. A higher-level source of inspiration is HPX.
+command queues, a model for asynchronous computation and I/O which I think is very elegant and has proven to
+be portable to a very wide range of hardware configurations. A higher-level source of inspiration is HPX.
 
 ### Events
 
 Events, in our model, are a 1-N intertask communication primitive which represent an asynchronous process.
 They are little state machines which, over their lifetime, transition exactly once from a pending state to one
-of several completion state. Currently, the following process states are defined:
+of several completion state. Currently, the following event states are defined:
 
 - **Pending**: Process is ongoing
 - **Done**: Process completed normally
@@ -36,16 +36,16 @@ of several completion state. Currently, the following process states are defined
 Event state may be tracked in one of three ways:
 
 - Polling (Easy to use, not suitable for waiting)
-- Blocking wait for completion (CPU-efficient but not scalable to many waiters, only intended for use in the
-  main application program)
+- Blocking wait for completion (CPU-efficient but not scalable to many waiters, only intended for the main
+  program)
 - Callback objects (Preferred solution for most waiting scenarios. Unlike regular callbacks, these objects are
   stateful, and can thus be easily made context aware. Moreover, because any suitably tagged Ada type may be
   used, thread-safety can be achieved quite easily using protected types.)
 
-Events are composable using an AND-gate like relationship: a composite event is Done if all its children are
-Done, and edge cases are handled the way you would expect. The design of Ada protected types makes it
-somewhat harder to implement other composition relationships such as OR gates, however it is nothing that
-cannot be worked around if a clear use case for such composition is demonstrated.
+Events are composable using an AND-gate like relationship: a composite event becomes Done when all of its
+children are Done, and the other cases are handled the way you would expect. The design of Ada protected types
+makes it somewhat harder to implement other composition relationships such as OR gates, however it is nothing
+that cannot be worked around if a clear use case for such composition is demonstrated.
 
 Cancelation of events is also supported, in the sense that any entity with a reference to an event can request
 the cancelation of the underlying asynchronous process. How quickly the underlying process will actually stop
@@ -68,8 +68,8 @@ be used to track the progress of said task. In addition, a task may, both at sch
 time during execution, opt to wait for a list of events. This effectively creates a dynamic event-based task
 dependency graph, which is a very powerful primitive when composing complex asynchronous computations.
 
-By design, this execution model makes it hard to accidentally create a cyclic dependency graph which would
-result in program deadlock. This improves usability and voids the need for expensive and complex runtime cycle
+By design, this execution model makes it hard to accidentally create a cyclic dependency graph, which would
+result in a deadlock. This improves usability and voids the need for expensive and complex runtime cycle
 detection algorithms.
 
 A task is scheduled for execution as soon as a CPU core is available, and then has multiple avenues for
@@ -116,9 +116,9 @@ arbitrarily selected CPU core, which is fine for symmetric multiprocessing machi
 optimal performance on higher-end multi-socket machines. Addressing this problem requires a combination of
 both CPU pinning and careful memory management, and this will raise interesting interface design questions.
 
-Going in the same general direction, one can also implement distributed computing support. The HPX team has
-shown that the asynchronous tasking model can scale remarkably well in a distributed setting, and there are
-definitely many interesting avenues to explore in this area.
+Going in the same general direction, one can also implement distributed and heterogeneous computing support.
+The HPX team has shown that the asynchronous tasking model can scale remarkably well in a distributed setting,
+and there are definitely many interesting avenues to explore in this area.
 
 Debugging and profiling tools are often a sore point of asynchronous tasking libraries, and one area which I
 would definitely love to explore more. Here, what I would envision is an interactive visualization of the
@@ -127,4 +127,4 @@ This would help a user to pinpoint the exact origin of errors, along with the ex
 
 Asynchronous tasking is also strongly dependent on the availability of nonblocking IO, which is in general a
 core component of any scalable software system that interacts with the outside world. If this idea is
-successful, this is definitely an area which I will want to explore as well.
+successful, it is definitely an area which I will want to explore as well.
