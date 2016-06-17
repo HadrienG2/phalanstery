@@ -92,8 +92,8 @@ usage scenarios. For example, if fire-and-forget semantics are desired, as is ty
 debugging output, a client can easily choose not to receive the output event of the associated task.
 
 A core goal of this execution model is to be scalable to non-shared memory scenarios, such as distributed
-and heterogeneous computing. In this respect, no issue is foreseen with a usage model where programs use one
-executor per core, as in OpenCL. Events should also be reasonably scalable provided that clients accept to
+and heterogeneous computing. In this respect, no issue is foreseen in usage scenarios where programs use one
+executor per locality, as in OpenCL. Events should also be reasonably scalable provided that clients accept to
 tolerate some caching and state propagation latencies.
 
 In the future, executors may also acquire more functionality, such as performing watchdog monitoring of
