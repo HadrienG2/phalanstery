@@ -1,3 +1,4 @@
+with Ada.Assertions;
 with Asynchronous.Events.Callbacks;
 with Asynchronous.Utilities.Exceptions;
 with Asynchronous.Utilities.Testing;
@@ -17,12 +18,18 @@ package body Asynchronous.Events.Implementation is
                                          Source => Event_Error);
       end Get_Error;
 
-      entry Wait_Completion (Final_Status : out Interfaces.Finished_Event_Status) when Status /= Pending is
+      entry Wait_Completion when Status /= Pending is
       begin
-         Final_Status := Current_Status;
-         if not Utilities.Exceptions.Is_Null_Occurrence (Event_Error) then
-            Ada.Exceptions.Reraise_Occurrence (Event_Error);
-         end if;
+         case Current_Status is
+            when Pending =>
+               raise Ada.Assertions.Assertion_Error;  -- Should never happen
+            when Done =>
+               return;
+            when Error =>
+               Ada.Exceptions.Reraise_Occurrence (Event_Error);
+            when Canceled =>
+               raise Interfaces.Event_Canceled;
+         end case;
       end Wait_Completion;
 
       procedure Add_Listener (Who : in out Interfaces.Event_Listener_Reference'Class) is
@@ -92,7 +99,7 @@ package body Asynchronous.Events.Implementation is
       Custom_Error : exception;
       Custom_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
-      Final_Status : Interfaces.Event_Status;
+      -- Final_Status : Interfaces.Event_Status;
       Test_Callback_Listener : Callbacks.Callback_Listener := Callbacks.Make_Callback_Listener (Test_Callback'Access);
 
       procedure Setup_Tests is
@@ -112,7 +119,7 @@ package body Asynchronous.Events.Implementation is
                        Message => "Freshly initialized events should be devoid of exceptions");
 
          select
-            Test_Event.Wait_Completion (Final_Status);
+            Test_Event.Wait_Completion;
             Fail ("Pending events should lead to blocking waits");
          else
             null;
@@ -139,9 +146,7 @@ package body Asynchronous.Events.Implementation is
                        Message => "Normally completed events should be devoid of exceptions");
 
          select
-            Test_Event.Wait_Completion (Final_Status);
-            Assert_Truth (Check   => (Final_Status = Done),
-                          Message => "Waiting for a done event should return immediately, with the right status");
+            Test_Event.Wait_Completion;
          else
             Fail ("Waiting for a done event should not block");
          end select;
@@ -185,13 +190,17 @@ package body Asynchronous.Events.Implementation is
          Assert_Truth (Check   => (Ada.Exceptions.Exception_Identity (Test_Error) = Ada.Exceptions.Null_Id),
                        Message => "Canceled events should be devoid of exceptions");
 
-         select
-            Test_Event.Wait_Completion (Final_Status);
-            Assert_Truth (Check   => (Final_Status = Canceled),
-                          Message => "Waiting for a canceled event should return immediately, with the right status");
-         else
-            Fail ("Waiting for a canceled event should not block");
-         end select;
+         begin
+            select
+               Test_Event.Wait_Completion;
+               Fail ("Waiting for a canceled event should raise Event_Canceled");
+            else
+               Fail ("Waiting for a canceled event should not block");
+            end select;
+         exception
+            when Interfaces.Event_Canceled =>
+               null;
+         end;
 
          Assert_Truth (Check   => (Test_Callback_Calls = 3) and (Last_Status = Canceled),
                        Message => "Previously set callbacks should be fired when the event is canceled");
@@ -234,7 +243,7 @@ package body Asynchronous.Events.Implementation is
 
          begin
             select
-               Test_Event.Wait_Completion (Final_Status);
+               Test_Event.Wait_Completion;
                Fail ("Waiting for an erronerous event should re-raise the underlying exception");
             else
                Fail ("Waiting for an erronerous event should not block");

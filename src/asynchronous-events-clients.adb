@@ -14,10 +14,9 @@ package body Asynchronous.Events.Clients is
       Who.Ref.Set.Get_Error (What);
    end Get_Error;
 
-   overriding procedure Wait_Completion (Who          : Client;
-                                         Final_Status : out Interfaces.Finished_Event_Status) is
+   overriding procedure Wait_Completion (Who : Client) is
    begin
-      Who.Ref.Set.Wait_Completion (Final_Status);
+      Who.Ref.Set.Wait_Completion;
    end Wait_Completion;
 
    overriding procedure Add_Listener (Where : in out Client;

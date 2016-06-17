@@ -34,9 +34,10 @@ package Asynchronous.Events.Interfaces with Preelaborate is
      with Pre'Class => (not Who.Is_Null);
 
    -- Waiting is more CPU-efficient, but it blocks OS threads and is thus still not scalable to many waiters.
-   -- If the event ends up throwing an exception, it will be propagated to the waiter upon wakeup.
-   procedure Wait_Completion (Who  : Event_Client;
-                              Final_Status : out Finished_Event_Status) is abstract
+   -- If the event ends up throwing an exception, it will be propagated to the waiter upon wakeup, and if it is
+   -- canceled, the following specific exception will be raised.
+   Event_Canceled : exception;
+   procedure Wait_Completion (Who : Event_Client) is abstract
      with Pre'Class => (not Who.Is_Null);
 
    -- Finally, we may ask the event to synchronously notify some listener about status changes using a callback.

@@ -23,7 +23,7 @@ package Asynchronous.Events.Implementation is
       function Status return Interfaces.Event_Status;
       procedure Get_Error (What : out Ada.Exceptions.Exception_Occurrence);
 
-      entry Wait_Completion (Final_Status : out Interfaces.Finished_Event_Status);
+      entry Wait_Completion;
 
       procedure Add_Listener (Who : in out Interfaces.Event_Listener_Reference'Class);
 

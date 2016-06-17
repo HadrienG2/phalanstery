@@ -18,8 +18,7 @@ package Asynchronous.Events.Clients is
    overriding procedure Get_Error (Who  : Client;
                                    What : out Ada.Exceptions.Exception_Occurrence);
 
-   overriding procedure Wait_Completion (Who          : Client;
-                                         Final_Status : out Interfaces.Finished_Event_Status);
+   overriding procedure Wait_Completion (Who : Client);
 
    overriding procedure Add_Listener (Where : in out Client;
                                       Who   : in out Interfaces.Event_Listener_Reference'Class);

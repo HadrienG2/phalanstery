@@ -23,8 +23,6 @@ package body Benchmarks is
       Serial_Executor : Asynchronous.Executors.Objects.Executor (1);
       Number_Of_CPUs : constant Positive := Positive (System.Multiprocessors.Number_Of_CPUs);
 
-      Final_Status : Asynchronous.Events.Interfaces.Event_Status with Unreferenced;
-
       procedure Benchmark_Task (What                : Asynchronous.Executors.Interfaces.Any_Async_Task;
                                 How_Many            : Positive;
                                 Title               : String;
@@ -45,7 +43,7 @@ package body Benchmarks is
                Test_Event := On.Schedule_Task (What, Test_Event);
             end loop;
             Schedule_Time := Ada.Calendar.Clock;
-            Test_Event.Wait_Completion (Final_Status);
+            Test_Event.Wait_Completion;
             End_Time := Ada.Calendar.Clock;
 
             -- Analyze sequential results
@@ -70,7 +68,7 @@ package body Benchmarks is
             Schedule_Time := Ada.Calendar.Clock;
             Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events);
             When_All_Time := Ada.Calendar.Clock;
-            Test_Event.Wait_Completion (Final_Status);
+            Test_Event.Wait_Completion;
             Wait_Over_Time := Ada.Calendar.Clock;
          end;
          End_Time := Ada.Calendar.Clock;
@@ -222,7 +220,12 @@ package body Benchmarks is
             end loop;
             Test_Event := On.Schedule_Task (Producer_Task_S, Test_Event);
             Schedule_Time := Ada.Calendar.Clock;
-            Test_Event.Wait_Completion (Final_Status);
+            begin
+               Test_Event.Wait_Completion;
+            exception
+               when Asynchronous.Events.Interfaces.Event_Canceled =>
+                  null;
+            end;
             End_Time := Ada.Calendar.Clock;
 
             -- Analyze sequential results
@@ -250,7 +253,12 @@ package body Benchmarks is
             Schedule_Time := Ada.Calendar.Clock;
             Test_Event := Asynchronous.Events.Composition.Shortcuts.When_All (Parallel_Events & Producer_Event);
             When_All_Time := Ada.Calendar.Clock;
-            Test_Event.Wait_Completion (Final_Status);
+            begin
+               Test_Event.Wait_Completion;
+            exception
+               when Asynchronous.Events.Interfaces.Event_Canceled =>
+                  null;
+            end;
             Wait_Over_Time := Ada.Calendar.Clock;
          end;
          End_Time := Ada.Calendar.Clock;

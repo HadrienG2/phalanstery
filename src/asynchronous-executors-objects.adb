@@ -107,7 +107,6 @@ package body Asynchronous.Executors.Objects is
       end Test_Initial_State;
 
       procedure Test_Functions is
-         Final_Status : Events.Interfaces.Finished_Event_Status;
          Dep1_S, Dep2_S : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
          Dep1_C : constant Events.Contracts.Valid_Event_Client := Dep1_S.Make_Client;
          Dep2_C : constant Events.Contracts.Valid_Event_Client := Dep2_S.Make_Client;
@@ -116,8 +115,8 @@ package body Asynchronous.Executors.Objects is
          declare
             C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Task (What => T);
          begin
-            C.Wait_Completion (Final_Status);
-            Assert_Truth (Check   => (Final_Status = Done),
+            C.Wait_Completion;
+            Assert_Truth (Check   => (C.Status = Done),
                           Message => "The null task should complete properly after being scheduled");
          end;
 
@@ -129,8 +128,8 @@ package body Asynchronous.Executors.Objects is
                           Message => "The null task should not start until its dependencies are satisfied");
 
             Dep1_S.Mark_Done;
-            C.Wait_Completion (Final_Status);
-            Assert_Truth (Check   => (Final_Status = Done),
+            C.Wait_Completion;
+            Assert_Truth (Check   => (C.Status = Done),
                           Message => "The null task should complete properly after its dependencies are met");
          end;
 
@@ -142,8 +141,8 @@ package body Asynchronous.Executors.Objects is
                           Message => "The null task should not start until all its dependencies are satisfied");
 
             Dep2_S.Mark_Done;
-            C.Wait_Completion (Final_Status);
-            Assert_Truth (Check   => (Final_Status = Done),
+            C.Wait_Completion;
+            Assert_Truth (Check   => (C.Status = Done),
                           Message => "The null task should complete properly after its dependencies are met");
          end;
 
