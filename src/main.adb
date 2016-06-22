@@ -1,32 +1,32 @@
 pragma Warnings (Off);
-with Asynchronous;
-with Asynchronous.Events;
-with Asynchronous.Events.Callbacks;
-with Asynchronous.Events.Clients;
-with Asynchronous.Events.Composition;
-with Asynchronous.Events.Composition.And_Gates;
-with Asynchronous.Events.Composition.Shortcuts;
-with Asynchronous.Events.Implementation;
-with Asynchronous.Events.Interfaces;
-with Asynchronous.Events.Servers;
-with Asynchronous.Executors;
-with Asynchronous.Executors.Interfaces;
-with Asynchronous.Executors.Objects;
-with Asynchronous.Executors.Task_Instances;
-with Asynchronous.Executors.Task_Instances.References;
-with Asynchronous.Executors.Task_Queues;
-with Asynchronous.Executors.Task_Queues.References;
-with Asynchronous.Tasks;
-with Asynchronous.Tasks.Trivial;
-with Asynchronous.Utilities;
-with Asynchronous.Utilities.Atomic_Counters;
-with Asynchronous.Utilities.Barriers;
-with Asynchronous.Utilities.Debug;
-with Asynchronous.Utilities.References;
-with Asynchronous.Utilities.References.Not_Null;
-with Asynchronous.Utilities.References.Nullable;
-with Asynchronous.Utilities.Signals;
-with Asynchronous.Utilities.Testing;
+with Phalanstery;
+with Phalanstery.Events;
+with Phalanstery.Events.Callbacks;
+with Phalanstery.Events.Clients;
+with Phalanstery.Events.Composition;
+with Phalanstery.Events.Composition.And_Gates;
+with Phalanstery.Events.Composition.Shortcuts;
+with Phalanstery.Events.Implementation;
+with Phalanstery.Events.Interfaces;
+with Phalanstery.Events.Servers;
+with Phalanstery.Executors;
+with Phalanstery.Executors.Interfaces;
+with Phalanstery.Executors.Objects;
+with Phalanstery.Executors.Job_Instances;
+with Phalanstery.Executors.Job_Instances.References;
+with Phalanstery.Executors.Job_Queues;
+with Phalanstery.Executors.Job_Queues.References;
+with Phalanstery.Jobs;
+with Phalanstery.Jobs.Trivial;
+with Phalanstery.Utilities;
+with Phalanstery.Utilities.Atomic_Counters;
+with Phalanstery.Utilities.Barriers;
+with Phalanstery.Utilities.Debug;
+with Phalanstery.Utilities.References;
+with Phalanstery.Utilities.References.Not_Null;
+with Phalanstery.Utilities.References.Nullable;
+with Phalanstery.Utilities.Signals;
+with Phalanstery.Utilities.Testing;
 pragma Warnings (On);
 
 with Benchmarks;
@@ -65,6 +65,6 @@ begin
 
 exception
    when E : others =>
-      Asynchronous.Utilities.Debug.Display_Unhandled_Exception ("the main program", E);
+      Phalanstery.Utilities.Debug.Display_Unhandled_Exception ("the main program", E);
       raise;
 end Main;
