@@ -31,8 +31,8 @@ package Phalanstery.Executors.Job_Queues is
    package Ready_Queue_Implementation is new Ada.Containers.Unbounded_Synchronized_Queues (Ready_Queue_Interfaces);
 
 
-   -- Pending jobs do not really follow an organized data structure: a job may become pending at any time, and resume
-   -- execution at any other time, irrespective of what any other job is doing.
+   -- Pending jobs do not really follow an organized queue-like structure: a job may become pending at any time, and
+   -- resume execution at any other time, irrespective of what any other job is doing.
    --
    -- For this reason, pending jobs will be stored on the heap (see Executors.Scheduling for more details), and the
    -- job queue will only keep track of their amount using an atomic conter.
