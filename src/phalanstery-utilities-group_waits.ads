@@ -15,18 +15,19 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-package Phalanstery.Utilities.Barriers is
+package Phalanstery.Utilities.Group_Waits is
 
-   -- The signal primitive is intended as a lightweight way for one task to wait for N tasks do something.
-   -- A typical use case for it is task shutdown in scenarios where terminate alternatives cannot be used.
-   protected type Barrier (Number_Of_Tasks : Natural) is
-      procedure Join;
-      entry Wait;
+   -- This primitive is intended as a way for one task to wait for a group of N tasks to do something.
+   -- It can typically be used in abort-less task termination: the master task starts the termination of its slaves
+   -- using a signal, and waits for them to be finished using a group wait.
+   protected type Group_Wait (Number_Of_Tasks : Natural) is
+      procedure Mark_One_Ready;
+      entry Wait_All;
    private
       Ready_Tasks : Natural := 0;
-   end Barrier;
+   end Group_Wait;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
 
-end Phalanstery.Utilities.Barriers;
+end Phalanstery.Utilities.Group_Waits;

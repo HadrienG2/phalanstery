@@ -23,8 +23,8 @@ with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues.References;
 with Phalanstery.Jobs;
 with Phalanstery.Jobs.Trivial;
-with Phalanstery.Utilities.Barriers;
 with Phalanstery.Utilities.Debug;
+with Phalanstery.Utilities.Group_Waits;
 with Phalanstery.Utilities.Signals;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
@@ -42,9 +42,9 @@ package body Phalanstery.Executors.Executor_Tasks is
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
-      -- termination using a signal object, and acknowledges it using a barrier object.
+      -- termination using a signal object, and acknowledges it using a group wait object.
       Stop_Request : Utilities.Signals.Signal;
-      Stop_Barrier : Utilities.Barriers.Barrier (Natural (Number_Of_Workers));
+      Worker_Wait : Utilities.Group_Waits.Group_Wait (Natural (Number_Of_Workers));
 
       -- Work items are executed by a flock of worker threads, which are defined as follows
       task type Worker with Priority => System.Priority'Last;
@@ -81,7 +81,7 @@ package body Phalanstery.Executors.Executor_Tasks is
          end Run_Work_Item;
 
          -- This function processes a work item according to the current scheduling policy
-         procedure Process_Work_Item (What : Valid_Job_Instance_Reference) is
+         procedure Process_Work_Item (What : Valid_Job_Instance_Reference) with Inline is
          begin
             case Active_Scheduling_Policy is
                when Round_Robin =>
@@ -116,12 +116,13 @@ package body Phalanstery.Executors.Executor_Tasks is
          end loop;
 
          -- Signal the underlying executor task that all work is complete
-         Stop_Barrier.Join;
+         Worker_Wait.Mark_One_Ready;
 
       exception
          when E : others =>
             Utilities.Debug.Display_Unhandled_Exception ("an asynchronous worker", E);
-            Stop_Request.Send;
+            Worker_Wait.Mark_One_Ready;
+            Stop;
             raise;
       end Worker;
 
@@ -133,6 +134,8 @@ package body Phalanstery.Executors.Executor_Tasks is
       Executor_Active : Boolean := True;
 
    begin
+
+      -- Accept requests from the outside world
       while Executor_Active loop
          select
             accept Schedule_Job (What  : Interfaces.Any_Async_Job;
@@ -153,10 +156,13 @@ package body Phalanstery.Executors.Executor_Tasks is
                Job_Queue.Set.Flush;
                Stop_Request.Send;
                Executor_Active := False;
-               Stop_Barrier.Wait;
+               Worker_Wait.Wait_All;
             end Stop;
          end select;
       end loop;
+
+      -- TODO: Handle worker exceptions better
+
    exception
       when E : others =>
          Utilities.Debug.Display_Unhandled_Exception ("an asynchronous executor", E);

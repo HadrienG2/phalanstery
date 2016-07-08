@@ -18,21 +18,21 @@
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Utilities.Barriers is
+package body Phalanstery.Utilities.Group_Waits is
 
-   protected body Barrier is
+   protected body Group_Wait is
 
-      procedure Join is
+      procedure Mark_One_Ready is
       begin
          Ready_Tasks := Ready_Tasks + 1;
-      end Join;
+      end Mark_One_Ready;
 
-      entry Wait when Ready_Tasks = Number_Of_Tasks is
+      entry Wait_All when Ready_Tasks = Number_Of_Tasks is
       begin
          null;
-      end Wait;
+      end Wait_All;
 
-   end Barrier;
+   end Group_Wait;
 
 
    -- The remainder of this package is dedicated to unit tests
@@ -40,53 +40,53 @@ package body Phalanstery.Utilities.Barriers is
 
       use Utilities.Testing;
 
-      procedure Test_Null_Barrier is
-         B : Barrier (0);
+      procedure Test_Empty_Group_Wait is
+         B : Group_Wait (0);
       begin
          select
-            B.Wait;
+            B.Wait_All;
          else
-            Fail ("The null barrier should be opened");
+            Fail ("Waiting for an empty group should return immediately");
          end select;
-      end Test_Null_Barrier;
+      end Test_Empty_Group_Wait;
 
       procedure Test_One_Task is
-         B : Barrier (1);
+         B : Group_Wait (1);
       begin
          select
-            B.Wait;
-            Fail ("The barrier should be initially closed");
+            B.Wait_All;
+            Fail ("Waiting for one non-ready task should block");
          else
             null;
          end select;
-         B.Join;
+         B.Mark_One_Ready;
          select
-            B.Wait;
+            B.Wait_All;
          else
-            Fail ("Waiting on a full barrier should succeed");
+            Fail ("Waiting for one ready task should return immediately");
          end select;
       end Test_One_Task;
 
       procedure Test_Two_Tasks is
-         B : Barrier (2);
+         B : Group_Wait (2);
       begin
-         B.Join;
+         B.Mark_One_Ready;
          select
-            B.Wait;
-            Fail ("One arrival should not be enough to trigger the barrier");
+            B.Wait_All;
+            Fail ("One ready task should not be enough to consider the wait over");
          else
             null;
          end select;
-         B.Join;
+         B.Mark_One_Ready;
          select
-            B.Wait;
+            B.Wait_All;
          else
-            Fail ("Waiting on a full barrier should succeed");
+            Fail ("When all tasks are ready, the wait should succeed");
          end select;
       end Test_Two_Tasks;
 
    begin
-      Test_Null_Barrier;
+      Test_Empty_Group_Wait;
       Test_One_Task;
       Test_Two_Tasks;
    end Run_Tests;
@@ -95,4 +95,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Utilities.Barriers;
+end Phalanstery.Utilities.Group_Waits;
