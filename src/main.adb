@@ -82,6 +82,5 @@ begin
 
 exception
    when E : others =>
-      Phalanstery.Utilities.Debug.Display_Unhandled_Exception ("the main program", E);
-      raise;
+      Phalanstery.Utilities.Debug.Last_Chance_Handler ("the main program", E);
 end Main;

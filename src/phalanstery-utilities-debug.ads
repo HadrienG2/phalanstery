@@ -26,4 +26,8 @@ package Phalanstery.Utilities.Debug is
    procedure Display_Unhandled_Exception (Task_Name : String;
                                           Error     : Ada.Exceptions.Exception_Occurrence);
 
+   -- This function prints details about an unhandled exception in a task, then terminates the program
+   procedure Last_Chance_Handler (Task_Name : String;
+                                  Error     : Ada.Exceptions.Exception_Occurrence);
+
 end Phalanstery.Utilities.Debug;

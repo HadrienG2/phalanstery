@@ -35,4 +35,11 @@ package body Phalanstery.Utilities.Debug is
                  Ada.Exceptions.Exception_Information (Error));
    end Display_Unhandled_Exception;
 
+   procedure Last_Chance_Handler (Task_Name : String;
+                                  Error     : Ada.Exceptions.Exception_Occurrence) is
+   begin
+      Display_Unhandled_Exception (Task_Name, Error);
+      Ada.Task_Identification.Abort_Task (Ada.Task_Identification.Environment_Task);
+   end Last_Chance_Handler;
+
 end Phalanstery.Utilities.Debug;

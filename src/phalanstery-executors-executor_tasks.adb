@@ -120,10 +120,7 @@ package body Phalanstery.Executors.Executor_Tasks is
 
       exception
          when E : others =>
-            Utilities.Debug.Display_Unhandled_Exception ("an asynchronous worker", E);
-            Worker_Wait.Mark_One_Ready;
-            Stop;
-            raise;
+            Utilities.Debug.Last_Chance_Handler ("an asynchronous worker", E);
       end Worker;
 
       -- We define the following flock of workers
@@ -135,7 +132,7 @@ package body Phalanstery.Executors.Executor_Tasks is
 
    begin
 
-      -- Accept requests from the outside world
+      -- Accept requests from the outside world until requested to stop
       while Executor_Active loop
          select
             accept Schedule_Job (What  : Interfaces.Any_Async_Job;
@@ -161,13 +158,9 @@ package body Phalanstery.Executors.Executor_Tasks is
          end select;
       end loop;
 
-      -- TODO: Handle worker exceptions better
-
    exception
       when E : others =>
-         Utilities.Debug.Display_Unhandled_Exception ("an asynchronous executor", E);
-         Stop_Request.Send;
-         raise;
+         Utilities.Debug.Last_Chance_Handler ("an asynchronous executor", E);
    end Executor_Task;
 
 
