@@ -15,8 +15,8 @@ thus strongly recommend against basing any work on this library yet.
 
 The goal of any user mode tasking library is to permit the existence of a large amount of cooperative tasks in
 a program, in order to expose the internal concurrency of a program and allow latency hiding of IO operations,
-but while bounding the number of underlying OS threads to a reasonable amount (typically more or less the
-amount of CPU cores or hardware threads on the host).
+while bounding the number of underlying OS threads to a reasonable amount (typically more or less the amount
+of CPU cores or hardware threads on the host).
 
 The low-level interface to this specific library was heavily influenced by the design of out-of-order OpenCL
 command queues, a model for asynchronous computation and I/O which I think is very elegant and has proven to
@@ -49,9 +49,9 @@ that cannot be worked around if a clear use case for such composition is demonst
 
 Cancelation of events is also supported, in the sense that any entity with a reference to an event can request
 the cancelation of the underlying asynchronous process. How quickly the underlying process will actually stop
-is implementation-dependent, but it is guaranteed that all pending dependents of the event will also be
-stopped, since otherwise their execution might be erronerous as they would incorrectly assume that all their
-dependencies have completed successfully.
+and whether it will stop before normal completion is job-dependent, but it is guaranteed that all pending
+dependents of the event will also be stopped, since otherwise their execution might be erronerous as they
+would incorrectly assume that all their dependencies have been satisfied.
 
 This is an area where I need feedback on use cases: this cancelation model is not as general as a model where
 dependent jobs are merely notified of parent cancelation. However, it is also easier for developers to use,
