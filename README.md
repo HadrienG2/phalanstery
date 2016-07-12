@@ -13,64 +13,107 @@ thus strongly recommend against basing any work on this library yet.
 
 ### Introduction
 
-The goal of any user mode tasking library is to permit the existence of a large amount of cooperative tasks in
-a program, in order to expose the internal concurrency of a program and allow latency hiding of IO operations,
-while bounding the number of underlying OS threads to a reasonable amount (typically more or less the amount
-of CPU cores or hardware threads on the host).
+Any user mode tasking library strives to simultaneously fulfill two goals, which are incompatible when relying
+solely on OS threads as a multitasking abstraction:
 
-The low-level interface to this specific library was heavily influenced by the design of out-of-order OpenCL
-command queues, a model for asynchronous computation and I/O which I think is very elegant and has proven to
-be portable to a very wide range of hardware configurations. A higher-level source of inspiration is HPX.
+- Allow a program to be decomposed into a relatively large amount of asynchronous jobs, so as to leverage the
+  concurrent processing abilities of modern hardware and allow for optimal IO scheduling.
+- Keep the amount of OS threads relatively small, ideally more or less the amount of CPU cores or hardware
+  threads on the host, as most thread implementations use round-robin scheduling, which does not scale to
+  large number of tasks.
 
-### Events
+As far as design inspirations are concerned, the low-level interface to Phalanstery was heavily influenced by
+the design of out-of-order OpenCL command queues, a model for asynchronous computation and I/O which I think
+is very elegant and has proven to be portable to a very wide range of hardware configurations. Higher-level
+sources of inspiration include HPX and Intel TBB.
 
-An event, in this library, is a 1-N intertask communication primitive which represents an asynchronous process.
-It is essentially a little state machine which, over its lifetime, transitions once from a pending state to
-one of several completion state. Currently, the following event states are defined:
+### Outcome objects
 
-- **Pending**: Process is ongoing
-- **Done**: Process completed normally
-- **Error**: Process was erronerous (additional exception information may be retrieved from the event object)
-- **Canceled**: Process was aborted, typically on user request
+Being able to run some jobs asynchronously is not very useful unless there is a way to wait for them to
+finish, order them with respect to one another, and handle operational errors correctly. Another important
+use case is to be able to cancel previously started tasks without it being treated as an error. In
+Plalanstery, all this functionality is handled through the use of Outcome objects.
 
-Event state may be tracked in one of three ways:
+An Outcome object is a client-server inter-task synchronization primitive which aims to address these issues.
+By using it...
 
-- Polling (Easy to use, not suitable for waiting)
-- Blocking wait for completion (CPU-efficient but not scalable to many waiters, preferably only use in the
-  main program)
-- Callback objects (Preferred solution for most waiting scenarios. Unlike regular callbacks, these objects are
-  stateful, and can thus be easily made context aware. Moreover, because any suitably tagged Ada type may be
-  used, thread-safety can be achieved quite easily using protected types.)
+- Job processing code can notify clients that a job has completed normally.
+- It can also throw exceptions when an error occurs, knowing that the runtime will propagate it to clients.
+- A client can attempt to cancel a job, and the runtime will propagate this request to the underlying worker.
 
-Events are composable using an AND-gate like relationship: a composite event becomes Done when all of its
-children are Done, and the other cases are handled the way you would expect. The design of Ada protected types
-makes it somewhat harder to implement other composition relationships such as OR gates, however it is nothing
-that cannot be worked around if a clear use case for such composition is demonstrated.
+Outcome objects are not restricted to pure Phalanstery asynchronous jobs. It would be reasonably easy to map
+their interface onto third-party asynchronous programming primitives, such as the asynchronous I/O that is
+provided by some operating systems. This, in turn, improves the interoperability of Phalanstery code.
 
-Cancelation of events is also supported, in the sense that any entity with a reference to an event can request
-the cancelation of the underlying asynchronous process. How quickly the underlying process will actually stop
-and whether it will stop before normal completion is job-dependent, but it is guaranteed that all pending
-dependents of the event will also be stopped, since otherwise their execution might be erronerous as they
-would incorrectly assume that all their dependencies have been satisfied.
+An outcome objects is implemented as a state machine, which can transition exactly once in its lifetime from 
+the "pending" state to one of several final states. The following outcome states are currently defined:
 
-This is an area where I need feedback on use cases: this cancelation model is not as general as a model where
-dependent jobs are merely notified of parent cancelation. However, it is also easier for developers to use,
-and seems applicable in most asynchronous computation scenarios. Do you foresee a major use case where it
-would not be appropriate?
+- **Pending**: The asynchronous job has not finished yet.
+- **Done**: The job was performed as expected.
+- **Error**: The job was aborted due to an error (additional exception information is available as needed).
+- **Canceled**: The job was aborted voluntarily, on user request or as part of an early exit strategy.
+
+As a design constraint which allows client code to be written a lot more efficiently, once an outcome object
+has transitioned to one of the finished states, it is guaranteed to stay forever in this state. Attempts to
+change the outcome after that will currently be ignored, although there are discussions to change this
+behaviour in the future at it can lead to errors being ignored silently in some circumstances.
+
+The outcome of a job may be tracked in three different ways:
+
+- It may be queried in a nonblocking fashion. This interface is easy to use, and efficient for quick state
+  queries, but it should not be used in a loop as a way to wait for state changes.
+- A client may wait for the completion of the job. In its most straightforward form, this operation blocks an
+  OS thread, and it is thus only really suitable for use in the main program, as blocking a Phalanstery
+  thread can lead to performance loss and deadlocks. However, there are ways for an asynchronous job to wait
+  for an event to occur without blocking a whole OS thread to this end.
+- A client may also register a callback object, a dispatching method of which will be invoked when the job
+  finishes. Callback objects are a strict superset of the regular callbacks that are sometimes used in other
+  asynchronous libraries: any global Ada procedure may be turned into a callback object, but a callback object
+  may in addition also retain state, giving it some context awareness, which in turn greatly eases
+  thread-safe implementations.
+
+As mentioned earlier, a job can also be canceled through its outcome object. The semantics of this operation
+are defined as follow:
+
+- If the underlying process has not started yet, the Phalanstery runtime ensures that it will never run. Any
+  task which waited for that process to finish is notified of the cancelation in a configurable way, the
+  default behaviour of which is to similarly prevent the dependent task to run.
+- If the underlying process has already begun, it is usually not safe to abort it in the middle of its
+  operation. For this reason, Phalanstery mereley notifies the job of the cancelation request, requesting it
+  to complete earlier if possible. Dependent of the job are still canceled as before.
+- If the underlying process has completed, cancelation has no effect. It is too late, because the completion
+  signal has already fired, and clients have already taken it into account.
+
+Finally, more often than not, it is necessary to wait not just for the outcome of one job, but for that of a
+set of jobs, using some composition relationship such as AND (all dependencies have completed) or OR (at least
+one dependency has completed). Currently, only AND composition is supported, as it is the most immediately
+useful relationship. But adding some form of OR composition is also under discussion in the Issues.
 
 ### Asynchronous jobs
 
-An asynchronous job is a user-defined cooperative multi-tasking work-item, implemented as a tagged type, which
-communicates with the underlying job scheduler using dispatching methods.
+An asynchronous job is a user-defined cooperative multi-tasking work-item, implemented as a tagged type whose
+behaviour is defined or customized using dispatching methods.
 
-When an asynchronous job is scheduled for execution, the library provides the client with an event, which may
-be used to track the progress of said job. In addition, a job may, both at scheduling time and at any later
-time during execution, opt to wait for a list of events. This effectively creates a dynamic event-based job
-dependency graph, which is a very powerful primitive when composing complex asynchronous computations.
+There are a couple of programming restrictions on asynchronous jobs, which stem from the way they are
+implemented and interact with the rest of the world. First, an asynchronous job should not use any blocking
+thread synchronization mechanism, as failure to do so will lead to performance loss (one CPU going idle) and
+potentially even cause deadlocks. Second, because synchronization and cancelation operates at job granularity
+granularity, asynchronous jobs should be designed with transactional semantics, in the sense that they
+should avoid leaving any data structure in an inconsistent state upon termination. The later job intended to
+fix this mess may, after all, never run.
 
-By design, this execution model makes it hard to accidentally create a cyclic dependency graph, which would
-result in a deadlock. This improves usability and voids the need for expensive and complex runtime cycle
-detection algorithms.
+When an asynchronous job is scheduled for execution, the library internally makes a copy of it (allowing for
+a job to be scheduled multiple times) and provides the client with an outcome object, which represents the
+job's progression and eventual completion. In addition, a job may, at scheduling time or during execution, be
+programmed to wait for the completion of some ongoing operations before proceeding. Given these two features,
+a client can easily create a dynamic event-based job dependency graph, which is a very powerful primitive
+when composing complex asynchronous computations.
+
+Because the outcome object associated to a job instance is not created until the job is scheduled, and is
+required in order to schedule other jobs depending on this specific instance, the aforementioned execution
+model makes it hard to accidentally create a circular job dependency graph where a job directly or indirectly
+waits for itself, resulting in a deadlock. This improves usability and voids the need for expensive and
+complex runtime dependency cycle detection algorithms.
 
 A job is scheduled for execution as soon as a CPU core is available, and then has multiple avenues for
 interacting with the scheduler and its clients. Depending on the program requirements, an asynchronous job
@@ -89,12 +132,12 @@ Ada tasks, and managing the state of job instances across iterations.
 
 The external interface to executor objects is meant to be easy to use, and to accomodate for all envisioned
 usage scenarios. For example, if fire-and-forget semantics are desired, as is typically the case when emitting
-debugging output, a client can easily choose not to receive the output event of the associated job.
+debugging output, a client can easily choose not to receive the outcome object of the freshly spawned job.
 
 A core goal of this execution model is to be scalable to non-shared memory scenarios, such as distributed
 and heterogeneous computing. In this respect, no issue is foreseen in usage scenarios where programs use one
-executor per locality, as in OpenCL. Events should also be reasonably scalable provided that clients accept to
-tolerate some caching and state propagation latencies.
+executor per locality, as in OpenCL. Outcome objects should also be reasonably scalable provided that clients
+accept to tolerate some caching and state propagation latencies.
 
 In the future, executors may also acquire more functionality, such as performing watchdog monitoring of
 runaway jobs, depending on which limitations people run into with the simple execution model. As of now, the
