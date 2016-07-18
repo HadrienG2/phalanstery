@@ -17,14 +17,14 @@
 
 pragma Warnings (Off);
 with Phalanstery;
-with Phalanstery.Events;
+with Phalanstery.Outcomes;
 with Phalanstery.Events.Callbacks;
 with Phalanstery.Events.Clients;
 with Phalanstery.Events.Composition;
 with Phalanstery.Events.Composition.And_Gates;
 with Phalanstery.Events.Composition.Shortcuts;
 with Phalanstery.Events.Implementation;
-with Phalanstery.Events.Interfaces;
+with Phalanstery.Outcomes.Interfaces;
 with Phalanstery.Events.Servers;
 with Phalanstery.Executors;
 with Phalanstery.Executors.Interfaces;
