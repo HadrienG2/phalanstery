@@ -15,29 +15,30 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Events.Interfaces;
+with Phalanstery.Outcomes.Interfaces;
 
-package Phalanstery.Events.Callbacks is
+package Phalanstery.Outcomes.Callbacks is
 
-   -- As an example of an event listener object, we support a thin wrapper for global callbacks.
+   -- For situations where full-blown outcome listener objects are not needed, we provide a simple listener object
+   -- wrapping any global callback function.
 
-   type Event_Status_Callback is not null access procedure (What : Interfaces.Finished_Event_Status);
+   type Outcome_Callback is not null access procedure (What : Interfaces.Final_Outcome_Status);
 
-   type Callback_Listener (<>) is new Interfaces.Event_Listener_Reference with private;
+   type Callback_Listener (<>) is new Interfaces.Outcome_Listener_Reference with private;
 
-   not overriding function Make_Callback_Listener (From : Event_Status_Callback) return Callback_Listener;
+   not overriding function Make_Callback_Listener (From : Outcome_Callback) return Callback_Listener;
 
-   overriding procedure Notify_Event_Status_Change (Where : in out Callback_Listener;
-                                                    What  : Interfaces.Finished_Event_Status);
+   overriding procedure Notify_Outcome (Where : in out Callback_Listener;
+                                        What  : Interfaces.Final_Outcome_Status);
 
    -- Run the unit tests for this package
    procedure Run_Tests;
 
 private
 
-   type Callback_Listener is new Interfaces.Event_Listener_Reference with
+   type Callback_Listener is new Interfaces.Outcome_Listener_Reference with
       record
-         Callback : Event_Status_Callback;
+         Callback : Outcome_Callback;
       end record;
 
-end Phalanstery.Events.Callbacks;
+end Phalanstery.Outcomes.Callbacks;
