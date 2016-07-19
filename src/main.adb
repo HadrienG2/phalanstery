@@ -17,12 +17,10 @@
 
 pragma Warnings (Off);
 with Phalanstery;
-with Phalanstery.Events.Callbacks;
 with Phalanstery.Events.Clients;
 with Phalanstery.Events.Composition;
 with Phalanstery.Events.Composition.And_Gates;
 with Phalanstery.Events.Composition.Shortcuts;
-with Phalanstery.Events.Implementation;
 with Phalanstery.Events.Servers;
 with Phalanstery.Executors;
 with Phalanstery.Executors.Interfaces;
@@ -34,6 +32,8 @@ with Phalanstery.Executors.Job_Queues.References;
 with Phalanstery.Jobs;
 with Phalanstery.Jobs.Trivial;
 with Phalanstery.Outcomes;
+with Phalanstery.Outcomes.Callbacks;
+with Phalanstery.Outcomes.Implementation;
 with Phalanstery.Outcomes.Interfaces;
 with Phalanstery.Utilities;
 with Phalanstery.Utilities.Atomic_Counters;
