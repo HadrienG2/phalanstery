@@ -27,12 +27,11 @@ package Phalanstery.Outcomes.Implementation is
    -- This package features an implementation of outcome objects as described by Outcomes.Interfaces.
    -- It does not implement outcome clients and servers directly, for that see Outcomes.Clients and Outcomes.Servers.
 
-   use type Interfaces.Outcome_Listener_Reference;
-
    -- First, we define a container to store references to the listeners of the outcome object
    package Outcome_Listener_Lists is
      new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
-                                            Element_Type => Interfaces.Outcome_Listener_Reference'Class);
+                                            Element_Type => Interfaces.Outcome_Listener_Reference'Class,
+                                            "="          => Interfaces."=");
 
    subtype Outcome_Listener_List is Outcome_Listener_Lists.Vector;
 
@@ -62,7 +61,7 @@ package Phalanstery.Outcomes.Implementation is
 
    end Outcome;
 
-   -- And finally, we can define references to these outcome objects
+   -- And finally, we can define references to these outcome objects, which will be the basis for client/server classes
    package Outcome_References_Base is new Utilities.References (Outcome);
    package Outcome_References is new Outcome_References_Base.Nullable;
    subtype Outcome_Reference is Outcome_References.Reference;

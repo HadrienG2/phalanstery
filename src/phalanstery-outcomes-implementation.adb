@@ -23,6 +23,7 @@ pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
 package body Phalanstery.Outcomes.Implementation is
 
+   use type Interfaces.Outcome_Listener_Reference;
    use all type Interfaces.Outcome_Status;
 
    protected body Outcome is
