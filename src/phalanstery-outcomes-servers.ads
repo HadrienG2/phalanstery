@@ -16,18 +16,23 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Exceptions;
-with Phalanstery.Events.Clients;
-with Phalanstery.Events.Implementation;
-with Phalanstery.Events.Interfaces;
+with Phalanstery.Outcomes.Clients;
+with Phalanstery.Outcomes.Implementation;
+with Phalanstery.Outcomes.Interfaces;
 
-package Phalanstery.Events.Servers is
+package Phalanstery.Outcomes.Servers is
 
-   -- This is a reference-counted implementation of event servers
-   type Server is limited new Interfaces.Event_Server with private;
+   -- This is an implementation of outcome object servers. Creating an outcome server silently spawns an outcome object
+   -- under the hood. The lifetime of this object is subsequently managed through counting of servers and clients.
+
+   -- Outcome servers implement the server interface defined in Outcomes.Interfaces
+   type Server is limited new Interfaces.Outcome_Server with private;
 
    overriding function Is_Null (Who : Server) return Boolean;
 
    overriding function "=" (A, B : Server) return Boolean;
+
+   overriding function Make_Outcome return Server;
 
    overriding procedure Mark_Done (Who : in out Server);
 
@@ -38,10 +43,9 @@ package Phalanstery.Events.Servers is
 
    overriding function Is_Canceled (Who : Server) return Boolean;
 
-   -- This cannot be made part of the Event_Server interface, but is required for event completeness.
-   not overriding function Make_Event return Server
-     with Post => (not Make_Event'Result.Is_Null);
-
+   -- This method cannot be part of the Outcome_Server interface because Ada does not support multiple dispatching.
+   -- However, it is necessary to the proper operation of outcome objects, since it is the way one creates outcome
+   -- clients from outcome servers.
    not overriding function Make_Client (From : Server) return Clients.Client
      with Pre => (not From.Is_Null),
           Post => (not Make_Client'Result.Is_Null);
@@ -51,9 +55,9 @@ package Phalanstery.Events.Servers is
 
 private
 
-   type Server is limited new Interfaces.Event_Server with
+   type Server is limited new Interfaces.Outcome_Server with
       record
-         Ref : Implementation.Event_Reference;
+         Ref : Implementation.Outcome_Reference;
       end record;
 
-end Phalanstery.Events.Servers;
+end Phalanstery.Outcomes.Servers;

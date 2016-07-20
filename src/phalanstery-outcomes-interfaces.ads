@@ -19,7 +19,7 @@ with Ada.Exceptions;
 
 package Phalanstery.Outcomes.Interfaces with Preelaborate is
 
-   -- === COMMON OUTCOME INTERFACE ===
+   -- === COMMON OUTCOME OBJECT INTERFACE ===
 
    -- An asynchronous operation may have multiple outcomes. We represent this programmatically by having outcome objects
    -- that hold an internal state machine, which goes from an indefinite "pending" state to one of several final states.
@@ -101,6 +101,10 @@ package Phalanstery.Outcomes.Interfaces with Preelaborate is
    -- executing the asynchronous operation, or of monitoring it if it is being carried out by a third party asynchronous
    -- library. The outcome server can be used to set the final outcome of an asynchronous operation.
    type Outcome_Server is limited interface and Outcome_Reference;
+
+   -- Outcome objects are created by creating the associated outcome server
+   function Make_Outcome return Outcome_Server is abstract
+     with Post'Class => (not Make_Outcome'Result.Is_Null);
 
    -- Using an outcome server, one can mark the operation as having completed normally...
    procedure Mark_Done (Who : in out Outcome_Server) is abstract

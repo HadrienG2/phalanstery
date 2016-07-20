@@ -15,15 +15,15 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-package body Phalanstery.Events.Clients is
+package body Phalanstery.Outcomes.Clients is
 
-   use type Implementation.Event_Reference;
+   use type Implementation.Outcome_Reference;
 
    overriding function Is_Null (Who : Client) return Boolean is (Who.Ref.Is_Null);
 
    overriding function "=" (A, B : Client) return Boolean is (A.Ref = B.Ref);
 
-   overriding function Status (Who : Client) return Interfaces.Event_Status is (Who.Ref.Get.Status);
+   overriding function Status (Who : Client) return Interfaces.Outcome_Status is (Who.Ref.Get.Status);
 
    overriding procedure Get_Error (Who  : Client;
                                    What : out Ada.Exceptions.Exception_Occurrence) is
@@ -37,7 +37,7 @@ package body Phalanstery.Events.Clients is
    end Wait_Completion;
 
    overriding procedure Add_Listener (Where : in out Client;
-                                      Who   : in out Interfaces.Event_Listener_Reference'Class) is
+                                      Who   : in out Interfaces.Outcome_Listener_Reference'Class) is
    begin
       Where.Ref.Set.Add_Listener (Who);
    end Add_Listener;
@@ -47,6 +47,6 @@ package body Phalanstery.Events.Clients is
       Who.Ref.Set.Cancel;
    end Cancel;
 
-   not overriding function Make_Client (Event : Implementation.Event_Reference) return Client is ((Ref => Event));
+   not overriding function Make_Client (From : Implementation.Outcome_Reference) return Client is ((Ref => From));
 
-end Phalanstery.Events.Clients;
+end Phalanstery.Outcomes.Clients;
