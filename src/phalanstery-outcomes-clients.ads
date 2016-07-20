@@ -45,9 +45,9 @@ package Phalanstery.Outcomes.Clients is
 
    -- This function is an implementation detail. It cannot be private because the Outcomes.Servers package needs it in
    -- order to spawn the clients associated with an outcome server object. However, one should never use it directly.
-   not overriding function Make_Client (From : Implementation.Outcome_Reference) return Client
-     with Pre  => (not From.Is_Null),
-          Post => (not Make_Client'Result.Is_Null);
+   not overriding function Make_Client (From : Implementation.Outcome_Reference) return Client with
+     Pre  => (not From.Is_Null),
+     Post => (not Make_Client'Result.Is_Null);
 
    -- NOTE : Since outcome clients and servers are only usable together as a communication channel, they should be
    --        tested together. The unit tests for outcome clients are thus locasted in Outcomes.Servers.
