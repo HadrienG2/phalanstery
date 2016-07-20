@@ -17,13 +17,15 @@
 
 package Phalanstery.Utilities with Pure is
 
-   -- This package groups together a set of simple components that haven't really found their place anywhere else.
-   --    - Utilities.Atomic_Counters is for now an interface to GNAT's System.Atomic_Counters, allowing us to extend it.
-   --    - Utilities.Barriers provides a synchronization primitive allowing a task to wait for N others.
+   -- This package groups together a set of simple components that haven't really found their place anywhere else:
+   --
+   --    - Utilities.Atomic_Counters abstracts away the functionality of GNAT's System.Atomic_Counters.
    --    - Utilities.Debug provides some debugging tools, particularly related to output.
-   --    - Utilities.References provides reference counting facilities, which are needed to address the scoping
-   --         complications that arise when objects can asynchronously go out of scope.
-   --    - Utilities.Signals provides a synchronization primitive allowing a task to trigger work in N others.
-   --    - Utilities.Testing provides testing facilities.
+   --    - Utilities.Exceptions provides some additional exception handling functionality on top of Ada.Exceptions.
+   --    - Utilities.Group_Waits provides a way for one task to wait for N others without blocking them.
+   --    - Utilities.References provides reference counting facilities, which are used to address the scoping
+   --                           complications that arise when objects can asynchronously go out of scope.
+   --    - Utilities.Signals provides a way for one task to asynchronously trigger work in N other tasks.
+   --    - Utilities.Testing provides unit testing facilities.
 
 end Phalanstery.Utilities;

@@ -23,7 +23,7 @@ package Phalanstery.Utilities.Exceptions is
    procedure Make_Occurrence (What  : Ada.Exceptions.Exception_Id;
                               Where : out Ada.Exceptions.Exception_Occurrence);
 
-   -- Tell whether we are dealing with a null exception occurence
+   -- Tell whether we are dealing with an occurence of a specific exception
    function Is_Occurrence_Of (Who  : Ada.Exceptions.Exception_Occurrence;
                               What : Ada.Exceptions.Exception_Id) return Boolean;
 
