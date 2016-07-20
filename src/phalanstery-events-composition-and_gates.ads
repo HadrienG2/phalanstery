@@ -22,10 +22,15 @@ pragma Elaborate_All (Phalanstery.Utilities.References.Not_Null);
 
 package Phalanstery.Events.Composition.And_Gates is
 
-   -- This is an implementation of AND gates as defined in the parent package
+   -- This is an implementation of AND gates, a form of outcome object composition which is defined as follows:
+   --    - An AND gate with no children is Done
+   --    - If any child is Pending, the AND gate is Pending
+   --    - If all children are Done, the AND gate is Done
+   --    - If any child is Canceled, the AND gate is Canceled
+   --    - If any child is in the Error state , the AND gate in the Error state with exception Child_Error
    type And_Gate is private;
 
-   -- Composite events are created by composing multiple events with one another
+   -- Composite events are created by grouping outcome objects together
    procedure Add_Child (Where : in out And_Gate;
                         Who   : in out Valid_Event_Client)
      with Pre => (not Is_Frozen (Where));

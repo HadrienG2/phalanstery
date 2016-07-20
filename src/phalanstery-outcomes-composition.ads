@@ -32,15 +32,4 @@ package Phalanstery.Outcomes.Composition with Pure is
    --    - Composition.And_Gates provides an implementation of AND gate composition.
    --    - Composition.Shortcuts provides convenience shortcuts for all forms of outcome composition.
 
-   -- ===================== TODO : The following should be moved to "And_Gates" =======================
-
-   -- The rules for AND-gate composition are the following :
-   --    - An AND gate with zero children is Done
-   --    - If any child is Pending, the AND gate is Pending
-   --    - If all children are Done, the AND gate is Done
-   --    - If any child is Canceled, the AND gate is Canceled
-   --    - If any child is Error, the AND gate is Error with the special exception Child_Error
-
-   -- =================================================================================================
-
 end Phalanstery.Outcomes.Composition;
