@@ -17,7 +17,6 @@
 
 pragma Warnings (Off);
 with Phalanstery;
-with Phalanstery.Events.Composition;
 with Phalanstery.Events.Composition.And_Gates;
 with Phalanstery.Events.Composition.Shortcuts;
 with Phalanstery.Executors;
@@ -32,6 +31,7 @@ with Phalanstery.Jobs.Trivial;
 with Phalanstery.Outcomes;
 with Phalanstery.Outcomes.Callbacks;
 with Phalanstery.Outcomes.Clients;
+with Phalanstery.Outcomes.Composition;
 with Phalanstery.Outcomes.Contracts;
 with Phalanstery.Outcomes.Implementation;
 with Phalanstery.Outcomes.Interfaces;
