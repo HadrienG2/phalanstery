@@ -130,6 +130,7 @@ package body Phalanstery.Outcome_Composition.And_Gates is
       use type Ada.Exceptions.Exception_Id;
       subtype Valid_Outcome_Client is Interfaces.Valid_Outcome_Client;
       subtype Valid_Outcome_Server is Interfaces.Valid_Outcome_Server;
+      subtype Valid_Outcome_List is Interfaces.Valid_Outcome_List;
 
       Test_Error : Ada.Exceptions.Exception_Occurrence;
       Custom_Error : exception;
@@ -215,8 +216,8 @@ package body Phalanstery.Outcome_Composition.And_Gates is
       procedure Test_Done_Children is
          Test_Gate : And_Gate;
          Test_Child_Server_1, Test_Child_Server_2 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
-         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                                         Test_Child_Server_2.Make_Client);
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Child_Server_1.Mark_Done;
          Test_Gate.Add_Children (Test_Child_Clients);
@@ -237,8 +238,8 @@ package body Phalanstery.Outcome_Composition.And_Gates is
          Test_Gate : And_Gate;
          Test_Child_Server_1 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Test_Child_Server_2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
-         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                                         Test_Child_Server_2.Make_Client);
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
          declare
@@ -254,8 +255,8 @@ package body Phalanstery.Outcome_Composition.And_Gates is
          Test_Gate : And_Gate;
          Test_Child_Server_1 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Test_Child_Server_2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
-         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                                         Test_Child_Server_2.Make_Client);
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
 

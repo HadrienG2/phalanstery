@@ -15,13 +15,15 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-package Phalanstery.Events.Composition.Shortcuts is
+with Phalanstery.Outcome_Composition.Interfaces;
+
+package Phalanstery.Outcome_Composition.Shorthands is
 
    -- In the simplest use cases, the whole AND gate life cycle may be shortened into the following convenience function.
-   -- For more complicated use cases, see the And_Gates sibling package for raw access to the AND gate implementation
-   function When_All (Wait_List : Valid_Event_List) return Valid_Event_Client;
+   -- For more complicated use cases, see the And_Gates sibling package.
+   function When_All (Wait_List : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
 
-end Phalanstery.Events.Composition.Shortcuts;
+end Phalanstery.Outcome_Composition.Shorthands;
