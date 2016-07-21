@@ -22,13 +22,17 @@ with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Exceptions,
                       Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Events.Composition.And_Gates is
+package body Phalanstery.Outcomes.Composition.And_Gates is
+
+   subtype Valid_Outcome_Client is Composition.Interfaces.Valid_Outcome_Client;
+   use type Valid_Outcome_Client;
+   use all type Outcomes.Interfaces.Final_Outcome_Status;
 
    Child_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
 
    protected body And_Gate_Implementation is
 
-      procedure Notify_Event_Status_Change (What : Interfaces.Finished_Event_Status) is
+      procedure Notify_Child_Outcome (What : Outcomes.Interfaces.Final_Outcome_Status) is
       begin
          case What is
             when Done =>
@@ -38,8 +42,8 @@ package body Phalanstery.Events.Composition.And_Gates is
             when Error =>
                Current_Status := Error;
          end case;
-         Propagate_Status_Change;
-      end Notify_Event_Status_Change;
+         Propagate_Outcome;
+      end Notify_Child_Outcome;
 
       procedure Add_Children (Count : Natural) is
       begin
@@ -47,74 +51,74 @@ package body Phalanstery.Events.Composition.And_Gates is
             Child_Count := Child_Count + Count;
             -- NOTE : Cannot add ourselves as listener here, this will be a job for the reference
          else
-            raise Composite_Event_Already_Frozen;
+            raise Composition.Interfaces.Composite_Outcome_Already_Frozen;
          end if;
       end Add_Children;
 
-      procedure Make_Client (Where : out Valid_Event_Client) is
+      procedure Make_Client (Where : out Valid_Outcome_Client) is
       begin
          Frozen := True;
-         Where := Event.Make_Client;
-         Propagate_Status_Change;
+         Where := Outcome.Make_Client;
+         Propagate_Outcome;
       end Make_Client;
 
       function Is_Frozen return Boolean is (Frozen);
 
-      procedure Propagate_Status_Change is
+      procedure Propagate_Outcome is
       begin
-         -- Do not propagate event status if clients may still be added
+         -- Do not decide on a final outcome until all children have been added
          if not Frozen then
             return;
          end if;
 
-         -- Propagate the current event status
+         -- Propagate the final outcome
          case Current_Status is
             when Pending =>
                if Done_Children = Child_Count then
                   Current_Status := Done;
-                  Event.Mark_Done;
+                  Outcome.Mark_Done;
                end if;
             when Done =>
-               raise Ada.Assertions.Assertion_Error;  -- This case should never be reached
+               raise Ada.Assertions.Assertion_Error with "This line of code should never be reached";
             when Canceled =>
-               Event.Cancel;
+               Outcome.Cancel;
             when Error =>
-               Event.Mark_Error (Child_Error_Occurence);
+               Outcome.Mark_Error (Child_Error_Occurence);
          end case;
-      end Propagate_Status_Change;
+      end Propagate_Outcome;
 
    end And_Gate_Implementation;
 
-   procedure Add_Child (Where : in out And_Gate;
-                        Who   : in out Valid_Event_Client) is
+   not overriding procedure Add_Child (Where : in out And_Gate;
+                                       Who   : in out Valid_Outcome_Client) is
    begin
       Where.Ref.Set.Add_Children (1);
       Who.Add_Listener (Where);
    end Add_Child;
 
-   procedure Add_Children (Where : in out And_Gate;
-                           Who   : in out Valid_Event_List) is
+   not overriding procedure Add_Children (Where : in out And_Gate;
+                                          Who   : in out Valid_Outcome_List) is
    begin
       Where.Ref.Set.Add_Children (Who'Length);
-      for Event of Who loop
-         Event.Add_Listener (Where);
+      for Outcome of Who loop
+         Outcome.Add_Listener (Where);
       end loop;
    end Add_Children;
 
-   function Make_Client (From : in out And_Gate) return Valid_Event_Client is
-      C : Events.Clients.Client;
+   not overriding function Make_Client (From : in out And_Gate) return Valid_Outcome_Client is
+      C : Outcomes.Clients.Client;
    begin
       From.Ref.Set.Make_Client (C);
       return C;
    end Make_Client;
 
-   function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
+   overriding function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
 
-   overriding procedure Notify_Event_Status_Change (Where : in out And_Gate;
-                                                    What  : Interfaces.Finished_Event_Status) is
+   overriding procedure Notify_Outcome (Where : in out And_Gate;
+                                        What  : Interfaces.Finished_Outcome_Status) is
    begin
-      Where.Ref.Set.Notify_Event_Status_Change (What);
-   end Notify_Event_Status_Change;
+      Where.Ref.Set.Notify_Child_Outcome (What);
+   end Notify_Outcome;
 
 
    -- The remainder of this package is dedicated to unit tests
@@ -135,7 +139,7 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Initial_State is
          Test_Gate : And_Gate;
-         Test_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+         Test_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
       begin
          Assert_Truth (Check   => (Test_Client.Status = Done),
                        Message => "An AND gate with no children should be Done");
@@ -143,22 +147,22 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Done_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
 
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Assert_Truth (Check   => (Test_Gate_Client.Status = Pending),
                           Message => "An AND gate with one pending child should be Pending");
 
             begin
                Test_Gate.Add_Child (Test_Child_Client);
-               Fail ("Adding clients to a frozen AND gate should be forbidden");
+               Fail ("Adding children to a frozen AND gate should be forbidden");
             exception
-               when Ada.Assertions.Assertion_Error | Composite_Event_Already_Frozen =>
+               when Ada.Assertions.Assertion_Error | Composite_Outcome_Already_Frozen =>
                   null;
             end;
 
@@ -170,12 +174,12 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Canceled_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Cancel;
             Assert_Truth (Check   => (Test_Gate_Client.Status = Canceled),
@@ -185,13 +189,13 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Child_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Client : Valid_Event_Client := Test_Child_Server.Make_Client;
+         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
 
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server.Mark_Error (Custom_Error_Occurence);
             Assert_Truth (Check   => (Test_Gate_Client.Status = Error),
@@ -205,15 +209,15 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Done_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                            Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1, Test_Child_Server_2 : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Child_Server_1.Mark_Done;
          Test_Gate.Add_Children (Test_Child_Clients);
 
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Assert_Truth (Check   => (Test_Gate_Client.Status = Pending),
                           Message => "An AND gate with only some Done children should still be Pending");
@@ -226,14 +230,14 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Canceled_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Server_2 : constant Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                            Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Server_2 : constant Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Cancel;
             Assert_Truth (Check   => (Test_Gate_Client.Status = Canceled),
@@ -243,15 +247,15 @@ package body Phalanstery.Events.Composition.And_Gates is
 
       procedure Test_Children_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Server_2 : constant Valid_Event_Server := Servers.Make_Event;
-         Test_Child_Clients : Valid_Event_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                            Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Server_2 : constant Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                              Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
 
          declare
-            Test_Gate_Client : constant Valid_Event_Client := Test_Gate.Make_Client;
+            Test_Gate_Client : constant Valid_Outcome_Client := Test_Gate.Make_Client;
          begin
             Test_Child_Server_1.Mark_Error (Custom_Error_Occurence);
             Assert_Truth (Check   => (Test_Gate_Client.Status = Error),
@@ -283,4 +287,4 @@ begin
    -- Conditionally run the unit tests on startup
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Events.Composition.And_Gates;
+end Phalanstery.Outcomes.Composition.And_Gates;

@@ -20,7 +20,7 @@ with Phalanstery.Outcomes.Contracts;
 
 package Phalanstery.Outcomes.Composition.Interfaces is
 
-   -- This type expresses a list of asynchronous operations that one wants to simultaneously synchronize with
+   -- This type expresses a list of asynchronous operations that one wants to synchronize with concurrently
    type Wait_List is array (Positive range <>) of Outcomes.Clients.Client;
 
    -- In this package, we only want to deal with valid outcome objects, or lists thereof
@@ -31,9 +31,22 @@ package Phalanstery.Outcomes.Composition.Interfaces is
    subtype Valid_Wait_List is Wait_List
      with Dynamic_Predicate => (for all E of Valid_Wait_List => E in Valid_Outcome_Client);
 
-   -- In general, failure of a composite outcome object means failure of at least one of the outcome objects that it is
-   -- made of, and possibly several of them at once. Full-blown error reporting is difficult to implement in this
-   -- situation, and may not be truly needed. For now, we opt to simply use a generic Ada exception to report this.
+   -- This is the interface common to all composite outcome objects. Not a lot of functionality has been moved to this
+   -- interface yet, as we're uncertain of how much the interface has to change from one composite object to another.
+   type Composite_Outcome is interface;
+
+   -- Composite outcome objects are built by combining multiple outcome objects. At some point, one can extract an
+   -- outcome object from them, which represents the completion of the requested combination of operations. After this
+   -- is done, the composite outcome object is said to be frozen, and it is an error to attempt to add more children.
+   function Is_Frozen (What : Composite_Outcome) return Boolean is abstract;
+
+   -- If one attempts to do so nevertheless, the following run-time exception will be raised.
+   Composite_Outcome_Already_Frozen : exception;
+
+   -- Error handling in composite outcome objects requires some care. In general, failure of the composite outcome can
+   -- originate from the failure of any of the outcome objects that it is made of, and possibly a combination thereof.
+   -- Because reporting these errors accurately is diffcult, and may not be actually needed, we opt to use a generic
+   -- catch-all Ada exception in this situation. This exception will be propagated to the final outcome object.
    Child_Error : exception;
 
 end Phalanstery.Outcomes.Composition.Interfaces;
