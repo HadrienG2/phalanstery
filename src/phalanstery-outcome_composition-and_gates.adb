@@ -26,7 +26,6 @@ pragma Elaborate_All (Phalanstery.Utilities.Exceptions,
 
 package body Phalanstery.Outcome_Composition.And_Gates is
 
-   use type Interfaces.Valid_Outcome_Client;
    use all type Outcomes.Interfaces.Final_Outcome_Status;
 
    Child_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
@@ -50,7 +49,7 @@ package body Phalanstery.Outcome_Composition.And_Gates is
       begin
          if not Frozen then
             Child_Count := Child_Count + Count;
-            -- NOTE : Cannot add ourselves as listener here, this will be a job for the reference
+            -- NOTE : Cannot add ourselves as listener here, this will be a job for And_Gate_Child_Listener
          else
             raise Interfaces.Composite_Outcome_Already_Frozen;
          end if;
@@ -90,33 +89,35 @@ package body Phalanstery.Outcome_Composition.And_Gates is
 
    end And_Gate_Implementation;
 
-   procedure Add_Child (Where : in out And_Gate;
-                        Who   : in out Interfaces.Valid_Outcome_Client) is
+   not overriding procedure Add_Child (Where : in out And_Gate;
+                                       Who   : in out Interfaces.Valid_Outcome_Client) is
+      Child_Listener : And_Gate_Child_Listener := (Ref => Where.Ref);
    begin
       Where.Ref.Set.Add_Children (1);
-      Who.Add_Listener (Where);
+      Who.Add_Listener (Child_Listener);
    end Add_Child;
 
-   procedure Add_Children (Where : in out And_Gate;
-                           Who   : in out Interfaces.Valid_Outcome_List) is
+   not overriding procedure Add_Children (Where : in out And_Gate;
+                                          Who   : in out Interfaces.Valid_Outcome_List) is
+      Child_Listener : And_Gate_Child_Listener := (Ref => Where.Ref);
    begin
       Where.Ref.Set.Add_Children (Who'Length);
       for Outcome of Who loop
-         Outcome.Add_Listener (Where);
+         Outcome.Add_Listener (Child_Listener);
       end loop;
    end Add_Children;
 
-   function Make_Client (From : in out And_Gate) return Interfaces.Valid_Outcome_Client is
+   not overriding function Make_Client (From : in out And_Gate) return Interfaces.Valid_Outcome_Client is
       C : Outcomes.Clients.Client;
    begin
       From.Ref.Set.Make_Client (C);
       return C;
    end Make_Client;
 
-   function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
+   overriding function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
 
-   procedure Notify_Outcome (Where : in out And_Gate;
-                             What  : Outcomes.Interfaces.Final_Outcome_Status) is
+   overriding procedure Notify_Outcome (Where : in out And_Gate_Child_Listener;
+                                        What  : Outcomes.Interfaces.Final_Outcome_Status) is
    begin
       Where.Ref.Set.Notify_Child_Outcome (What);
    end Notify_Outcome;
@@ -125,10 +126,10 @@ package body Phalanstery.Outcome_Composition.And_Gates is
    -- The remainder of this package is dedicated to unit tests
    procedure Run_Tests is
 
-      subtype Valid_Outcome_Client is Interfaces.Valid_Outcome_Client;
-      subtype Valid_Outcome_Server is Interfaces.Valid_Outcome_Server;
       use Utilities.Testing;
       use type Ada.Exceptions.Exception_Id;
+      subtype Valid_Outcome_Client is Interfaces.Valid_Outcome_Client;
+      subtype Valid_Outcome_Server is Interfaces.Valid_Outcome_Server;
 
       Test_Error : Ada.Exceptions.Exception_Occurrence;
       Custom_Error : exception;

@@ -29,25 +29,25 @@ package Phalanstery.Outcome_Composition.And_Gates is
    --    - If all children are Done, the AND gate is Done
    --    - If any child is Canceled, the AND gate is Canceled
    --    - If any child is in the Error state , the AND gate in the Error state with exception Child_Error
-   type And_Gate is private;
+   type And_Gate is new Interfaces.Composite_Outcome with private;
 
    -- AND gates, like any other form of outcome object composition, are created by grouping outcome objects together
-   procedure Add_Child (Where : in out And_Gate;
-                        Who   : in out Interfaces.Valid_Outcome_Client)
+   not overriding procedure Add_Child (Where : in out And_Gate;
+                                       Who   : in out Interfaces.Valid_Outcome_Client)
      with Pre => (not Is_Frozen (Where));
 
    -- Children may be added in a bulk fashion for increased efficiency
-   procedure Add_Children (Where : in out And_Gate;
-                           Who   : in out Interfaces.Valid_Outcome_List)
+   not overriding procedure Add_Children (Where : in out And_Gate;
+                                          Who   : in out Interfaces.Valid_Outcome_List)
      with Pre => (not Is_Frozen (Where));
 
    -- Once all children have been added, one can produce an outcome object associated with the AND gate's outcome.
-   function Make_Client (From : in out And_Gate) return Interfaces.Valid_Outcome_Client
+   not overriding function Make_Client (From : in out And_Gate) return Interfaces.Valid_Outcome_Client
      with Post => (Is_Frozen (From));
 
    -- After this is done, the AND gate is said to be frozen, which means that it is a run-time error to attempt to
-   -- add more children outcome objects to it.
-   function Is_Frozen (What : And_Gate) return Boolean;
+   -- add more children to it. This function may be used to test this status.
+   overriding function Is_Frozen (What : And_Gate) return Boolean;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
@@ -69,15 +69,26 @@ private
       procedure Propagate_Outcome;
    end And_Gate_Implementation;
 
-   -- Like any shared object, AND gates are best managed using automatic memory management such as reference counting
+   -- Like any entity that is shared between multiple tasks, AND gates are best managed using some form of automatic
+   -- memory management, such as reference counting.
    package And_Gate_References_Base is new Utilities.References (And_Gate_Implementation);
    package And_Gate_References is new And_Gate_References_Base.Not_Null;
+   subtype And_Gate_Reference is And_Gate_References.Reference;
 
-   -- What we present as an AND gate to the user is actually just a reference to the actual AND gate implementation
-   type And_Gate is new Outcomes.Interfaces.Outcome_Listener_Reference with record
-         Ref : And_Gate_References.Reference;
-   end record;
-   overriding procedure Notify_Outcome (Where : in out And_Gate;
+   -- Once we have references to AND gates, we can use them to listen to children outcome objects
+   type And_Gate_Child_Listener is new Outcomes.Interfaces.Outcome_Listener_Reference with
+      record
+         Ref : And_Gate_Reference;
+      end record;
+
+   -- This means, of course, implementing the required Notify_Outcome method
+   overriding procedure Notify_Outcome (Where : in out And_Gate_Child_Listener;
                                         What  : Outcomes.Interfaces.Final_Outcome_Status);
+
+   -- We can also use AND gate references to build the end user interface to the actual AND gate implementation
+   type And_Gate is new Interfaces.Composite_Outcome with
+      record
+         Ref : And_Gate_Reference;
+      end record;
 
 end Phalanstery.Outcome_Composition.And_Gates;

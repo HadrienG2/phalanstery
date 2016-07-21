@@ -24,12 +24,13 @@ package Phalanstery.Outcome_Composition with Pure is
    --    - Wait for any operation to complete or to fail ("OR gate", also known as "wait_any" or "select")
    --    - Wait for any operation to complete or to fail, then cancel all others ("XOR gate")
    --
-   -- At the moment, only AND gate composition is implemented. The implementation of other forms of composition will
-   -- need to wait until support for multiple asynchronous operation outcomes is added to Phalanstery.
+   -- At the moment, only AND gate composition is implemented. The implementation of other forms of composition is more
+   -- complex and will need to wait until support for asynchronous operation with several possible completion paths is
+   -- added to Phalanstery.
    --
    -- The children of this package are organized as follows:
-   --    - Composition.Interfaces presents some concepts common to all forms of outcome object composition.
-   --    - Composition.And_Gates provides an implementation of AND gate composition.
-   --    - Composition.Shortcuts provides convenience shortcuts for all forms of outcome composition.
+   --    - Outcome_Composition.Interfaces presents some concepts common to all forms of outcome object composition.
+   --    - Outcome_Composition.And_Gates provides an implementation of AND gate composition.
+   --    - Outcome_Composition.Shortcuts provides convenience shortcuts for all forms of outcome composition.
 
 end Phalanstery.Outcome_Composition;

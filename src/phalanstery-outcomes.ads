@@ -24,7 +24,7 @@ package Phalanstery.Outcomes with Pure is
    --
    -- In Phalanstery, this functionality is grouped into so-called outcome objects, which are spawned anytime a job
    -- is scheduled for execution, and are also intended to be applicable as an interface to more than Phalanstery jobs,
-   -- also encompassing other asynchronous facilities such as OS-provided asynchronous IO when available.
+   -- encompassing other asynchronous facilities such as OS-provided asynchronous IO when they are available.
    --
    -- The outcome object implementation is decomposed into child packages as follows:
    --    - Outcomes.Interfaces defines the basic client/server interface followed by outcome objects
@@ -33,6 +33,6 @@ package Phalanstery.Outcomes with Pure is
    --
    -- In addition, the following outcome-related convenience packages are provided:
    --    - Outcomes.Callbacks provides the simplest example of an outcome listener : a global callback procedure.
-   --    - Outcomes.Contracts provide some specialized contracts on top of the general outcome interface.
+   --    - Outcomes.Contracts provide some useful contracts on top of the general outcome client/server interface.
 
 end Phalanstery.Outcomes;
