@@ -17,15 +17,16 @@
 
 with Ada.Assertions;
 with Ada.Exceptions;
+with Phalanstery.Outcomes.Clients;
+with Phalanstery.Outcomes.Servers;
 with Phalanstery.Utilities.Exceptions;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Exceptions,
                       Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Outcomes.Composition.And_Gates is
+package body Phalanstery.Outcome_Composition.And_Gates is
 
-   subtype Valid_Outcome_Client is Composition.Interfaces.Valid_Outcome_Client;
-   use type Valid_Outcome_Client;
+   use type Interfaces.Valid_Outcome_Client;
    use all type Outcomes.Interfaces.Final_Outcome_Status;
 
    Child_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
@@ -51,11 +52,11 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
             Child_Count := Child_Count + Count;
             -- NOTE : Cannot add ourselves as listener here, this will be a job for the reference
          else
-            raise Composition.Interfaces.Composite_Outcome_Already_Frozen;
+            raise Interfaces.Composite_Outcome_Already_Frozen;
          end if;
       end Add_Children;
 
-      procedure Make_Client (Where : out Valid_Outcome_Client) is
+      procedure Make_Client (Where : out Interfaces.Valid_Outcome_Client) is
       begin
          Frozen := True;
          Where := Outcome.Make_Client;
@@ -89,15 +90,15 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
    end And_Gate_Implementation;
 
-   not overriding procedure Add_Child (Where : in out And_Gate;
-                                       Who   : in out Valid_Outcome_Client) is
+   procedure Add_Child (Where : in out And_Gate;
+                        Who   : in out Interfaces.Valid_Outcome_Client) is
    begin
       Where.Ref.Set.Add_Children (1);
       Who.Add_Listener (Where);
    end Add_Child;
 
-   not overriding procedure Add_Children (Where : in out And_Gate;
-                                          Who   : in out Valid_Outcome_List) is
+   procedure Add_Children (Where : in out And_Gate;
+                           Who   : in out Interfaces.Valid_Outcome_List) is
    begin
       Where.Ref.Set.Add_Children (Who'Length);
       for Outcome of Who loop
@@ -105,17 +106,17 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
       end loop;
    end Add_Children;
 
-   not overriding function Make_Client (From : in out And_Gate) return Valid_Outcome_Client is
+   function Make_Client (From : in out And_Gate) return Interfaces.Valid_Outcome_Client is
       C : Outcomes.Clients.Client;
    begin
       From.Ref.Set.Make_Client (C);
       return C;
    end Make_Client;
 
-   overriding function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
+   function Is_Frozen (What : And_Gate) return Boolean is (What.Ref.Get.Is_Frozen);
 
-   overriding procedure Notify_Outcome (Where : in out And_Gate;
-                                        What  : Interfaces.Finished_Outcome_Status) is
+   procedure Notify_Outcome (Where : in out And_Gate;
+                             What  : Outcomes.Interfaces.Final_Outcome_Status) is
    begin
       Where.Ref.Set.Notify_Child_Outcome (What);
    end Notify_Outcome;
@@ -124,6 +125,8 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
    -- The remainder of this package is dedicated to unit tests
    procedure Run_Tests is
 
+      subtype Valid_Outcome_Client is Interfaces.Valid_Outcome_Client;
+      subtype Valid_Outcome_Server is Interfaces.Valid_Outcome_Server;
       use Utilities.Testing;
       use type Ada.Exceptions.Exception_Id;
 
@@ -147,7 +150,7 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
       procedure Test_Done_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Server : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -162,7 +165,7 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
                Test_Gate.Add_Child (Test_Child_Client);
                Fail ("Adding children to a frozen AND gate should be forbidden");
             exception
-               when Ada.Assertions.Assertion_Error | Composite_Outcome_Already_Frozen =>
+               when Ada.Assertions.Assertion_Error | Interfaces.Composite_Outcome_Already_Frozen =>
                   null;
             end;
 
@@ -174,7 +177,7 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
       procedure Test_Canceled_Child is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Server : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -189,7 +192,7 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
       procedure Test_Child_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server : Valid_Outcome_Server := Servers.Make_Outcome;
+         Test_Child_Server : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Test_Child_Client : Valid_Outcome_Client := Test_Child_Server.Make_Client;
       begin
          Test_Gate.Add_Child (Test_Child_Client);
@@ -202,16 +205,17 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
                           Message => "An AND gate with an erronerous child should be in the Error state");
 
             Test_Gate_Client.Get_Error (Test_Error);
-            Assert_Truth (Check   => (Ada.Exceptions.Exception_Identity (Test_Error) = Child_Error'Identity),
+            Assert_Truth (Check   => Utilities.Exceptions.Is_Occurrence_Of (Who  => Test_Error,
+                                                                            What => Interfaces.Child_Error'Identity),
                           Message => "The error associated with an erronerous AND gate should be Child_Error");
          end;
       end Test_Child_Error;
 
       procedure Test_Done_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1, Test_Child_Server_2 : Valid_Outcome_Server := Servers.Make_Outcome;
-         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                              Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1, Test_Child_Server_2 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                                         Test_Child_Server_2.Make_Client);
       begin
          Test_Child_Server_1.Mark_Done;
          Test_Gate.Add_Children (Test_Child_Clients);
@@ -230,10 +234,10 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
       procedure Test_Canceled_Children is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Valid_Outcome_Server := Servers.Make_Outcome;
-         Test_Child_Server_2 : constant Valid_Outcome_Server := Servers.Make_Outcome;
-         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                              Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Test_Child_Server_2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                                         Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
          declare
@@ -247,10 +251,10 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 
       procedure Test_Children_Error is
          Test_Gate : And_Gate;
-         Test_Child_Server_1 : Valid_Outcome_Server := Servers.Make_Outcome;
-         Test_Child_Server_2 : constant Valid_Outcome_Server := Servers.Make_Outcome;
-         Test_Child_Clients : Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
-                                                              Test_Child_Server_2.Make_Client);
+         Test_Child_Server_1 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Test_Child_Server_2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Test_Child_Clients : Interfaces.Valid_Outcome_List (1 .. 2) := (Test_Child_Server_1.Make_Client,
+                                                                         Test_Child_Server_2.Make_Client);
       begin
          Test_Gate.Add_Children (Test_Child_Clients);
 
@@ -262,7 +266,8 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
                           Message => "An AND gate with one erronerous child should be in the Error state");
 
             Test_Gate_Client.Get_Error (Test_Error);
-            Assert_Truth (Check   => (Ada.Exceptions.Exception_Identity (Test_Error) = Child_Error'Identity),
+            Assert_Truth (Check   => Utilities.Exceptions.Is_Occurrence_Of (Who  => Test_Error,
+                                                                            What => Interfaces.Child_Error'Identity),
                           Message => "The error associated with an erronerous AND gate should be Child_Error");
          end;
       end Test_Children_Error;
@@ -281,10 +286,10 @@ package body Phalanstery.Outcomes.Composition.And_Gates is
 begin
 
    -- Save an occurence of Child_Error, to be propagated as needed
-   Utilities.Exceptions.Make_Occurrence (What  => Child_Error'Identity,
+   Utilities.Exceptions.Make_Occurrence (What  => Interfaces.Child_Error'Identity,
                                          Where => Child_Error_Occurence);
 
    -- Conditionally run the unit tests on startup
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Outcomes.Composition.And_Gates;
+end Phalanstery.Outcome_Composition.And_Gates;

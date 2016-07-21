@@ -15,7 +15,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-package Phalanstery.Outcomes.Composition with Pure is
+package Phalanstery.Outcome_Composition with Pure is
 
    -- Outcome objects should be composable, in the sense that one should be able to wait for multiple asynchronous
    -- operations to complete. Multiple forms of composition may be envisioned, which can to some degree be related to
@@ -32,4 +32,4 @@ package Phalanstery.Outcomes.Composition with Pure is
    --    - Composition.And_Gates provides an implementation of AND gate composition.
    --    - Composition.Shortcuts provides convenience shortcuts for all forms of outcome composition.
 
-end Phalanstery.Outcomes.Composition;
+end Phalanstery.Outcome_Composition;

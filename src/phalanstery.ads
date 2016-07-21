@@ -23,6 +23,7 @@ package Phalanstery with Pure is
    --    - Phalanstery.Jobs provides an interface for user-defined asynchronous jobs.
    --    - Phalanstery.Executors provides a mean to run such asynchronous jobs.
    --    - Phalanstery.Outcomes provides an interface to monitor and cancel asynchronous operations (jobs, IO...).
+   --    - Phalanstery.Outcome_Composition provides a way to compose outcome objects, e.g. using an AND relationship.
    --    - Phalanstery.Utilities provides some basic infrastructure for these facilities.
 
 end Phalanstery;

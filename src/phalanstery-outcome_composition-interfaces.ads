@@ -18,18 +18,18 @@
 with Phalanstery.Outcomes.Clients;
 with Phalanstery.Outcomes.Contracts;
 
-package Phalanstery.Outcomes.Composition.Interfaces is
+package Phalanstery.Outcome_Composition.Interfaces is
 
    -- This type expresses a list of asynchronous operations that one wants to synchronize with concurrently
-   type Wait_List is array (Positive range <>) of Outcomes.Clients.Client;
+   type Outcome_List is array (Positive range <>) of Outcomes.Clients.Client;
 
    -- In this package, we only want to deal with valid outcome objects, or lists thereof
-   subtype Valid_Outcome_Client is Contracts.Valid_Outcome_Client;
+   subtype Valid_Outcome_Client is Outcomes.Contracts.Valid_Outcome_Client;
 
-   subtype Valid_Outcome_Server is Contracts.Valid_Outcome_Server;
+   subtype Valid_Outcome_Server is Outcomes.Contracts.Valid_Outcome_Server;
 
-   subtype Valid_Wait_List is Wait_List
-     with Dynamic_Predicate => (for all E of Valid_Wait_List => E in Valid_Outcome_Client);
+   subtype Valid_Outcome_List is Outcome_List
+     with Dynamic_Predicate => (for all E of Valid_Outcome_List => E in Valid_Outcome_Client);
 
    -- This is the interface common to all composite outcome objects. Not a lot of functionality has been moved to this
    -- interface yet, as we're uncertain of how much the interface has to change from one composite object to another.
@@ -49,4 +49,4 @@ package Phalanstery.Outcomes.Composition.Interfaces is
    -- catch-all Ada exception in this situation. This exception will be propagated to the final outcome object.
    Child_Error : exception;
 
-end Phalanstery.Outcomes.Composition.Interfaces;
+end Phalanstery.Outcome_Composition.Interfaces;

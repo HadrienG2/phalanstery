@@ -34,6 +34,5 @@ package Phalanstery.Outcomes with Pure is
    -- In addition, the following outcome-related convenience packages are provided:
    --    - Outcomes.Callbacks provides the simplest example of an outcome listener : a global callback procedure.
    --    - Outcomes.Contracts provide some specialized contracts on top of the general outcome interface.
-   --    - Outcomes.Composition provides a way to compose outcome objects, e.g. using an AND relationship.
 
 end Phalanstery.Outcomes;
