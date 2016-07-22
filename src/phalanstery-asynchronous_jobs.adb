@@ -16,22 +16,22 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Assertions;
-with Phalanstery.Events.Servers;
+with Phalanstery.Outcomes.Servers;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Jobs is
+package body Phalanstery.Asynchronous_Jobs is
 
-   function Return_Waiting (Cause : Valid_Event_Client) return Return_Value is
+   function Return_Waiting (Cause : Valid_Outcome_Client) return Return_Value is
      ((State => Waiting, Wait_List_Length => 1, Wait_List => (1 => Cause)));
 
-   function Return_Waiting (Cause : Event_Wait_List) return Return_Value is
+   function Return_Waiting (Cause : Valid_Outcome_List) return Return_Value is
      ((State => Waiting, Wait_List_Length => Cause'Length, Wait_List => Cause));
 
    function Status (What : Return_Value) return Return_Status is
      (What.State);
 
-   function Wait_List (What : Return_Value) return Event_Wait_List is
+   function Wait_List (What : Return_Value) return Valid_Outcome_List is
      (What.Wait_List);
 
 
@@ -39,8 +39,8 @@ package body Phalanstery.Jobs is
    procedure Run_Tests is
 
       use Utilities.Testing;
-      use type Valid_Event_Client;
-      subtype Valid_Event_Server is Events.Contracts.Valid_Event_Server;
+      use type Valid_Outcome_Client;
+      subtype Valid_Outcome_Server is Outcomes.Contracts.Valid_Outcome_Server;
 
       procedure Test_Finished is
       begin
@@ -48,7 +48,7 @@ package body Phalanstery.Jobs is
                        Message => "The status of a job returning Return_Finished should be Finished");
          begin
             declare
-               Unused : constant Event_Wait_List := Wait_List (Return_Finished) with Unreferenced;
+               Unused : constant Valid_Outcome_List := Wait_List (Return_Finished) with Unreferenced;
             begin
                Fail ("Querying the wait list of a finished job should be an error");
             end;
@@ -64,7 +64,7 @@ package body Phalanstery.Jobs is
                        Message => "The status of a job returning Return_Yielding should be Yielding");
          begin
             declare
-               Unused : constant Event_Wait_List := Wait_List (Return_Yielding) with Unreferenced;
+               Unused : constant Valid_Outcome_List := Wait_List (Return_Yielding) with Unreferenced;
             begin
                Fail ("Querying the wait list of a yielding job should be an error");
             end;
@@ -75,34 +75,34 @@ package body Phalanstery.Jobs is
       end Test_Yielding;
 
       procedure Test_Waiting_One is
-         E : constant Valid_Event_Server := Events.Servers.Make_Event;
-         C : constant Valid_Event_Client := E.Make_Client;
+         E : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         C : constant Valid_Outcome_Client := E.Make_Client;
          R : constant Return_Value := Return_Waiting (C);
       begin
          Assert_Truth (Check   => (Status (R) = Waiting),
                        Message => "The status of a waiting job should be Waiting");
          declare
-            List : constant Event_Wait_List := Wait_List (R);
+            List : constant Valid_Outcome_List := Wait_List (R);
          begin
             Assert_Truth (Check   => ((List'Length = 1) and then (List (List'First) = C)),
-                          Message => "The event wait list of a waiting job should be correct");
+                          Message => "The wait list of a job waiting for one operation should be correct");
          end;
       end Test_Waiting_One;
 
       procedure Test_Waiting_Multiple is
-         E1, E2 : constant Valid_Event_Server := Events.Servers.Make_Event;
-         C1 : constant Valid_Event_Client := E1.Make_Client;
-         C2 : constant Valid_Event_Client := E2.Make_Client;
+         E1, E2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         C1 : constant Valid_Outcome_Client := E1.Make_Client;
+         C2 : constant Valid_Outcome_Client := E2.Make_Client;
          R : constant Return_Value := Return_Waiting ((C1, C2));
       begin
          Assert_Truth (Check   => (Status (R) = Waiting),
                        Message => "The status of a waiting job should be Waiting");
          declare
-            List : constant Event_Wait_List := Wait_List (R);
+            List : constant Valid_Outcome_List := Wait_List (R);
          begin
             Assert_Truth (Check   => ((List'Length = 2) and then
                                         ((List (List'First) = C1) and (List (List'Last) = C2))),
-                          Message => "The event wait list of a waiting job should be correct");
+                          Message => "The wait list of a job waiting for several operations should be correct");
          end;
       end Test_Waiting_Multiple;
 
@@ -112,7 +112,7 @@ package body Phalanstery.Jobs is
                        Message => "The status of a job returning Return_Canceled should be Canceled");
          begin
             declare
-               Unused : constant Event_Wait_List := Wait_List (Return_Canceled) with Unreferenced;
+               Unused : constant Valid_Outcome_List := Wait_List (Return_Canceled) with Unreferenced;
             begin
                Fail ("Querying the wait list of a canceled job should be an error");
             end;
@@ -134,4 +134,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Jobs;
+end Phalanstery.Asynchronous_Jobs;

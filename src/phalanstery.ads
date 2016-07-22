@@ -20,9 +20,9 @@ package Phalanstery with Pure is
    -- This package, together with its children, provides a way to run computations asynchronously.
    --
    -- Its children provide the following facilities:
-   --    - Phalanstery.Jobs provides an interface for user-defined asynchronous jobs.
+   --    - Phalanstery.Asynchronous_Jobs specifies how one can define asynchronous jobs.
    --    - Phalanstery.Executors provides a mean to run such asynchronous jobs.
-   --    - Phalanstery.Outcomes provides an interface to monitor and cancel asynchronous operations (jobs, IO...).
+   --    - Phalanstery.Outcomes provides a way to monitor and cancel asynchronous operations (jobs, IO...).
    --    - Phalanstery.Outcome_Composition provides a way to monitor multiple operations at once.
    --    - Phalanstery.Utilities provides some basic infrastructure for these facilities.
 

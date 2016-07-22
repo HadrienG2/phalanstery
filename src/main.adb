@@ -17,6 +17,7 @@
 
 pragma Warnings (Off);
 with Phalanstery;
+with Phalanstery.Asynchronous_Jobs;
 with Phalanstery.Executors;
 with Phalanstery.Executors.Interfaces;
 with Phalanstery.Executors.Objects;
@@ -24,7 +25,6 @@ with Phalanstery.Executors.Job_Instances;
 with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues;
 with Phalanstery.Executors.Job_Queues.References;
-with Phalanstery.Jobs;
 with Phalanstery.Jobs.Trivial;
 with Phalanstery.Outcome_Composition;
 with Phalanstery.Outcome_Composition.And_Gates;
