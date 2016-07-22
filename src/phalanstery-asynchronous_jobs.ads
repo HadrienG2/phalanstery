@@ -58,7 +58,7 @@ package Phalanstery.Asynchronous_Jobs is
 
    -- ...and can be queried in the following way
    function Status (What : Return_Value) return Return_Status;
-   function Wait_List (What : Return_Value) return Valid_Outcome_List
+   function Wait_List (What : Return_Value) return Valid_Outcome_List  -- TODO : Replace with a single event ?
      with Pre => (Status (What) = Waiting);
 
    -- To allow asynchronous jobs to retain state across invocations, they are implemented as Ada tagged types inheriting
@@ -73,7 +73,7 @@ package Phalanstery.Asynchronous_Jobs is
    -- In addition, to comply with Ada accessibility rules, job types should be defined at global scope. Otherwise, the
    -- Ada implementation will consider the host program to be invalid, as the asynchronous job might outlive its type.
    --
-   type Asynchronous_Job is interface;
+   type Asynchronous_Job is abstract tagged private;
 
    -- The "Run" method is the heart of an asynchronous job. From the point where a job is ready to run, it will be
    -- repeatedly called until the job completes, fails, or is canceled. The Was_Canceled parameter is used to notify a
@@ -81,9 +81,9 @@ package Phalanstery.Asynchronous_Jobs is
    function Run (Who          : in out Asynchronous_Job;
                  Was_Canceled : Boolean) return Return_Value is abstract;
 
-   -- TODO : Add a method to notify a job that it was canceled before starting. By default, abort immediately.
-   -- TODO : Add a method to notify that a job's dependency was canceled. By default, abort immediately.
-   -- TODO : Add a method to notify that a job's dependency failed with an error. By default, abort immediately.
+   -- TODO : Add a hook to notify a job that it was canceled before starting. By default, cancel the job.
+   -- TODO : Add a hook to notify that a job dependency was canceled. By default, cancel the job.
+   -- TODO : Add a hook to notify that a job dependency failed with an error. By default, abort with a special error.
 
    -- Run the unit tests for this package
    procedure Run_Tests;
@@ -96,12 +96,14 @@ private
             when Finished | Yielding | Canceled =>
                null;
             when Waiting =>
-               Wait_List : Valid_Outcome_List (1 .. Wait_List_Length);
+               Wait_List : Valid_Outcome_List (1 .. Wait_List_Length); -- TODO : Use a composite event instead
          end case;
       end record;
 
    Return_Finished : constant Return_Value := (State => Finished, Wait_List_Length => 0);
    Return_Yielding : constant Return_Value := (State => Yielding, Wait_List_Length => 0);
    Return_Canceled : constant Return_Value := (State => Canceled, Wait_List_Length => 0);
+
+   type Asynchronous_Job is abstract tagged null record;
 
 end Phalanstery.Asynchronous_Jobs;
