@@ -182,10 +182,10 @@ package body Benchmarks is
                         Internal_Iterations => Yielding_Iterations);
       end Benchmark_Yielding;
 
-      Busy_Waiting_Nanoseconds : constant := 100_000;
+      Busy_Waiting_Microseconds : constant := 100;
 
       procedure Benchmark_Waiting is
-         My_Job : Async_Jobs.Trivial.Waiting_Job (Busy_Waiting_Nanoseconds);
+         My_Job : Async_Jobs.Trivial.Waiting_Job (Busy_Waiting_Microseconds);
       begin
 
          Benchmark_Job (What                => My_Job,
@@ -195,7 +195,7 @@ package body Benchmarks is
       end Benchmark_Waiting;
 
       procedure Benchmark_Wait_Ready is
-         My_Job : Async_Jobs.Trivial.Ready_Wait_Job (Busy_Waiting_Nanoseconds);
+         My_Job : Async_Jobs.Trivial.Ready_Wait_Job (Busy_Waiting_Microseconds);
       begin
          Benchmark_Job (What         => My_Job,
                         How_Many     => 50_000,
@@ -212,13 +212,13 @@ package body Benchmarks is
 
          subtype Custom_Wait_Job is Async_Jobs.Trivial.Custom_Wait_Job;
          subtype Event_Cancelation_Job is Async_Jobs.Trivial.Event_Cancelation_Job;
-         Consumer_Job_P : constant Custom_Wait_Job := (Waiting_Nanoseconds => Busy_Waiting_Nanoseconds,
+         Consumer_Job_P : constant Custom_Wait_Job := (Waiting_Microseconds => Busy_Waiting_Microseconds,
                                                        Target => Event_Client_P);
-         Consumer_Job_S : constant Custom_Wait_Job := (Waiting_Nanoseconds => Busy_Waiting_Nanoseconds,
+         Consumer_Job_S : constant Custom_Wait_Job := (Waiting_Microseconds => Busy_Waiting_Microseconds,
                                                        Target => Event_Client_S);
-         Producer_Job_P : constant Event_Cancelation_Job := (Waiting_Nanoseconds => Busy_Waiting_Nanoseconds,
+         Producer_Job_P : constant Event_Cancelation_Job := (Waiting_Microseconds => Busy_Waiting_Microseconds,
                                                              Target => Event_Client_P);
-         Producer_Job_S : constant Event_Cancelation_Job := (Waiting_Nanoseconds => Busy_Waiting_Nanoseconds,
+         Producer_Job_S : constant Event_Cancelation_Job := (Waiting_Microseconds => Busy_Waiting_Microseconds,
                                                              Target => Event_Client_S);
 
          Consumer_Count : constant := 50_000;

@@ -18,6 +18,8 @@
 pragma Warnings (Off);
 with Phalanstery;
 with Phalanstery.Asynchronous_Jobs;
+with Phalanstery.Examples;
+with Phalanstery.Examples.Trivial_Jobs;
 with Phalanstery.Executors;
 with Phalanstery.Executors.Interfaces;
 with Phalanstery.Executors.Objects;
@@ -25,7 +27,6 @@ with Phalanstery.Executors.Job_Instances;
 with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues;
 with Phalanstery.Executors.Job_Queues.References;
-with Phalanstery.Jobs.Trivial;
 with Phalanstery.Outcome_Composition;
 with Phalanstery.Outcome_Composition.And_Gates;
 with Phalanstery.Outcome_Composition.Shorthands;
@@ -75,6 +76,10 @@ procedure Main is
    -- TODO : Add continuations ?
    -- TODO : Think about composition of iterators and data !
    -- TODO : Add data-parallel programming facilities
+
+   -- === MOAR FEATURES ===
+
+   -- TODO : Add non-busy waiting facilities
 
 begin
 

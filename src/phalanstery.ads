@@ -17,13 +17,16 @@
 
 package Phalanstery with Pure is
 
-   -- This package, together with its children, provides a way to run computations asynchronously.
+   -- Phalanstery is an Ada library which helps one efficiently perform parallel and asynchronous computations.
    --
-   -- Its children provide the following facilities:
+   -- The main functionality is divided into the following child packages:
    --    - Phalanstery.Asynchronous_Jobs specifies how one can define asynchronous jobs.
    --    - Phalanstery.Executors provides a mean to run such asynchronous jobs.
    --    - Phalanstery.Outcomes provides a way to monitor and cancel asynchronous operations (jobs, IO...).
    --    - Phalanstery.Outcome_Composition provides a way to monitor multiple operations at once.
-   --    - Phalanstery.Utilities provides some basic infrastructure for these facilities.
+   --    - Phalanstery.Utilities provides some simple Ada components, used as a building block for these facilities.
+   --
+   -- In addition to this core infrastructure, the following packages provide some extra functionality:
+   --    - Phalanstery.Examples gives some examples outlining how the library can be used.
 
 end Phalanstery;
