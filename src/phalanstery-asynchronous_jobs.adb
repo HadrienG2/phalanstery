@@ -16,23 +16,34 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Assertions;
+with Phalanstery.Outcome_Composition.Shorthands;
 with Phalanstery.Outcomes.Servers;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
 package body Phalanstery.Asynchronous_Jobs is
 
+   use all type Outcomes.Interfaces.Outcome_Status;
+
    function Return_Waiting (Cause : Valid_Outcome_Client) return Return_Value is
-     ((State => Waiting, Wait_List_Length => 1, Wait_List => (1 => Cause)));
+     ((State => Waiting, Awaited_Outcome => Cause));
 
    function Return_Waiting (Cause : Valid_Outcome_List) return Return_Value is
-     ((State => Waiting, Wait_List_Length => Cause'Length, Wait_List => Cause));
+     ((State => Waiting, Awaited_Outcome => Outcome_Composition.Shorthands.When_All (Cause)));
 
    function Status (What : Return_Value) return Return_Status is
      (What.State);
 
-   function Wait_List (What : Return_Value) return Valid_Outcome_List is
-     (What.Wait_List);
+   function Awaited_Outcome (What : Return_Value) return Valid_Outcome_Client is
+     (What.Awaited_Outcome);
+
+   function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
+                                       Dependency_Status : Aborted_Outcome_Status) return Return_Value is
+     ( case Dependency_Status is
+         when Canceled =>
+            Return_Canceled,
+         when Error =>
+            raise Dependency_Error );
 
 
    -- The remainder of this package is dedicated to unit tests
@@ -48,9 +59,9 @@ package body Phalanstery.Asynchronous_Jobs is
                        Message => "The status of a job returning Return_Finished should be Finished");
          begin
             declare
-               Unused : constant Valid_Outcome_List := Wait_List (Return_Finished) with Unreferenced;
+               Unused : constant Valid_Outcome_Client := Awaited_Outcome (Return_Finished) with Unreferenced;
             begin
-               Fail ("Querying the wait list of a finished job should be an error");
+               Fail ("A finished job should not wait for something");
             end;
          exception
             when Ada.Assertions.Assertion_Error | Constraint_Error =>
@@ -64,9 +75,9 @@ package body Phalanstery.Asynchronous_Jobs is
                        Message => "The status of a job returning Return_Yielding should be Yielding");
          begin
             declare
-               Unused : constant Valid_Outcome_List := Wait_List (Return_Yielding) with Unreferenced;
+               Unused : constant Valid_Outcome_Client := Awaited_Outcome (Return_Yielding) with Unreferenced;
             begin
-               Fail ("Querying the wait list of a yielding job should be an error");
+               Fail ("A yielding job should not wait for something");
             end;
          exception
             when Ada.Assertions.Assertion_Error | Constraint_Error =>
@@ -82,15 +93,15 @@ package body Phalanstery.Asynchronous_Jobs is
          Assert_Truth (Check   => (Status (R) = Waiting),
                        Message => "The status of a waiting job should be Waiting");
          declare
-            List : constant Valid_Outcome_List := Wait_List (R);
+            Awaited : constant Valid_Outcome_Client := Awaited_Outcome (R);
          begin
-            Assert_Truth (Check   => ((List'Length = 1) and then (List (List'First) = C)),
-                          Message => "The wait list of a job waiting for one operation should be correct");
+            Assert_Truth (Check   => (Awaited = C),
+                          Message => "A job waiting for one event should wait for the right one");
          end;
       end Test_Waiting_One;
 
       procedure Test_Waiting_Multiple is
-         E1, E2 : constant Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         E1, E2 : Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          C1 : constant Valid_Outcome_Client := E1.Make_Client;
          C2 : constant Valid_Outcome_Client := E2.Make_Client;
          R : constant Return_Value := Return_Waiting ((C1, C2));
@@ -98,11 +109,18 @@ package body Phalanstery.Asynchronous_Jobs is
          Assert_Truth (Check   => (Status (R) = Waiting),
                        Message => "The status of a waiting job should be Waiting");
          declare
-            List : constant Valid_Outcome_List := Wait_List (R);
+            Awaited : constant Valid_Outcome_Client := Awaited_Outcome (R);
          begin
-            Assert_Truth (Check   => ((List'Length = 2) and then
-                                        ((List (List'First) = C1) and (List (List'Last) = C2))),
-                          Message => "The wait list of a job waiting for several operations should be correct");
+            Assert_Truth (Check   => (Awaited.Status = Pending),
+                          Message => "Initially, a job waiting for two events should be pending");
+
+            E1.Mark_Done;
+            Assert_Truth (Check   => (Awaited.Status = Pending),
+                          Message => "Fulfilling only part of the dependencies of a waiting job should not be enough");
+
+            E2.Mark_Done;
+            Assert_Truth (Check   => (Awaited.Status = Done),
+                          Message => "Once all the dependencies of a job are fulfilled, the job should be ready");
          end;
       end Test_Waiting_Multiple;
 
@@ -112,9 +130,9 @@ package body Phalanstery.Asynchronous_Jobs is
                        Message => "The status of a job returning Return_Canceled should be Canceled");
          begin
             declare
-               Unused : constant Valid_Outcome_List := Wait_List (Return_Canceled) with Unreferenced;
+               Unused : constant Valid_Outcome_Client := Awaited_Outcome (Return_Canceled) with Unreferenced;
             begin
-               Fail ("Querying the wait list of a canceled job should be an error");
+               Fail ("A canceled job should not wait for something");
             end;
          exception
             when Ada.Assertions.Assertion_Error | Constraint_Error =>

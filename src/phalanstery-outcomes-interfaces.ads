@@ -25,6 +25,7 @@ package Phalanstery.Outcomes.Interfaces with Preelaborate is
    -- that hold an internal state machine, which goes from an indefinite "pending" state to one of several final states.
    type Outcome_Status is (Pending, Done, Canceled, Error);
    subtype Final_Outcome_Status is Outcome_Status range Done .. Error;
+   subtype Aborted_Outcome_Status is Outcome_Status range Canceled .. Error;
 
    -- Beacause outcomes are used to synchronize multiple tasks, they must be stored in some shared memory area and
    -- accessed by reference. These references have semantics similar to those of Ada's general access types.

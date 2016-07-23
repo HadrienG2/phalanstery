@@ -17,6 +17,7 @@
 
 with Phalanstery.Outcome_Composition.Interfaces;
 with Phalanstery.Outcomes.Contracts;
+with Phalanstery.Outcomes.Interfaces;
 
 package Phalanstery.Asynchronous_Jobs is
 
@@ -58,7 +59,7 @@ package Phalanstery.Asynchronous_Jobs is
 
    -- ...and can be queried in the following way
    function Status (What : Return_Value) return Return_Status;
-   function Wait_List (What : Return_Value) return Valid_Outcome_List  -- TODO : Replace with a single event ?
+   function Awaited_Outcome (What : Return_Value) return Valid_Outcome_Client
      with Pre => (Status (What) = Waiting);
 
    -- To allow asynchronous jobs to retain state across invocations, they are implemented as Ada tagged types inheriting
@@ -77,32 +78,38 @@ package Phalanstery.Asynchronous_Jobs is
 
    -- The "Run" method is the heart of an asynchronous job. From the point where a job is ready to run, it will be
    -- repeatedly called until the job completes, fails, or is canceled. The Was_Canceled parameter is used to notify a
-   -- job that it has been canceled by a client while it was running. Run returns a Return_Value, as defined above.
+   -- job that it has been canceled by a client while it was running, allowing for early termination.
+   -- Run communicates with the job scheduler through its return values, using the protocol defined above.
    function Run (Who          : in out Asynchronous_Job;
                  Was_Canceled : Boolean) return Return_Value is abstract;
 
-   -- TODO : Add a hook to notify a job that it was canceled before starting. By default, cancel the job.
-   -- TODO : Add a hook to notify that a job dependency was canceled. By default, cancel the job.
-   -- TODO : Add a hook to notify that a job dependency failed with an error. By default, abort with a special error.
+   -- By default, Phalanstery assumes that if a job has not begun running yet, it is safe not to run it at all in the
+   -- event where it cannot be run normally because the operations it depends on have failed or been canceled.
+   -- This behaviour can be changed by overriding the following function. When doing so, keep in mind that no job
+   -- dependency can be relied upon: the job should solely clean up its internal state and terminate.
+   subtype Aborted_Outcome_Status is Outcomes.Interfaces.Aborted_Outcome_Status;
+   function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
+                                       Dependency_Status : Aborted_Outcome_Status) return Return_Value;
+   Dependency_Error : exception;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
 
 private
 
-   type Return_Value (State : Return_Status; Wait_List_Length : Natural) is
+   type Return_Value (State : Return_Status) is
       record
          case State is
             when Finished | Yielding | Canceled =>
                null;
             when Waiting =>
-               Wait_List : Valid_Outcome_List (1 .. Wait_List_Length); -- TODO : Use a composite event instead
+               Awaited_Outcome : Valid_Outcome_Client;
          end case;
       end record;
 
-   Return_Finished : constant Return_Value := (State => Finished, Wait_List_Length => 0);
-   Return_Yielding : constant Return_Value := (State => Yielding, Wait_List_Length => 0);
-   Return_Canceled : constant Return_Value := (State => Canceled, Wait_List_Length => 0);
+   Return_Finished : constant Return_Value := (State => Finished);
+   Return_Yielding : constant Return_Value := (State => Yielding);
+   Return_Canceled : constant Return_Value := (State => Canceled);
 
    type Asynchronous_Job is abstract tagged null record;
 
