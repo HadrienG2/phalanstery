@@ -19,7 +19,7 @@ with Phalanstery.Events.Contracts;
 with Phalanstery.Jobs;
 with System.Multiprocessors;
 
-package Phalanstery.Executors.Interfaces is
+package Phalanstery.Executors.SMP.Interfaces is
 
    -- Let us define some common convenience notations for executors
    subtype Any_Async_Job is Jobs.Async_Job'Class;
@@ -65,4 +65,4 @@ package Phalanstery.Executors.Interfaces is
                           What  : Any_Async_Job;
                           After : Event_Wait_List) return Valid_Event_Client is abstract;
 
-end Phalanstery.Executors.Interfaces;
+end Phalanstery.Executors.SMP.Interfaces;

@@ -17,15 +17,31 @@
 
 package Phalanstery.Executors with Pure is
 
-   -- To execute asynchronous jobs, one must send them to executor objects. These will take care of running the job.
-   -- In the future, executors might span multiple physical machines and perform distributed load balancing.
+   -- Executor objects are in charge of scheduling and running asynchronous jobs. One sends a job to an executor, along
+   -- with some scheduling information indicating when and where it should be scheduled. In return, the executor makes
+   -- a copy of the job, prepares it for execution, and provides the caller with an outcome object that can be used to
+   -- synchronize with the newly scheduled asynchronous operation.
    --
-   -- The children of this package are organized as follows :
-   --    - Executors.Interfaces defines the common interface design followed by executors.
-   --    - Executors.Job_Instances defines a way to package running asynchronous jobs.
-   --    - Executors.Job_Queues defines data structures for the manadement of pending jobs.
-   --    - Executors.Scheduling defines the job scheduling logic of executors.
-   --    - Executors.Executor_Tasks provides a task-based implementation of the executor concept.
-   --    - Executors.Objects provides a high-level interface to executor tasks
+   -- Several kinds of executor objects may be envisioned, corresponding to various processing hardware topologies:
+   --    - SMP (symmetric multiprocessing), where all processing nodes are considered equivalent.
+   --    - NUMA (non-uniform memory access), where jobs are best located on some specific processing nodes, but can run
+   --                                        unmodified on other processing nodes at the cost of lower performance.
+   --    - Distributed, where jobs cannot run on another processing locality than the one they were assigned to, without
+   --                   having all the memory objects they access being explicitly migrated from one place to another.
+   --
+   -- Ideally, these kinds of executors should be composable into relatively deep processing hierarchies, such as:
+   --    - A network of distributed processing nodes (computing cluster)...
+   --    - ...each of which features some internal distribution of processing resources (CPU, GPU, MIC)...
+   --    - ...on the inside of which one can find multiple NUMA localities (physical processors, GPU computing units)...
+   --    - ...each of which exhibits some internal symmetric parallelism.
+   --
+   -- Processing topologies are strongly related to memory topologies, support for which is not yet implemented in
+   -- Phalanstery. Consequently, only SMP executors are implemented at the moment.
+   --
+   -- The children of this package are organized as follows:
+   --    - Executors.Job_Instances provides a representation of running asynchronous jobs.
+   --    - Executors.Job_Queues provides a thread-safe FIFO queue, used to store scheduled jobs.
+   --    - Executors.Scheduling defines the job scheduling logic internally used by executors.
+   --    - Executors.SMP holds the current executor object implementation, which is SMP specific.
 
 end Phalanstery.Executors;

@@ -25,7 +25,7 @@ with Phalanstery.Utilities.Testing;
 with System.Multiprocessors;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Executors.Objects is
+package body Phalanstery.Executors.SMP.Executor_Objects is
 
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What : Interfaces.Any_Async_Job) is
@@ -200,4 +200,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Executors.Objects;
+end Phalanstery.Executors.SMP.Executor_Objects;

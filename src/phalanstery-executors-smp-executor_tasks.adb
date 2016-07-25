@@ -29,7 +29,7 @@ with Phalanstery.Utilities.Signals;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
-package body Phalanstery.Executors.Executor_Tasks is
+package body Phalanstery.Executors.SMP.Executor_Tasks is
 
    subtype Valid_Job_Instance_Reference is Job_Instances.References.Valid_Reference;
    subtype Valid_Job_Queue_Reference is Job_Queues.References.Valid_Reference;
@@ -261,4 +261,4 @@ begin
 
    Utilities.Testing.Startup_Test (Run_Tests'Access);
 
-end Phalanstery.Executors.Executor_Tasks;
+end Phalanstery.Executors.SMP.Executor_Tasks;

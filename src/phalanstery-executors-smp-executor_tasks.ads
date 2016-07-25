@@ -15,10 +15,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Executors.Interfaces;
+with Phalanstery.Executors.SMP.Interfaces;
 with System;
 
-private package Phalanstery.Executors.Executor_Tasks is
+private package Phalanstery.Executors.SMP.Executor_Tasks is
 
    -- Under the hood, executor objects spawn and manage an Ada task, which is called the executor task.
    task type Executor_Task (Number_Of_Workers : Interfaces.Worker_Count) with Priority => System.Priority'First is
@@ -44,4 +44,4 @@ private
    type Scheduling_Policy is (Batch, Round_Robin);
    Active_Scheduling_Policy : constant Scheduling_Policy := Batch;
 
-end Phalanstery.Executors.Executor_Tasks;
+end Phalanstery.Executors.SMP.Executor_Tasks;

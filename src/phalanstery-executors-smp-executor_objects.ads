@@ -16,11 +16,11 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Finalization;
-private with Phalanstery.Executors.Executor_Tasks;
-with Phalanstery.Executors.Interfaces;
-pragma Elaborate_All (Phalanstery.Executors.Executor_Tasks);
+with Phalanstery.Executors.SMP.Interfaces;
+private with Phalanstery.Executors.SMP.Executor_Tasks;
+pragma Elaborate_All (Phalanstery.Executors.SMP.Executor_Tasks);
 
-package Phalanstery.Executors.Objects is
+package Phalanstery.Executors.SMP.Executor_Objects is
 
    -- This package defines executor objects, whose mission is to execute asynchronous jobs.
    --
@@ -83,4 +83,4 @@ private
 
    overriding procedure Finalize (Who : in out Executor);
 
-end Phalanstery.Executors.Objects;
+end Phalanstery.Executors.SMP.Executor_Objects;
