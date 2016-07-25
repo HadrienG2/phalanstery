@@ -15,18 +15,21 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Executors.SMP.Interfaces;
+with Phalanstery.Executors.Interfaces;
+with Phalanstery.Executors.SMP.Specific_Interfaces;
 with System;
 
 private package Phalanstery.Executors.SMP.Executor_Tasks is
 
    -- Under the hood, executor objects spawn and manage an Ada task, which is called the executor task.
-   task type Executor_Task (Number_Of_Workers : Interfaces.Worker_Count) with Priority => System.Priority'First is
+   task type Executor_Task (Number_Of_Workers : Specific_Interfaces.Worker_Count) with
+     Priority => System.Priority'First
+   is
 
       -- Queue a new asynchronous job
       entry Schedule_Job (What  : Interfaces.Any_Async_Job;
-                          After : Interfaces.Event_Wait_List;
-                          Event : out Interfaces.Valid_Event_Client);
+                          After : Interfaces.Valid_Outcome_List;
+                          Event : out Interfaces.Valid_Outcome_Client);
 
       -- Schedule executor termination
       entry Stop;

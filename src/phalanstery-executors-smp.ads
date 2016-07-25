@@ -23,7 +23,7 @@ package Phalanstery.Executors.SMP with Pure is
    -- future and should not be relied upon.
    --
    -- The children of this package are organized as follows:
-   --    - SMP.Interfaces defines an executor interface suitable for SMP hardware.
+   --    - SMP.Specific_Interfaces defines an executor interface suitable for SMP hardware.
    --    - SMP.Executor_Tasks provides a low-level task-based executor implementation.
    --    - SMP.Executor_Objects provides a high-level implementation of the executor interface.
 

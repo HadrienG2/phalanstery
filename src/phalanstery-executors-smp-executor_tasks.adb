@@ -124,7 +124,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       end Worker;
 
       -- We define the following flock of workers
-      type Worker_Array is array (Interfaces.Worker_Count range <>) of Worker;
+      type Worker_Array is array (Specific_Interfaces.Worker_Count range <>) of Worker;
       Workers : Worker_Array (1 .. Number_Of_Workers) with Unreferenced;
 
       -- Executor tasks will wait for work until this flag goes to False
@@ -136,8 +136,8 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       while Executor_Active loop
          select
             accept Schedule_Job (What  : Interfaces.Any_Async_Job;
-                                 After : Interfaces.Event_Wait_List;
-                                 Event : out Interfaces.Valid_Event_Client) do
+                                 After : Interfaces.Valid_Outcome_List;
+                                 Event : out Interfaces.Valid_Outcome_Client) do
                declare
                   Work_Item : constant Valid_Job_Instance_Reference :=
                     Job_Instances.References.Make_Job_Instance (What);
@@ -171,7 +171,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       subtype Event_Client is Events.Clients.Client;
 
       Number_Of_Workers : constant := 2;
-      Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
+      Empty_Wait_List : Interfaces.Valid_Outcome_List (2 .. 1);
 
       procedure Test_Null_Job is
          Executor : Executor_Task (Number_Of_Workers);

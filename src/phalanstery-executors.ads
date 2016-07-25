@@ -39,6 +39,7 @@ package Phalanstery.Executors with Pure is
    -- Phalanstery. Consequently, only SMP executors are implemented at the moment.
    --
    -- The children of this package are organized as follows:
+   --    - Executors.Interfaces defines the part of the executor interface that has been made topology-agnostic.
    --    - Executors.Job_Instances provides a representation of running asynchronous jobs.
    --    - Executors.Job_Queues provides a thread-safe FIFO queue, used to store scheduled jobs.
    --    - Executors.Scheduling defines the job scheduling logic internally used by executors.

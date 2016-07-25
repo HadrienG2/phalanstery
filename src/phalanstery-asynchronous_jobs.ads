@@ -100,7 +100,7 @@ package Phalanstery.Asynchronous_Jobs is
    function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
                                        Dependency_Status : Aborted_Outcome_Status) return Return_Value;
 
-   -- If a dependency encounters an error, the default job behaviour is to raise the following exception
+   -- If a job dependency fails, the default job behaviour is to immediately raise the following exception
    Dependency_Error : exception;
 
    -- Run the unit tests for this package

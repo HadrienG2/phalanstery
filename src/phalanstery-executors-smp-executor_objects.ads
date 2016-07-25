@@ -16,7 +16,8 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Finalization;
-with Phalanstery.Executors.SMP.Interfaces;
+with Phalanstery.Executors.Interfaces;
+with Phalanstery.Executors.SMP.Specific_Interfaces;
 private with Phalanstery.Executors.SMP.Executor_Tasks;
 pragma Elaborate_All (Phalanstery.Executors.SMP.Executor_Tasks);
 
@@ -28,8 +29,8 @@ package Phalanstery.Executors.SMP.Executor_Objects is
    -- environment task will wait for the executor task to complete before finalizing the executor object, whereas the
    -- termination signal for that task should be sent by the finalization of the executor object.
    --
-   type Executor (Number_Of_Workers : Interfaces.Worker_Count := Interfaces.Hardware_Workers) is
-     new Ada.Finalization.Limited_Controlled and Interfaces.Executor with private;
+   type Executor (Number_Of_Workers : Specific_Interfaces.Worker_Count := Specific_Interfaces.Hardware_Workers) is
+     new Ada.Finalization.Limited_Controlled and Specific_Interfaces.Executor with private;
 
    -- Schedule a job, do not care when it will run
    overriding procedure Schedule_Job (Where : in out Executor;
@@ -38,26 +39,26 @@ package Phalanstery.Executors.SMP.Executor_Objects is
    -- Schedule a job which waits for one event, do not synchronize
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Job;
-                                      After : Interfaces.Valid_Event_Client);
+                                      After : Interfaces.Valid_Outcome_Client);
 
    -- Schedule a job which waits for multiple events, do not synchronize
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Job;
-                                      After : Interfaces.Event_Wait_List);
+                                      After : Interfaces.Valid_Outcome_List);
 
    -- Schedule a job immediately, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
-                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Event_Client;
+                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client;
 
    -- Schedule a job which waits for one event, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
                                      What  : Interfaces.Any_Async_Job;
-                                     After : Interfaces.Valid_Event_Client) return Interfaces.Valid_Event_Client;
+                                     After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client;
 
    -- Schedule a job which waits for multiple events, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
                                      What  : Interfaces.Any_Async_Job;
-                                     After : Interfaces.Event_Wait_List) return Interfaces.Valid_Event_Client;
+                                     After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
@@ -72,8 +73,8 @@ private
 
    type Executor_Access is access Executor_Task;
 
-   type Executor (Number_Of_Workers : Interfaces.Worker_Count := Interfaces.Hardware_Workers) is
-     new Ada.Finalization.Limited_Controlled and Interfaces.Executor with
+   type Executor (Number_Of_Workers : Specific_Interfaces.Worker_Count := Specific_Interfaces.Hardware_Workers) is
+     new Ada.Finalization.Limited_Controlled and Specific_Interfaces.Executor with
       record
          Executor_Task : Executor_Access := null;
       end record;

@@ -29,35 +29,35 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
 
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What : Interfaces.Any_Async_Job) is
-      Unused : constant Interfaces.Valid_Event_Client := Schedule_Job (Where => Where,
-                                                                       What  => What) with Unreferenced;
+      Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
+                                                                         What  => What) with Unreferenced;
    begin
       null;
    end Schedule_Job;
 
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Job;
-                                      After : Interfaces.Valid_Event_Client) is
-      Unused : constant Interfaces.Valid_Event_Client := Schedule_Job (Where => Where,
-                                                                       What  => What,
-                                                                       After => After) with Unreferenced;
+                                      After : Interfaces.Valid_Outcome_Client) is
+      Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
+                                                                         What  => What,
+                                                                         After => After) with Unreferenced;
    begin
       null;
    end Schedule_Job;
 
    overriding procedure Schedule_Job (Where : in out Executor;
                                       What  : Interfaces.Any_Async_Job;
-                                      After : Interfaces.Event_Wait_List) is
-      Unused : constant Interfaces.Valid_Event_Client := Schedule_Job (Where => Where,
-                                                                       What  => What,
-                                                                       After => After) with Unreferenced;
+                                      After : Interfaces.Valid_Outcome_List) is
+      Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
+                                                                         What  => What,
+                                                                         After => After) with Unreferenced;
    begin
       null;
    end Schedule_Job;
 
    overriding function Schedule_Job (Where : in out Executor;
-                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Event_Client is
-      Empty_Wait_List : Interfaces.Event_Wait_List (2 .. 1);
+                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client is
+      Empty_Wait_List : Interfaces.Valid_Outcome_List (2 .. 1);
    begin
       return Schedule_Job (Where => Where,
                            What  => What,
@@ -66,7 +66,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
 
    overriding function Schedule_Job (Where : in out Executor;
                                      What  : Interfaces.Any_Async_Job;
-                                     After : Interfaces.Valid_Event_Client) return Interfaces.Valid_Event_Client is
+                                     After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client is
    begin
       return Schedule_Job (Where => Where,
                            What  => What,
@@ -75,8 +75,8 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
 
    overriding function Schedule_Job (Where : in out Executor;
                                      What  : Interfaces.Any_Async_Job;
-                                     After : Interfaces.Event_Wait_List) return Interfaces.Valid_Event_Client is
-      Result : Events.Clients.Client;
+                                     After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client is
+      Result : Outcomes.Clients.Client;
    begin
       Where.Executor_Task.Schedule_Job (What  => What,
                                         After => After,
@@ -130,7 +130,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
       begin
 
          declare
-            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Job (What => T);
+            C : constant Interfaces.Valid_Outcome_Client := Test_Executor.Schedule_Job (What => T);
          begin
             C.Wait_Completion;
             Assert_Truth (Check   => (C.Status = Done),
@@ -138,8 +138,8 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
          end;
 
          declare
-            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Job (What  => T,
-                                                                                      After => Dep1_C);
+            C : constant Interfaces.Valid_Outcome_Client := Test_Executor.Schedule_Job (What  => T,
+                                                                                        After => Dep1_C);
          begin
             Assert_Truth (Check   => (C.Status = Pending),
                           Message => "The null job should not start until its dependencies are satisfied");
@@ -151,8 +151,8 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
          end;
 
          declare
-            C : constant Interfaces.Valid_Event_Client := Test_Executor.Schedule_Job (What  => T,
-                                                                                       After => (Dep1_C, Dep2_C));
+            C : constant Interfaces.Valid_Outcome_Client := Test_Executor.Schedule_Job (What  => T,
+                                                                                        After => (Dep1_C, Dep2_C));
          begin
             Assert_Truth (Check   => (C.Status = Pending),
                           Message => "The null job should not start until all its dependencies are satisfied");
@@ -168,8 +168,8 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
       procedure Test_Procedures is
          Alternate_Executor : Executor (Number_Of_Workers);
          S1, S2 : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
-         C1 : constant Interfaces.Valid_Event_Client := S1.Make_Client;
-         C2 : constant Interfaces.Valid_Event_Client := S2.Make_Client;
+         C1 : constant Interfaces.Valid_Outcome_Client := S1.Make_Client;
+         C2 : constant Interfaces.Valid_Outcome_Client := S2.Make_Client;
       begin
          -- Fire-and forget execution is particularly challenging to test, as we have no idea when it will occur and
          -- have no way to synchronize with it. Consequently, we only test that it does not hang or crash.
