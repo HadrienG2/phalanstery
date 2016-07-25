@@ -83,13 +83,24 @@ package Phalanstery.Asynchronous_Jobs is
    function Run (Who          : in out Asynchronous_Job;
                  Was_Canceled : Boolean) return Return_Value is abstract;
 
-   -- By default, Phalanstery assumes that if a job has not begun running yet, it is safe not to run it at all in the
-   -- event where it cannot be run normally because the operations it depends on have failed or been canceled.
-   -- This behaviour can be changed by overriding the following function. When doing so, keep in mind that no job
-   -- dependency can be relied upon: the job should solely clean up its internal state and terminate.
+   -- By default, Phalanstery assumes that a waiting job is always in a consistent state: if one of the asynchronous
+   -- operations that the job depends on fails to run to completion, either due to cancelation or errors, Phalanstery
+   -- considers that aborting the job and destroying the associated job object is both a safe thing to do, and the best
+   -- possible course of action.
+   --
+   -- This is not always the case, however. In the event where it isn't, this behaviour can be changed by overriding the
+   -- following hook. Appropriate care must be taken when doing so:
+   --    - Dependency error handling code should be written under the assumption that all the job's dependencies are in
+   --      an erronerous, inconsistent state, and not rely on the results of these operations. In general, all that this
+   --      code can and should do is clean up the job's internal state and terminate.
+   --    - If a job waits for events multiple times in its run cycle, this hook should be designed to be callable at any
+   --      of these synchronization points, for example by using case statements and a state tracking variable.
+   --
    subtype Aborted_Outcome_Status is Outcomes.Interfaces.Aborted_Outcome_Status;
    function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
                                        Dependency_Status : Aborted_Outcome_Status) return Return_Value;
+
+   -- If a dependency encounters an error, the default job behaviour is to raise the following exception
    Dependency_Error : exception;
 
    -- Run the unit tests for this package

@@ -26,12 +26,16 @@ private package Phalanstery.Executors.Scheduling is
    subtype Valid_Job_Instance_Reference is Job_Instances.References.Valid_Reference;
    subtype Valid_Job_Queue_Reference is Job_Queues.References.Valid_Reference;
 
+   -- MAJOR TODO: /!\ Use the new dependency error handling job hook /!\
+
    -- This function handles blocking jobs by allowing a job instance to be scheduled for execution (through queueing
    -- on an executor's ready job queue) after an event wait list has been completed. It also handles all the non-Done
    -- statuses which the wait list can end up in, allowing for proper handling of cancelation and errors.
    procedure Schedule_Job (Who   : Valid_Job_Instance_Reference;
                            After : Interfaces.Event_Wait_List;
                            On    : Valid_Job_Queue_Reference);
+
+   -- MAJOR TODO: /!\ Use the new dependency error handling job hook /!\
 
 private
 
