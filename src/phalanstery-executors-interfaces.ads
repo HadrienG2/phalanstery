@@ -15,16 +15,20 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Events.Contracts;
-with Phalanstery.Jobs;
+with Phalanstery.Asynchronous_Jobs;
+with Phalanstery.Outcomes.Contracts;
+with Phalanstery.Outcome_Composition.Interfaces;
 with System.Multiprocessors;
 
 package Phalanstery.Executors.Interfaces is
 
    -- This package holds declarations which are likely to be shared by any executor implementation
 
-   subtype Any_Async_Job is Asynchronous_Jobs.Async_Job'Class;
-   subtype Valid_Outcome_Client is Outcomes.Contracts.Valid_Event_Client;
-   subtype Valid_Outcome_List is Asynchronous_Jobs.Valid_Outcome_List;
+   subtype Asynchronous_Job is Asynchronous_Jobs.Asynchronous_Job;
+   subtype Any_Asynchronous_Job is Asynchronous_Job'Class;
+
+   subtype Valid_Outcome_Client is Outcomes.Contracts.Valid_Outcome_Client;
+   subtype Valid_Outcome_Server is Outcomes.Contracts.Valid_Outcome_Server;
+   subtype Valid_Outcome_List is Outcome_Composition.Interfaces.Valid_Outcome_List;
 
 end Phalanstery.Executors.Interfaces;

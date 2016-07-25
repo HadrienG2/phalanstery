@@ -16,37 +16,37 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Tags;
-with Phalanstery.Jobs;
+with Phalanstery.Asynchronous_Jobs;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
 package body Phalanstery.Executors.Job_Instances.References is
 
-   -- DEBUG : I would like this to return a Valid_Reference, but it leads to finalization issues for unclear reasons
-   function Make_Job_Instance (From : Interfaces.Any_Async_Job) return Reference is
+   function Make_Job_Instance (From : Interfaces.Any_Asynchronous_Job) return Valid_Reference is
       Result : constant Reference := Implementation.Make;
    begin
-      Result.Set.Job_Object := new Interfaces.Any_Async_Job'(From);
-      return Result;
+      Result.Set.Job_Object := new Interfaces.Any_Asynchronous_Job'(From);
+      return Valid_Reference (Result);
    end Make_Job_Instance;
 
 
    -- The remainder of this package is dedicated to unit tests
-   type State_Holding_Job is new Jobs.Async_Job with
+   type Stateful_Job is new Interfaces.Asynchronous_Job with
       record
          Dummy_Int : Natural;
       end record;
 
-   overriding function Run (T        : in out State_Holding_Job;
-                            Canceled : Boolean) return Jobs.Return_Value is (Jobs.Return_Finished);
+   overriding function Run (T        : in out Stateful_Job;
+                            Canceled : Boolean) return Asynchronous_Jobs.Return_Value is
+     (Asynchronous_Jobs.Return_Finished);
 
    procedure Run_Tests is
 
       use Utilities.Testing;
       use type Ada.Tags.Tag;
 
-      T : constant State_Holding_Job := (Dummy_Int => 42);
-      T_Any : constant Interfaces.Any_Async_Job := T;
+      T : constant Stateful_Job := (Interfaces.Asynchronous_Job with Dummy_Int => 42);
+      T_Any : constant Interfaces.Any_Asynchronous_Job := T;
       T_Instance : constant Valid_Reference := Make_Job_Instance (T);
 
    begin
@@ -57,7 +57,7 @@ package body Phalanstery.Executors.Job_Instances.References is
                     Message => "Make_Job_Instance should allocate job storage as appropriate");
       Assert_Truth (Check   => (T_Instance.Get.Job_Object'Tag = T_Any'Tag),
                     Message => "Make_Job_Instance should allocate job objects of the right type");
-      Assert_Truth (Check   => (State_Holding_Job (T_Instance.Get.Job_Object.all).Dummy_Int = 42),
+      Assert_Truth (Check   => (Stateful_Job (T_Instance.Get.Job_Object.all).Dummy_Int = 42),
                     Message => "Make_Job_Instance should copy instance data as appropriate");
       Assert_Truth (Check   => (not T_Instance.Get.Completion_Event.Is_Null),
                     Message => "Make_Job_Instance should allocate a completion event");
