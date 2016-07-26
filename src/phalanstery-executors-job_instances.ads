@@ -21,17 +21,17 @@ with Phalanstery.Executors.Interfaces;
 
 package Phalanstery.Executors.Job_Instances is
 
-   -- An asynchronous executor manipulates jobs instances, which are composed of a mutable copy of the source job and
-   -- some associated scheduler metadata such as the job's output event.
+   -- A Phalanstery executor manipulates jobs instances, which are composed of a mutable copy of the source job and
+   -- some unique scheduler metadata such as the outcome object associated with that job instance.
 
    -- Job copies must be heap-allocated because we use a class-wide type for them.
    type Job_Access is access Interfaces.Any_Asynchronous_Job;
 
-   -- Job instances are currently composed of a job copy and an event used for signaling job completion.
+   -- Currently, a job instance is composed of a copy of the job and the outcome object associated with it
    type Job_Instance is new Ada.Finalization.Limited_Controlled with
       record
          Job_Object : Job_Access := null;
-         Completion_Event : Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Outcome : Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
       end record;
 
    -- Because job instances contain pointers, we should make sure that they are always finalized properly
@@ -39,5 +39,6 @@ package Phalanstery.Executors.Job_Instances is
 
    -- Because job instances will be moved around, we need some kind of efficiently copyable reference to them.
    -- Due to Ada elaboration technicalities, these references must be implemented in a child package, called References.
+   -- This is also where unit tests will be located, since we'll be working with these references most of the time.
 
 end Phalanstery.Executors.Job_Instances;

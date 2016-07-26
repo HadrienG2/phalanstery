@@ -44,26 +44,36 @@ package body Phalanstery.Executors.Job_Instances.References is
 
       use Utilities.Testing;
       use type Ada.Tags.Tag;
+      use type Valid_Reference;
 
       T : constant Stateful_Job := (Interfaces.Asynchronous_Job with Dummy_Int => 42);
       T_Any : constant Interfaces.Any_Asynchronous_Job := T;
-      T_Instance : constant Valid_Reference := Make_Job_Instance (T);
+      I1, I2 : constant Valid_Reference := Make_Job_Instance (T);
 
    begin
 
-      Assert_Truth (Check   => (not T_Instance.Is_Null),
-                    Message => "Make_Job_Instance should return an initialized job instance ref");
-      Assert_Truth (Check   => (T_Instance.Get.Job_Object /= null),
-                    Message => "Make_Job_Instance should allocate job storage as appropriate");
-      Assert_Truth (Check   => (T_Instance.Get.Job_Object'Tag = T_Any'Tag),
-                    Message => "Make_Job_Instance should allocate job objects of the right type");
-      Assert_Truth (Check   => (Stateful_Job (T_Instance.Get.Job_Object.all).Dummy_Int = 42),
-                    Message => "Make_Job_Instance should copy instance data as appropriate");
-      Assert_Truth (Check   => (not T_Instance.Get.Completion_Event.Is_Null),
-                    Message => "Make_Job_Instance should allocate a completion event");
+      Assert_Truth (Check   => ((not I1.Is_Null) and (not I2.Is_Null)),
+                    Message => "Make_Job_Instance should return an initialized job instance reference");
+      Assert_Truth (Check   => (I1 /= I2),
+                    Message => "Make_Job_Instance should return a new job instance on every run");
 
-      T_Instance.Set.Finalize;
-      Assert_Truth (Check   => (T_Instance.Get.Job_Object = null),
+      Assert_Truth (Check   => ((I1.Get.Job_Object /= null) and (I2.Get.Job_Object /= null)),
+                    Message => "Make_Job_Instance should allocate job storage as appropriate");
+      Assert_Truth (Check   => (I1.Get.Job_Object /= I2.Get.Job_Object),
+                    Message => "Make_Job_Instance should make a new copy of the job on every call");
+
+      Assert_Truth (Check   => ((I1.Get.Job_Object'Tag = T_Any'Tag) and (I2.Get.Job_Object'Tag = T_Any'Tag)),
+                    Message => "Make_Job_Instance should allocate job objects of the right type");
+
+      Assert_Truth (Check   => ((Stateful_Job (I1.Get.Job_Object.all).Dummy_Int = 42) and
+                                (Stateful_Job (I2.Get.Job_Object.all).Dummy_Int = 42)),
+                    Message => "Make_Job_Instance should copy instance data as appropriate");
+
+      Assert_Truth (Check   => ((not I1.Get.Outcome.Is_Null) and (not I2.Get.Outcome.Is_Null)),
+                    Message => "Make_Job_Instance should allocate an outcome object to the new job instance");
+
+      I1.Set.Finalize;
+      Assert_Truth (Check   => (I1.Get.Job_Object = null),
                     Message => "Job instances should not leak job object storage on finalization");
 
    end Run_Tests;

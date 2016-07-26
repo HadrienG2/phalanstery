@@ -96,7 +96,7 @@ package body Phalanstery.Asynchronous_Jobs is
             Awaited : constant Valid_Outcome_Client := Awaited_Outcome (R);
          begin
             Assert_Truth (Check   => (Awaited = C),
-                          Message => "A job waiting for one event should wait for the right one");
+                          Message => "A job waiting for one operation should wait for the right one");
          end;
       end Test_Waiting_One;
 
@@ -112,7 +112,7 @@ package body Phalanstery.Asynchronous_Jobs is
             Awaited : constant Valid_Outcome_Client := Awaited_Outcome (R);
          begin
             Assert_Truth (Check   => (Awaited.Status = Pending),
-                          Message => "Initially, a job waiting for two events should be pending");
+                          Message => "Initially, a job waiting for two operations should be pending");
 
             E1.Mark_Done;
             Assert_Truth (Check   => (Awaited.Status = Pending),

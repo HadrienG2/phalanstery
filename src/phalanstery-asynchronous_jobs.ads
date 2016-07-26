@@ -88,13 +88,13 @@ package Phalanstery.Asynchronous_Jobs is
    -- considers that aborting the job and destroying the associated job object is both a safe thing to do, and the best
    -- possible course of action.
    --
-   -- This is not always the case, however. In the event where it isn't, this behaviour can be changed by overriding the
+   -- This is not always the case, however. When it isn't, this default behaviour can be changed by overriding the
    -- following hook. Appropriate care must be taken when doing so:
    --    - Dependency error handling code should be written under the assumption that all the job's dependencies are in
    --      an erronerous, inconsistent state, and not rely on the results of these operations. In general, all that this
    --      code can and should do is clean up the job's internal state and terminate.
-   --    - If a job waits for events multiple times in its run cycle, this hook should be designed to be callable at any
-   --      of these synchronization points, for example by using case statements and a state tracking variable.
+   --    - If a job waits for asynchronous operations multiple times in its run cycle, this hook should be callable at
+   --      any of these synchronization points, for example by using case statements and a state tracking variable.
    --
    subtype Aborted_Outcome_Status is Outcomes.Interfaces.Aborted_Outcome_Status;
    function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;

@@ -34,26 +34,26 @@ package Phalanstery.Executors.SMP.Specific_Interfaces is
    procedure Schedule_Job (Where : in out Executor;
                            What : Interfaces.Any_Async_Job) is abstract;
 
-   -- Schedule a job which waits for one event, do not synchronize
+   -- Schedule a job which depends on one asynchronous operation, do not synchronize
    procedure Schedule_Job (Where : in out Executor;
                            What  : Interfaces.Any_Async_Job;
                            After : Interfaces.Valid_Outcome_Client) is abstract;
 
-   -- Schedule a job which waits for multiple events, do not synchronize
+   -- Schedule a job which depends on multiple operations, do not synchronize
    procedure Schedule_Job (Where : in out Executor;
                            What  : Interfaces.Any_Async_Job;
                            After : Interfaces.Valid_Outcome_List) is abstract;
 
-   -- Schedule a job immediately, get an event to synchronize on
+   -- Schedule a job immediately, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
                           What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client is abstract;
 
-   -- Schedule a job which waits for one event, get an event to synchronize on
+   -- Schedule a job which depends on one asynchronous operation, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
                           What  : Interfaces.Any_Async_Job;
                           After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client is abstract;
 
-   -- Schedule a jobs which waits for multiple events, get an event to synchronize on
+   -- Schedule a jobs which depends on multiple operations, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
                           What  : Interfaces.Any_Async_Job;
                           After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client is abstract;
