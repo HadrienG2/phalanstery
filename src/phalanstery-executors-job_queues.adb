@@ -23,18 +23,18 @@ package body Phalanstery.Executors.Job_Queues is
 
    use type Ada.Containers.Count_Type;
 
-   procedure Add_Job (Where : in out Pending_Counter) is
+   procedure Add_Job (Where : in out Waiting_Counter) is
    begin
       Atomic_Counters.Increment (Where.Implementation);
    end Add_Job;
 
-   procedure Remove_Job (Where : in out Pending_Counter) is
-      Negative_Pending_Count : constant Boolean := Atomic_Counters.Decrement (Where.Implementation);
+   procedure Remove_Job (Where : in out Waiting_Counter) is
+      Negative_Job_Count : constant Boolean := Atomic_Counters.Decrement (Where.Implementation);
    begin
-      pragma Assert (not Negative_Pending_Count, "The amount of pending jobs should never become negative!");
+      pragma Assert (not Negative_Job_Count, "The amount of waiting jobs should never become negative!");
    end Remove_Job;
 
-   function No_Pending_Job (Where : Pending_Counter) return Boolean is
+   function No_Waiting_Job (Where : Waiting_Counter) return Boolean is
       (Atomic_Counters.Is_One (Where.Implementation));
 
    procedure Flush (What : Job_Queue) is
@@ -45,7 +45,7 @@ package body Phalanstery.Executors.Job_Queues is
    end Flush;
 
    not overriding function Is_Empty (What : Job_Queue) return Boolean is
-     ((What.Ready.Current_Use = 0) and (What.Pending.No_Pending_Job));
+     ((What.Ready.Current_Use = 0) and (What.Waiting.No_Waiting_Job));
 
    overriding procedure Finalize (What : in out Job_Queue) is
    begin
@@ -60,22 +60,22 @@ package body Phalanstery.Executors.Job_Queues is
 
       use Utilities.Testing;
 
-      procedure Test_Pending_Counter is
-         C : Pending_Counter;
+      procedure Test_Waiting_Counter is
+         C : Waiting_Counter;
       begin
 
-         Assert_Truth (Check   => C.No_Pending_Job,
-                       Message => "Pending counters should initially feature no pending job");
+         Assert_Truth (Check   => C.No_Waiting_Job,
+                       Message => "Waiting job counters should be initially cleared");
 
          C.Add_Job;
-         Assert_Truth (Check   => (not C.No_Pending_Job),
-                       Message => "After adding a pending job, counters should not signal it");
+         Assert_Truth (Check   => (not C.No_Waiting_Job),
+                       Message => "After adding a waiting job, the waiting job counter should not stay cleared");
 
          C.Remove_Job;
-         Assert_Truth (Check   => C.No_Pending_Job,
-                       Message => "After deleting the pending jobs, counters, should go back to the empty state");
+         Assert_Truth (Check   => C.No_Waiting_Job,
+                       Message => "After deleting the waiting jobs, the waiting job counter should go back to zero");
 
-      end Test_Pending_Counter;
+      end Test_Waiting_Counter;
 
       procedure Test_Job_Queue is
          TI : Job_Instance_Reference;
@@ -85,15 +85,15 @@ package body Phalanstery.Executors.Job_Queues is
          Assert_Truth (Check   => TQ.Is_Empty,
                        Message => "Job queues should be born empty");
 
-         TQ.Pending.Add_Job;
+         TQ.Waiting.Add_Job;
          Assert_Truth (Check   => (not TQ.Is_Empty),
-                       Message => "Job queues with a pending job should not be empty");
+                       Message => "Job queues with a waiting job should not be empty");
 
          TQ.Ready.Enqueue (TI);
          Assert_Truth (Check   => (not TQ.Is_Empty),
-                       Message => "Job queues with a pending job and a queued job should not be empty");
+                       Message => "Job queues with a waiting job and a queued job should not be empty");
 
-         TQ.Pending.Remove_Job;
+         TQ.Waiting.Remove_Job;
          Assert_Truth (Check   => (not TQ.Is_Empty),
                        Message => "Job queues with a queued job should not be empty");
 
@@ -112,7 +112,7 @@ package body Phalanstery.Executors.Job_Queues is
       end Test_Job_Queue;
 
    begin
-      Test_Pending_Counter;
+      Test_Waiting_Counter;
       Test_Job_Queue;
    end Run_Tests;
 

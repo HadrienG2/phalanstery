@@ -23,51 +23,55 @@ with Phalanstery.Utilities.Atomic_Counters;
 
 package Phalanstery.Executors.Job_Queues is
 
-   -- Ready asynchronous jobs will be put on a FIFO queue, and executed once worker threads become available.
-   -- Said queue is unbounded because the performance impact of a worker thread blocking on a bounded queue
-   -- would be catastrophic.
+   -- This package features the data structures that are required in order to schedule job instances, whether these are
+   -- ready to run as soon as a CPU core becomes available or waiting for other asynchronous operations to complete.
+
+
+   -- Ready jobs will be put on a FIFO queue, from which active CPU cores will later fetch them. That FIFO queue is
+   -- unbounded because the performance impact of a worker thread blocking on a bounded queue could be catastrophic.
    subtype Job_Instance_Reference is Job_Instances.References.Reference;
    package Ready_Queue_Interfaces is new Ada.Containers.Synchronized_Queue_Interfaces (Job_Instance_Reference);
    package Ready_Queue_Implementation is new Ada.Containers.Unbounded_Synchronized_Queues (Ready_Queue_Interfaces);
 
 
-   -- Pending jobs do not really follow an organized queue-like structure: a job may become pending at any time, and
-   -- resume execution at any other time, irrespective of what any other job is doing.
+   -- Waiting jobs do not really follow an organized data structure: a job can start waiting at any time, and resume
+   -- execution at any other time, irrespective of what any other job is doing.
    --
-   -- For this reason, pending jobs will be stored on the heap (see Executors.Scheduling for more details), and the
-   -- job queue will only keep track of their amount using an atomic conter.
+   -- For this reason, these jobs will be stored on the heap (see Executors.Scheduling for more details), and the
+   -- job queue will only keep track of their amount using a simple atomic conter.
    --
-   type Pending_Counter is tagged limited private;
+   type Waiting_Counter is tagged limited private;
 
-   procedure Add_Job (Where : in out Pending_Counter);
+   procedure Add_Job (Where : in out Waiting_Counter);
 
-   procedure Remove_Job (Where : in out Pending_Counter);
+   procedure Remove_Job (Where : in out Waiting_Counter);
 
-   function No_Pending_Job (Where : Pending_Counter) return Boolean;
+   function No_Waiting_Job (Where : Waiting_Counter) return Boolean;
 
 
-   -- A job queue is a combination of a ready job queue and a pending job counter. These two accounting facilities
-   -- are kept separate and un-encapsulated so that a client may synchronize with either part of the queue separately,
-   -- which should reduce lock contention as the pending counter and the ready queue are rarely accessed simultaneously.
-   --
-   -- Job queue users should make sure that all pending and ready jobs have completed before finalizing a queue,
-   -- otherwise disaster will ensue. The job queue implementation will attempt to detect this error and report it.
-   -- Unfortunately, due to Ada's policy on finalization exceptions, this means Program_Error will be raised.
-   --
+   -- A job queue is a combination of a ready job queue and a waiting job counter. These two accounting facilities
+   -- are kept separate and un-encapsulated, so that a client may synchronize with either part of the queue separately.
+   -- This should reduce lock contention as the pending counter and the ready queue are rarely accessed simultaneously.
    type Job_Queue is new Ada.Finalization.Limited_Controlled with
       record
          Ready : Ready_Queue_Implementation.Queue;
-         Pending : Pending_Counter;
+         Waiting : Waiting_Counter;
       end record;
 
+   -- This method may be used to wait for a job queue to be free of both ready and waiting jobs
    not overriding procedure Flush (What : Job_Queue);
 
+   -- This method may be used to check that it is the case in a nonblocking fashion
    not overriding function Is_Empty (What : Job_Queue) return Boolean;
 
+   -- At finalization time, the job queue implementation will make sure that a job queue has not been finalized as it
+   -- still has jobs in it: this would indicate an error in the executor implementation.
    overriding procedure Finalize (What : in out Job_Queue)
      with Pre => What.Is_Empty;
 
+   -- If the job queue is not empty at finalization time, this exception will be raised, causing a Program_Error.
    Queue_Usage_Error : exception;
+
 
    -- Because job queues will be referred to from multiple places, we need some kind of copyable reference to them.
    -- Due to Ada elaboration technicalities, these references must be implemented in a child package, called References.
@@ -79,7 +83,7 @@ private
 
    package Atomic_Counters renames Utilities.Atomic_Counters;
 
-   type Pending_Counter is tagged limited
+   type Waiting_Counter is tagged limited
       record
          Implementation : Atomic_Counters.Atomic_Counter;
       end record;
