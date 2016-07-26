@@ -38,7 +38,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
    task body Executor_Task is
 
       -- Executor tasks hold ready jobs on a FIFO queue
-      Job_Queue : constant Valid_Job_Queue_Reference := Job_Queues.References.Make_Job_Queue;
+      Job_Queue : constant Valid_Job_Queue_Reference;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker

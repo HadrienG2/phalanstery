@@ -15,7 +15,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Utilities.References.Nullable;
+with Phalanstery.Utilities.References.Not_Null;
 
 package Phalanstery.Executors.Job_Queues.References is
 
@@ -23,10 +23,8 @@ package Phalanstery.Executors.Job_Queues.References is
    -- shared across multiple tasks, reference counting must be used to manipulate job queues.
 
    package Implementation_Base is new Utilities.References (Job_Queue);
-   package Implementation is new Implementation_Base.Nullable;
+   package Implementation is new Implementation_Base.Not_Null;
 
-   subtype Reference is Implementation.Reference;
-   subtype Valid_Reference is Reference with Dynamic_Predicate => (not Valid_Reference.Is_Null);
-   function Make_Job_Queue return Valid_Reference renames Implementation.Make;
+   subtype Valid_Reference is Implementation.Reference;
 
 end Phalanstery.Executors.Job_Queues.References;

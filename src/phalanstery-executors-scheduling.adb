@@ -86,7 +86,7 @@ package body Phalanstery.Executors.Scheduling is
       subtype Valid_Event_Server is Events.Contracts.Valid_Event_Server;
 
       T : Jobs.Trivial.Null_Job;
-      Queue : constant Valid_Job_Queue_Reference := Job_Queues.References.Make_Job_Queue;
+      Queue : constant Valid_Job_Queue_Reference;
 
       procedure Test_Finished_Wait_List is
          Instance : constant Valid_Job_Instance_Reference := Job_Instances.References.Make_Job_Instance (T);

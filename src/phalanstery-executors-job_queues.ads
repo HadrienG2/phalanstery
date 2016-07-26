@@ -50,7 +50,7 @@ package Phalanstery.Executors.Job_Queues is
 
 
    -- A job queue is a combination of a ready job queue and a waiting job counter. These two accounting facilities
-   -- are kept separate and un-encapsulated, so that a client may synchronize with either part of the queue separately.
+   -- are kept separate and not encapsulated, so that a client may synchronize with either part of the queue separately.
    -- This should reduce lock contention as the pending counter and the ready queue are rarely accessed simultaneously.
    type Job_Queue is new Ada.Finalization.Limited_Controlled with
       record

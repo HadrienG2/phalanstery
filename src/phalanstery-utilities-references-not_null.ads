@@ -19,7 +19,7 @@ generic
 package Phalanstery.Utilities.References.Not_Null is
 
    -- Instances are manipulated through copyable and storable references
-   -- In the Not_Null variant, these references are initialized with some target object at creation time.
+   -- In the Not_Null variant, these references are initialized with a default-constructed object at creation time.
    type Reference is new Reference_Base with private;
 
    -- One can check whether two references point to the same object
