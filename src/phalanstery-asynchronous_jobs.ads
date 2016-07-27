@@ -63,18 +63,13 @@ package Phalanstery.Asynchronous_Jobs is
      with Pre => (Status (What) = Waiting);
 
    -- To allow asynchronous jobs to retain state across invocations, they are implemented as Ada tagged types inheriting
-   -- from a common ancestor (currently an interface).
+   -- from a common interface. By overriding that interface's subprograms, a concrete job type can define what happens
+   -- when a job runs normally, is cancelled, or when the job's dependencies fail.
    --
-   -- By overriding the ancestor's subprograms, jobs types can define what should happen when a job runs normally,
-   -- when it is cancelled, when one of the asynchronous operations that it depends on fails, and so on.
+   -- To comply with Ada accessibility rules, job types should be defined at global scope. Otherwise, the underlying Ada
+   -- implementation will consider the program to be invalid, as an asynchronous job object might outlive its type.
    --
-   -- Job implementors should note that jobs will be copied upon queuing, and may be further copied later on by a
-   -- distributed load balancing mechanism. Consequently, job types should be designed to be cheap to copy.
-   --
-   -- In addition, to comply with Ada accessibility rules, job types should be defined at global scope. Otherwise, the
-   -- Ada implementation will consider the host program to be invalid, as the asynchronous job might outlive its type.
-   --
-   type Asynchronous_Job is abstract tagged private;
+   type Asynchronous_Job is interface;
 
    -- The "Run" method is the heart of an asynchronous job. From the point where a job is ready to run, it will be
    -- repeatedly called until the job completes, fails, or is canceled. The Was_Canceled parameter is used to notify a
@@ -84,12 +79,11 @@ package Phalanstery.Asynchronous_Jobs is
                  Was_Canceled : Boolean) return Return_Value is abstract;
 
    -- By default, Phalanstery assumes that a waiting job is always in a consistent state: if one of the asynchronous
-   -- operations that the job depends on fails to run to completion, either due to cancelation or errors, Phalanstery
-   -- considers that aborting the job and destroying the associated job object is both a safe thing to do, and the best
-   -- possible course of action.
+   -- operations that the job depends on fails to run to completion, either due to cancelation or errors, it is assumed
+   -- that stopping the job immediately is the best possible course of action.
    --
-   -- This is not always the case, however. When it isn't, this default behaviour can be changed by overriding the
-   -- following hook. Appropriate care must be taken when doing so:
+   -- When it isn't the case, this default behaviour can be changed by overriding the following hook. Please note that
+   -- this should be done with appropriate care:
    --    - Dependency error handling code should be written under the assumption that all the job's dependencies are in
    --      an erronerous, inconsistent state, and not rely on the results of these operations. In general, all that this
    --      code can and should do is clean up the job's internal state and terminate.
@@ -97,10 +91,10 @@ package Phalanstery.Asynchronous_Jobs is
    --      any of these synchronization points, for example by using case statements and a state tracking variable.
    --
    subtype Aborted_Outcome_Status is Outcomes.Interfaces.Aborted_Outcome_Status;
-   function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
-                                       Dependency_Status : Aborted_Outcome_Status) return Return_Value;
+   procedure Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
+                                        Dependency_Status : Aborted_Outcome_Status) is null;
 
-   -- If a job dependency fails, the default job behaviour is to immediately raise the following exception
+   -- If a job dependency fails, the job's outcome object will be marked with the following error:
    Dependency_Error : exception;
 
    -- Run the unit tests for this package
@@ -121,7 +115,5 @@ private
    Return_Finished : constant Return_Value := (State => Finished);
    Return_Yielding : constant Return_Value := (State => Yielding);
    Return_Canceled : constant Return_Value := (State => Canceled);
-
-   type Asynchronous_Job is abstract tagged null record;
 
 end Phalanstery.Asynchronous_Jobs;

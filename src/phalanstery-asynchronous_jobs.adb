@@ -37,14 +37,6 @@ package body Phalanstery.Asynchronous_Jobs is
    function Awaited_Outcome (What : Return_Value) return Valid_Outcome_Client is
      (What.Awaited_Outcome);
 
-   function Handle_Aborted_Dependency (Who               : in out Asynchronous_Job;
-                                       Dependency_Status : Aborted_Outcome_Status) return Return_Value is
-     ( case Dependency_Status is
-         when Canceled =>
-            Return_Canceled,
-         when Error =>
-            raise Dependency_Error );
-
 
    -- The remainder of this package is dedicated to unit tests
    procedure Run_Tests is
