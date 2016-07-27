@@ -29,6 +29,5 @@ package Phalanstery.Executors.Interfaces is
 
    subtype Valid_Outcome_Client is Outcomes.Contracts.Valid_Outcome_Client;
    subtype Valid_Outcome_Server is Outcomes.Contracts.Valid_Outcome_Server;
-   subtype Valid_Outcome_List is Outcome_Composition.Interfaces.Valid_Outcome_List;
 
 end Phalanstery.Executors.Interfaces;

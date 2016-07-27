@@ -15,46 +15,47 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Events.Interfaces;
 with Phalanstery.Executors.Interfaces;
 with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues.References;
+with Phalanstery.Outcomes.Interfaces;
 
 private package Phalanstery.Executors.Scheduling is
 
-   -- Let us define some convenience notations first
-   subtype Valid_Job_Instance_Reference is Job_Instances.References.Valid_Reference;
-   subtype Valid_Job_Queue_Reference is Job_Queues.References.Valid_Reference;
+   -- This package implements the job scheduling logic of Phalanstery executors. By using it, one can schedule an
+   -- asynchronous job to run after some other asynchronous operations have completed, handling possible complications
+   -- such as dependency errors along the way.
 
-   -- MAJOR TODO: /!\ Use the new dependency error handling job hook /!\
+   -- First, let's define some convenience notations
+   subtype Valid_Job_Instance is Job_Instances.References.Valid_Reference;
+   subtype Valid_Job_Queue is Job_Queues.References.Valid_Reference;
 
-   -- This function handles blocking jobs by allowing a job instance to be scheduled for execution (through queueing
-   -- on an executor's ready job queue) after an event wait list has been completed. It also handles all the non-Done
-   -- statuses which the wait list can end up in, allowing for proper handling of cancelation and errors.
-   procedure Schedule_Job (Who   : Valid_Job_Instance_Reference;
-                           After : Interfaces.Event_Wait_List;
-                           On    : Valid_Job_Queue_Reference);
-
-   -- MAJOR TODO: /!\ Use the new dependency error handling job hook /!\
+   -- This function schedules a job instance to be put on the ready queue of an executor, and thus ultimately run, after
+   -- the asynchronous operations that it depends on have completed. If some waiting is needed, the waiting counter of
+   -- the job queue will be incremented and decremented as appropriate.
+   procedure Schedule_Job (Who   : Valid_Job_Instance;
+                           After : Interfaces.Valid_Outcome_Client;
+                           On    : Valid_Job_Queue);
 
 private
 
-   -- Let us define this conveience notation first
-   subtype Finished_Event_Status is Events.Interfaces.Finished_Event_Status;
+   -- Let us define one more shorthand for the private part of this package
+   subtype Final_Outcome_Status is Outcomes.Interfaces.Final_Outcome_Status;
 
-   -- It is easy to schedule a job given the prior assumption that it's waiting for a finished event of known status
-   procedure Schedule_Ready_Job (Who          : Valid_Job_Instance_Reference;
-                                 According_To : Finished_Event_Status;
-                                 On           : Valid_Job_Queue_Reference);
+   -- Now we can define what will happen once a job's dependencies are satisfied or have failed
+   procedure Schedule_Ready_Job (Who          : Valid_Job_Instance;
+                                 According_To : Final_Outcome_Status;
+                                 On           : Valid_Job_Queue);
 
-   -- We wait for non-ready jobs using the following listener object
-   type Scheduled_Job is new Events.Interfaces.Event_Listener_Reference with
+   -- The method above will be invoked by the following outcome listener...
+   type Scheduled_Job is new Outcomes.Interfaces.Outcome_Listener_Reference with
       record
-         Instance : Valid_Job_Instance_Reference;
-         Target_Queue : Valid_Job_Queue_Reference;
+         Instance : Valid_Job_Instance;
+         Target_Queue : Valid_Job_Queue;
       end record;
 
-   overriding procedure Notify_Event_Status_Change (Where : in out Scheduled_Job;
-                                                    What  : Finished_Event_Status);
+   -- ...equipped with its traditional outcome object callback
+   overriding procedure Notify_Outcome (Where : in out Scheduled_Job;
+                                        What  : Final_Outcome_Status);
 
 end Phalanstery.Executors.Scheduling;
