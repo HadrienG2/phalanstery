@@ -91,7 +91,7 @@ package Phalanstery.Outcomes.Interfaces with Preelaborate is
                              What  : Final_Outcome_Status) is abstract;
 
    -- Listener objects are bound to outcome objects using the following outcome object method.
-   procedure Add_Listener (Where : in out Outcome_Client;
+   procedure Add_Listener (Where : Outcome_Client;
                            Who   : in out Outcome_Listener_Reference'Class) is abstract
      with Pre'Class => (not Where.Is_Null);
 

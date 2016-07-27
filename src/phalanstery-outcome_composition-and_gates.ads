@@ -33,12 +33,12 @@ package Phalanstery.Outcome_Composition.And_Gates is
 
    -- AND gates, like any other form of outcome object composition, are created by grouping outcome objects together
    not overriding procedure Add_Child (Where : in out And_Gate;
-                                       Who   : in out Interfaces.Valid_Outcome_Client)
+                                       Who   : Interfaces.Valid_Outcome_Client)
      with Pre => (not Is_Frozen (Where));
 
    -- Children may be added in a bulk fashion for increased efficiency
    not overriding procedure Add_Children (Where : in out And_Gate;
-                                          Who   : in out Interfaces.Valid_Outcome_List)
+                                          Who   : Interfaces.Valid_Outcome_List)
      with Pre => (not Is_Frozen (Where));
 
    -- Once all children have been added, one can produce an outcome object associated with the AND gate's outcome.

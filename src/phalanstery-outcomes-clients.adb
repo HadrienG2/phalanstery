@@ -36,7 +36,7 @@ package body Phalanstery.Outcomes.Clients is
       Who.Ref.Set.Wait_Completion;
    end Wait_Completion;
 
-   overriding procedure Add_Listener (Where : in out Client;
+   overriding procedure Add_Listener (Where : Client;
                                       Who   : in out Interfaces.Outcome_Listener_Reference'Class) is
    begin
       Where.Ref.Set.Add_Listener (Who);

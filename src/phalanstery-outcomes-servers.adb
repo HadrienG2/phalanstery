@@ -132,7 +132,7 @@ package body Phalanstery.Outcomes.Servers is
 
       procedure Test_Pending_State is
          S : constant Servers.Server := Make_Outcome;
-         C : Clients.Client := S.Make_Client;
+         C : constant Clients.Client := S.Make_Client;
       begin
          Assert_Truth (Check   => (C.Status = Pending),
                        Message => "Clients should initially be in the Pending state");
@@ -153,7 +153,7 @@ package body Phalanstery.Outcomes.Servers is
 
       procedure Test_Done_State is
          S : Servers.Server := Make_Outcome;
-         C : Clients.Client := S.Make_Client;
+         C : constant Clients.Client := S.Make_Client;
       begin
          C.Add_Listener (Test_Callback_Listener);
          S.Mark_Done;
@@ -184,7 +184,7 @@ package body Phalanstery.Outcomes.Servers is
       procedure Test_Canceled_State is
 
          procedure Test_Cancelation (S : Servers.Server;
-                                     C : in out Clients.Client) is
+                                     C : Clients.Client) is
          begin
             Assert_Truth (Check   => (C.Status = Canceled),
                           Message => "After canceling a client, it should be marked Canceled");
@@ -225,7 +225,7 @@ package body Phalanstery.Outcomes.Servers is
          -- Test server-side cancelation
          declare
             S : Servers.Server := Make_Outcome;
-            C : Clients.Client := S.Make_Client;
+            C : constant Clients.Client := S.Make_Client;
          begin
             C.Add_Listener (Test_Callback_Listener);
             S.Cancel;
@@ -238,7 +238,7 @@ package body Phalanstery.Outcomes.Servers is
          Custom_Error : exception;
          Custom_Error_Occurence : Ada.Exceptions.Exception_Occurrence;
          S : Servers.Server := Make_Outcome;
-         C : Clients.Client := S.Make_Client;
+         C : constant Clients.Client := S.Make_Client;
       begin
          Utilities.Exceptions.Make_Occurrence (What  => Custom_Error'Identity,
                                                Where => Custom_Error_Occurence);

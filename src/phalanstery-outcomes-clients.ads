@@ -38,7 +38,7 @@ package Phalanstery.Outcomes.Clients is
 
    overriding procedure Wait_Completion (Who : Client);
 
-   overriding procedure Add_Listener (Where : in out Client;
+   overriding procedure Add_Listener (Where : Client;
                                       Who   : in out Interfaces.Outcome_Listener_Reference'Class);
 
    overriding procedure Cancel (Who : in out Client);

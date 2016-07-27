@@ -36,9 +36,8 @@ package body Phalanstery.Outcome_Composition.Shorthands is
       if Wait_List'Length > 1 then
          declare
             Gate : And_Gates.And_Gate;
-            Mutable_Wait_List_Copy : Interfaces.Valid_Outcome_List := Wait_List;
          begin
-            And_Gates.Add_Children (Gate, Mutable_Wait_List_Copy);
+            And_Gates.Add_Children (Gate, Wait_List);
             return And_Gates.Make_Client (Gate);
          end;
       elsif Wait_List'Length = 1 then
