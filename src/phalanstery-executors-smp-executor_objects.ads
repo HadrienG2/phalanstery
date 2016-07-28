@@ -34,30 +34,30 @@ package Phalanstery.Executors.SMP.Executor_Objects is
 
    -- Schedule a job, do not care when it will run
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What : Interfaces.Any_Async_Job);
+                                      What : Interfaces.Any_Asynchronous_Job);
 
    -- Schedule a job which waits for one event, do not synchronize
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What  : Interfaces.Any_Async_Job;
+                                      What  : Interfaces.Any_Asynchronous_Job;
                                       After : Interfaces.Valid_Outcome_Client);
 
    -- Schedule a job which waits for multiple events, do not synchronize
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What  : Interfaces.Any_Async_Job;
+                                      What  : Interfaces.Any_Asynchronous_Job;
                                       After : Interfaces.Valid_Outcome_List);
 
    -- Schedule a job immediately, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
-                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client;
+                                     What : Interfaces.Any_Asynchronous_Job) return Interfaces.Valid_Outcome_Client;
 
    -- Schedule a job which waits for one event, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
-                                     What  : Interfaces.Any_Async_Job;
+                                     What  : Interfaces.Any_Asynchronous_Job;
                                      After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client;
 
    -- Schedule a job which waits for multiple events, get an event to synchronize on
    overriding function Schedule_Job (Where : in out Executor;
-                                     What  : Interfaces.Any_Async_Job;
+                                     What  : Interfaces.Any_Asynchronous_Job;
                                      After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client;
 
    -- Run the unit tests for this package

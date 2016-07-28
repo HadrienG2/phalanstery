@@ -16,11 +16,11 @@
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
 with Ada.Unchecked_Deallocation;
-with Phalanstery.Events.Clients;
-with Phalanstery.Events.Contracts;
-with Phalanstery.Events.Interfaces;
-with Phalanstery.Events.Servers;
-with Phalanstery.Jobs.Trivial;
+with Phalanstery.Examples.Trivial_Jobs;
+with Phalanstery.Outcome_Composition.Shorthands;
+with Phalanstery.Outcomes.Clients;
+with Phalanstery.Outcomes.Interfaces;
+with Phalanstery.Outcomes.Servers;
 with Phalanstery.Utilities.Testing;
 with System.Multiprocessors;
 pragma Elaborate_All (Phalanstery.Utilities.Testing);
@@ -28,7 +28,7 @@ pragma Elaborate_All (Phalanstery.Utilities.Testing);
 package body Phalanstery.Executors.SMP.Executor_Objects is
 
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What : Interfaces.Any_Async_Job) is
+                                      What : Interfaces.Any_Asynchronous_Job) is
       Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
                                                                          What  => What) with Unreferenced;
    begin
@@ -36,7 +36,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
    end Schedule_Job;
 
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What  : Interfaces.Any_Async_Job;
+                                      What  : Interfaces.Any_Asynchronous_Job;
                                       After : Interfaces.Valid_Outcome_Client) is
       Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
                                                                          What  => What,
@@ -46,7 +46,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
    end Schedule_Job;
 
    overriding procedure Schedule_Job (Where : in out Executor;
-                                      What  : Interfaces.Any_Async_Job;
+                                      What  : Interfaces.Any_Asynchronous_Job;
                                       After : Interfaces.Valid_Outcome_List) is
       Unused : constant Interfaces.Valid_Outcome_Client := Schedule_Job (Where => Where,
                                                                          What  => What,
@@ -56,7 +56,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
    end Schedule_Job;
 
    overriding function Schedule_Job (Where : in out Executor;
-                                     What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client is
+                                     What : Interfaces.Any_Asynchronous_Job) return Interfaces.Valid_Outcome_Client is
       Empty_Wait_List : Interfaces.Valid_Outcome_List (2 .. 1);
    begin
       return Schedule_Job (Where => Where,
@@ -65,23 +65,23 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
    end Schedule_Job;
 
    overriding function Schedule_Job (Where : in out Executor;
-                                     What  : Interfaces.Any_Async_Job;
+                                     What  : Interfaces.Any_Asynchronous_Job;
                                      After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client is
+      Result : Outcomes.Clients.Client;
    begin
-      return Schedule_Job (Where => Where,
-                           What  => What,
-                           After => (1 => After));
+      Where.Executor_Task.Schedule_Job (What    => What,
+                                        After   => After,
+                                        Outcome => Result);
+      return Result;
    end Schedule_Job;
 
    overriding function Schedule_Job (Where : in out Executor;
-                                     What  : Interfaces.Any_Async_Job;
+                                     What  : Interfaces.Any_Asynchronous_Job;
                                      After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client is
-      Result : Outcomes.Clients.Client;
    begin
-      Where.Executor_Task.Schedule_Job (What  => What,
-                                        After => After,
-                                        Event => Result);
-      return Result;
+      return Schedule_Job (Where => Where,
+                           What  => What,
+                           After => Outcome_Composition.Shorthands.When_All (After));
    end Schedule_Job;
 
    overriding procedure Initialize (Who : in out Executor) is
@@ -109,11 +109,11 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
 
       use Utilities.Testing;
       use type System.Multiprocessors.CPU_Range;
-      use all type Events.Interfaces.Finished_Event_Status;
+      use all type Outcomes.Interfaces.Final_Outcome_Status;
 
       Number_Of_Workers : constant := 2;
       Test_Executor : Executor (Number_Of_Workers);
-      T : Jobs.Trivial.Null_Job;
+      T : Examples.Trivial_Jobs.Null_Job;
 
       procedure Test_Initial_State is
       begin
@@ -124,9 +124,9 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
       end Test_Initial_State;
 
       procedure Test_Functions is
-         Dep1_S, Dep2_S : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
-         Dep1_C : constant Events.Contracts.Valid_Event_Client := Dep1_S.Make_Client;
-         Dep2_C : constant Events.Contracts.Valid_Event_Client := Dep2_S.Make_Client;
+         Dep1_S, Dep2_S : constant Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+         Dep1_C : constant Interfaces.Valid_Outcome_Client := Dep1_S.Make_Client;
+         Dep2_C : constant Interfaces.Valid_Outcome_Client := Dep2_S.Make_Client;
       begin
 
          declare
@@ -167,7 +167,7 @@ package body Phalanstery.Executors.SMP.Executor_Objects is
 
       procedure Test_Procedures is
          Alternate_Executor : Executor (Number_Of_Workers);
-         S1, S2 : constant Events.Contracts.Valid_Event_Server := Events.Servers.Make_Event;
+         S1, S2 : constant Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          C1 : constant Interfaces.Valid_Outcome_Client := S1.Make_Client;
          C2 : constant Interfaces.Valid_Outcome_Client := S2.Make_Client;
       begin
