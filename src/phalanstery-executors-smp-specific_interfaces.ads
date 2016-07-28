@@ -32,30 +32,30 @@ package Phalanstery.Executors.SMP.Specific_Interfaces is
 
    -- Schedule a job, do not care when it will run
    procedure Schedule_Job (Where : in out Executor;
-                           What : Interfaces.Any_Async_Job) is abstract;
+                           What : Interfaces.Any_Asynchronous_Job) is abstract;
 
    -- Schedule a job which depends on one asynchronous operation, do not synchronize
    procedure Schedule_Job (Where : in out Executor;
-                           What  : Interfaces.Any_Async_Job;
+                           What  : Interfaces.Any_Asynchronous_Job;
                            After : Interfaces.Valid_Outcome_Client) is abstract;
 
    -- Schedule a job which depends on multiple operations, do not synchronize
    procedure Schedule_Job (Where : in out Executor;
-                           What  : Interfaces.Any_Async_Job;
+                           What  : Interfaces.Any_Asynchronous_Job;
                            After : Interfaces.Valid_Outcome_List) is abstract;
 
    -- Schedule a job immediately, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
-                          What : Interfaces.Any_Async_Job) return Interfaces.Valid_Outcome_Client is abstract;
+                          What : Interfaces.Any_Asynchronous_Job) return Interfaces.Valid_Outcome_Client is abstract;
 
    -- Schedule a job which depends on one asynchronous operation, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
-                          What  : Interfaces.Any_Async_Job;
+                          What  : Interfaces.Any_Asynchronous_Job;
                           After : Interfaces.Valid_Outcome_Client) return Interfaces.Valid_Outcome_Client is abstract;
 
    -- Schedule a jobs which depends on multiple operations, get an outcome object to synchronize on
    function Schedule_Job (Where : in out Executor;
-                          What  : Interfaces.Any_Async_Job;
+                          What  : Interfaces.Any_Asynchronous_Job;
                           After : Interfaces.Valid_Outcome_List) return Interfaces.Valid_Outcome_Client is abstract;
 
 end Phalanstery.Executors.SMP.Specific_Interfaces;
