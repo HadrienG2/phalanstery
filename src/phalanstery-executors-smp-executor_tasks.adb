@@ -15,14 +15,14 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-with Phalanstery.Events.Clients;
-with Phalanstery.Events.Interfaces;
-with Phalanstery.Events.Servers;
+with Phalanstery.Asynchronous_Jobs;
+with Phalanstery.Examples.Trivial_Jobs;
+with Phalanstery.Outcomes.Clients;
+with Phalanstery.Outcomes.Interfaces;
+with Phalanstery.Outcomes.Servers;
 with Phalanstery.Executors.Scheduling;
 with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues.References;
-with Phalanstery.Jobs;
-with Phalanstery.Jobs.Trivial;
 with Phalanstery.Utilities.Debug;
 with Phalanstery.Utilities.Group_Waits;
 with Phalanstery.Utilities.Signals;
@@ -31,14 +31,14 @@ pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
 package body Phalanstery.Executors.SMP.Executor_Tasks is
 
-   subtype Valid_Job_Instance_Reference is Job_Instances.References.Valid_Reference;
-   subtype Valid_Job_Queue_Reference is Job_Queues.References.Valid_Reference;
-   use all type Events.Interfaces.Event_Status;
+   subtype Valid_Job_Instance is Job_Instances.References.Valid_Reference;
+   subtype Valid_Job_Queue is Job_Queues.References.Valid_Reference;
+   use all type Outcomes.Interfaces.Outcome_Status;
 
    task body Executor_Task is
 
       -- Executor tasks hold ready jobs on a FIFO queue
-      Job_Queue : constant Valid_Job_Queue_Reference;
+      Job_Queue : Valid_Job_Queue;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
@@ -51,37 +51,37 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       task body Worker is
 
          -- This function runs a work item and tells whether it is yielding or not
-         function Run_Work_Item (What : Valid_Job_Instance_Reference) return Boolean is
-            use all type Jobs.Return_Status;
+         function Run_Work_Item (What : Valid_Job_Instance) return Boolean is
+            use all type Asynchronous_Jobs.Return_Status;
             Work_Item_Yielding : Boolean := False;
          begin
             declare
-               Job_Canceled : constant Boolean := What.Get.Completion_Event.Is_Canceled;
-               Work_Item_Output : constant Jobs.Return_Value :=
+               Job_Canceled : constant Boolean := What.Get.Outcome.Is_Canceled;
+               Work_Item_Output : constant Asynchronous_Jobs.Return_Value :=
                  What.Get.Job_Object.Run (Was_Canceled => Job_Canceled);
             begin
-               case Jobs.Status (Work_Item_Output) is
+               case Asynchronous_Jobs.Status (Work_Item_Output) is
                   when Finished =>
-                     What.Set.Completion_Event.Mark_Done;
+                     What.Set.Outcome.Mark_Done;
                   when Yielding =>
                      Work_Item_Yielding := True;
                   when Canceled =>
-                     What.Set.Completion_Event.Cancel;
+                     What.Set.Outcome.Cancel;
                   when Waiting =>
                      Scheduling.Schedule_Job (Who   => What,
-                                              After => Jobs.Wait_List (Work_Item_Output),
+                                              After => Asynchronous_Jobs.Awaited_Outcome (Work_Item_Output),
                                               On    => Job_Queue);
                end case;
                return Work_Item_Yielding;
             end;
          exception
             when E : others =>
-               What.Set.Completion_Event.Mark_Error (E);
+               What.Set.Outcome.Mark_Error (E);
                return False;
          end Run_Work_Item;
 
          -- This function processes a work item according to the current scheduling policy
-         procedure Process_Work_Item (What : Valid_Job_Instance_Reference) with Inline is
+         procedure Process_Work_Item (What : Valid_Job_Instance) with Inline is
          begin
             case Active_Scheduling_Policy is
                when Round_Robin =>
@@ -135,14 +135,13 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       -- Accept requests from the outside world until requested to stop
       while Executor_Active loop
          select
-            accept Schedule_Job (What  : Interfaces.Any_Async_Job;
-                                 After : Interfaces.Valid_Outcome_List;
-                                 Event : out Interfaces.Valid_Outcome_Client) do
+            accept Schedule_Job (What    : Interfaces.Any_Asynchronous_Job;
+                                 After   : Interfaces.Valid_Outcome_Client;
+                                 Outcome : out Interfaces.Valid_Outcome_Client) do
                declare
-                  Work_Item : constant Valid_Job_Instance_Reference :=
-                    Job_Instances.References.Make_Job_Instance (What);
+                  Work_Item : constant Valid_Job_Instance := Job_Instances.References.Make_Job_Instance (What);
                begin
-                  Event := Work_Item.Get.Completion_Event.Make_Client;
+                  Outcome := Work_Item.Get.Outcome.Make_Client;
                   Scheduling.Schedule_Job (Who   => Work_Item,
                                            After => After,
                                            On    => Job_Queue);
@@ -168,20 +167,27 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
    procedure Run_Tests is
 
       use Utilities.Testing;
-      subtype Event_Client is Events.Clients.Client;
+      subtype Outcome_Client is Outcomes.Clients.Client;
 
       Number_Of_Workers : constant := 2;
-      Empty_Wait_List : Interfaces.Valid_Outcome_List (2 .. 1);
+
+      Ready_Server : Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
+      Ready_Client : constant Interfaces.Valid_Outcome_Client := Ready_Server.Make_Client;
+
+      procedure Setup_Tests is
+      begin
+         Ready_Server.Mark_Done;
+      end Setup_Tests;
 
       procedure Test_Null_Job is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Jobs.Trivial.Null_Job;
-         Client : Event_Client;
+         T : Examples.Trivial_Jobs.Null_Job;
+         Client : Outcome_Client;
       begin
          select
-            Executor.Schedule_Job (What  => T,
-                                   After => Empty_Wait_List,
-                                   Event => Client);
+            Executor.Schedule_Job (What    => T,
+                                   After   => Ready_Client,
+                                   Outcome => Client);
          or
             delay 0.02;
             Fail ("An executor should accept jobs quickly");
@@ -198,12 +204,12 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
 
       procedure Test_Yielding_Job is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Jobs.Trivial.Yielding_Job (1);
-         Client : Event_Client;
+         T : Examples.Trivial_Jobs.Yielding_Job (1);
+         Client : Outcome_Client;
       begin
-         Executor.Schedule_Job (What  => T,
-                                After => Empty_Wait_List,
-                                Event => Client);
+         Executor.Schedule_Job (What    => T,
+                                After   => Ready_Client,
+                                Outcome => Client);
          select
             Executor.Stop;
          or
@@ -216,12 +222,12 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
 
       procedure Test_Erronerous_Job is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Jobs.Trivial.Erronerous_Job (1);
-         Client : Event_Client;
+         T : Examples.Trivial_Jobs.Erronerous_Job (1);
+         Client : Outcome_Client;
       begin
-         Executor.Schedule_Job (What  => T,
-                                After => Empty_Wait_List,
-                                Event => Client);
+         Executor.Schedule_Job (What    => T,
+                                After   => Ready_Client,
+                                Outcome => Client);
          select
             Executor.Stop;
          or
@@ -234,23 +240,24 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
 
       procedure Test_Canceled_Wait_Job is
          Executor : Executor_Task (Number_Of_Workers);
-         T : Jobs.Trivial.Canceled_Wait_Job (1);
-         Client : Event_Client;
+         T : Examples.Trivial_Jobs.Canceled_Wait_Job (1);
+         Client : Outcome_Client;
       begin
-         Executor.Schedule_Job (What  => T,
-                                After => Empty_Wait_List,
-                                Event => Client);
+         Executor.Schedule_Job (What    => T,
+                                After   => Ready_Client,
+                                Outcome => Client);
          select
             Executor.Stop;
          or
             delay 0.02;
-            Fail ("A job waiting for a canceled event should execute instantly");
+            Fail ("A job waiting for a canceled operation should execute instantly");
          end select;
          Assert_Truth (Check   => (Client.Status = Canceled),
                        Message => "The canceled-wait job should appear canceled after its executor has terminated");
       end Test_Canceled_Wait_Job;
 
    begin
+      Setup_Tests;
       Test_Null_Job;
       Test_Yielding_Job;
       Test_Erronerous_Job;

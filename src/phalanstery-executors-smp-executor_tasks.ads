@@ -27,9 +27,9 @@ private package Phalanstery.Executors.SMP.Executor_Tasks is
    is
 
       -- Queue a new asynchronous job
-      entry Schedule_Job (What  : Interfaces.Any_Async_Job;
-                          After : Interfaces.Valid_Outcome_List;
-                          Event : out Interfaces.Valid_Outcome_Client);
+      entry Schedule_Job (What    : Interfaces.Any_Asynchronous_Job;
+                          After   : Interfaces.Valid_Outcome_Client;
+                          Outcome : out Interfaces.Valid_Outcome_Client);
 
       -- Schedule executor termination
       entry Stop;
