@@ -18,7 +18,6 @@
 with Phalanstery.Asynchronous_Jobs;
 with Phalanstery.Outcomes.Contracts;
 with Phalanstery.Outcome_Composition.Interfaces;
-with System.Multiprocessors;
 
 package Phalanstery.Executors.Interfaces is
 
