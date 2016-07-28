@@ -28,7 +28,7 @@ package body Phalanstery.Outcomes.Servers is
 
    overriding function "=" (A, B : Server) return Boolean is (A.Ref = B.Ref);
 
-   function Make_Outcome return Server is ((Ref => Implementation.Make_Outcome));
+   overriding function Make_Outcome return Server is ((Ref => Implementation.Make_Outcome));
 
    overriding procedure Mark_Done (Who : in out Server) is
    begin
