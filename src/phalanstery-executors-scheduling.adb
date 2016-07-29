@@ -86,7 +86,7 @@ package body Phalanstery.Executors.Scheduling is
 
    type Null_Job_With_Handler is new Examples.Trivial_Jobs.Null_Job with null record;
 
-   procedure Handle_Aborted_Dependency (Who               : in out Null_Job_With_Handler;
+   overriding procedure Handle_Aborted_Dependency (Who               : in out Null_Job_With_Handler;
                                         Dependency_Status : Outcomes.Interfaces.Aborted_Outcome_Status) is
       pragma Unreferenced (Who);
    begin
