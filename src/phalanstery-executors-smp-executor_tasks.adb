@@ -202,6 +202,29 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
                        Message => "The null job should appear completed after its executor has terminated");
       end Test_Null_Job;
 
+      procedure Test_Self_Canceling_Job is
+         Executor : Executor_Task (Number_Of_Workers);
+         T : Examples.Trivial_Jobs.Self_Canceling_Job;
+         Client : Outcome_Client;
+      begin
+         select
+            Executor.Schedule_Job (What    => T,
+                                   After   => Ready_Client,
+                                   Outcome => Client);
+         or
+            delay 0.02;
+            Fail ("An executor should accept jobs quickly");
+         end select;
+         select
+            Executor.Stop;
+         or
+            delay 0.02;
+            Fail ("The self-canceling job should execute instantly");
+         end select;
+         Assert_Truth (Check   => (Client.Status = Canceled),
+                       Message => "The self-canceling job should appear canceled after its executor has terminated");
+      end Test_Self_Canceling_Job;
+
       procedure Test_Yielding_Job is
          Executor : Executor_Task (Number_Of_Workers);
          T : Examples.Trivial_Jobs.Yielding_Job (1);
@@ -259,6 +282,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
    begin
       Setup_Tests;
       Test_Null_Job;
+      Test_Self_Canceling_Job;
       Test_Yielding_Job;
       Test_Erronerous_Job;
       Test_Canceled_Wait_Job;

@@ -33,6 +33,13 @@ package body Phalanstery.Examples.Trivial_Jobs is
       return Asynchronous_Jobs.Return_Finished;
    end Run;
 
+   overriding function Run (Who          : in out Self_Canceling_Job;
+                            Was_Canceled : Boolean) return Asynchronous_Jobs.Return_Value is
+      pragma Unreferenced (Who, Was_Canceled);
+   begin
+      return Asynchronous_Jobs.Return_Canceled;
+   end Run;
+
    overriding function Run (Who          : in out Yielding_Job;
                             Was_Canceled : Boolean) return Asynchronous_Jobs.Return_Value is
    begin

@@ -33,6 +33,11 @@ package Phalanstery.Examples.Trivial_Jobs is
    overriding function Run (Who          : in out Null_Job;
                             Was_Canceled : Boolean) return Asynchronous_Jobs.Return_Value;
 
+   -- This is a variant of the null job which cancels itself instead
+   type Self_Canceling_Job is new Asynchronous_Job with null record;
+   overriding function Run (Who          : in out Self_Canceling_Job;
+                            Was_Canceled : Boolean) return Asynchronous_Jobs.Return_Value;
+
    -- This job yields in a tight loop, it can be used to measure yielding overhead
    type Yielding_Job (Iterations : Natural) is new Asynchronous_Job with
       record
