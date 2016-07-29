@@ -17,7 +17,6 @@
 
 with Ada.Exceptions;
 with Phalanstery.Outcome_Composition.And_Gates;
-with Phalanstery.Outcome_Composition.Interfaces;
 with Phalanstery.Outcomes.Clients;
 with Phalanstery.Outcomes.Interfaces;
 with Phalanstery.Outcomes.Servers;

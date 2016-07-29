@@ -18,7 +18,6 @@
 with Ada.Assertions;
 with Ada.Exceptions;
 with Phalanstery.Outcomes.Clients;
-with Phalanstery.Outcomes.Servers;
 with Phalanstery.Utilities.Exceptions;
 with Phalanstery.Utilities.Testing;
 pragma Elaborate_All (Phalanstery.Utilities.Exceptions,
