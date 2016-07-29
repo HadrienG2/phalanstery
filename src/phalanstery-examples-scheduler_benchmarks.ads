@@ -15,9 +15,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with Phalanstery.  If not, see <http://www.gnu.org/licenses/>.
 
-package Benchmarks is
+package Phalanstery.Examples.Scheduler_Benchmarks is
 
    -- This procedure runs scheduler benchmarks based on the tasks in Asynchronous.Tasks.Trivial
    procedure Run_Benchmarks;
 
-end Benchmarks;
+end Phalanstery.Examples.Scheduler_Benchmarks;

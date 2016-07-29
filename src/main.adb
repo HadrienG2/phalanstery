@@ -19,6 +19,7 @@ pragma Warnings (Off);
 with Phalanstery;
 with Phalanstery.Asynchronous_Jobs;
 with Phalanstery.Examples;
+with Phalanstery.Examples.Scheduler_Benchmarks;
 with Phalanstery.Examples.Trivial_Jobs;
 with Phalanstery.Executors;
 with Phalanstery.Executors.Interfaces;
@@ -48,8 +49,6 @@ with Phalanstery.Utilities.References.Nullable;
 with Phalanstery.Utilities.Signals;
 with Phalanstery.Utilities.Testing;
 pragma Warnings (On);
-
-with Benchmarks;
 
 procedure Main is
 
@@ -85,7 +84,7 @@ procedure Main is
 begin
 
    -- null; -- DEBUG : Remove scheduler benchmark for coverage tests
-   Benchmarks.Run_Benchmarks; -- DEBUG : Test scheduling performance using benchmarks
+   Phalanstery.Examples.Scheduler_Benchmarks.Run_Benchmarks; -- DEBUG : Test scheduling performance using benchmarks
 
 exception
    when E : others =>
