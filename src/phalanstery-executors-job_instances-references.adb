@@ -22,11 +22,11 @@ pragma Elaborate_All (Phalanstery.Utilities.Testing);
 
 package body Phalanstery.Executors.Job_Instances.References is
 
-   function Make_Job_Instance (From : Interfaces.Any_Asynchronous_Job) return Valid_Reference is
+   function Make_Job_Instance (From : Interfaces.Any_Asynchronous_Job) return Reference is
       Result : constant Reference := Implementation.Make;
    begin
       Result.Set.Job_Object := new Interfaces.Any_Asynchronous_Job'(From);
-      return Valid_Reference (Result);
+      return Result;
    end Make_Job_Instance;
 
 

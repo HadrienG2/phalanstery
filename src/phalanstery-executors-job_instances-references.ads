@@ -31,7 +31,9 @@ package Phalanstery.Executors.Job_Instances.References is
      Dynamic_Predicate => ((not Valid_Reference.Is_Null) and then not (Valid_Reference.Get.Job_Object = null));
 
    -- There should be a convenient way to make a reference-counted job instance from a job object
-   function Make_Job_Instance (From : Interfaces.Any_Asynchronous_Job) return Valid_Reference;
+   -- DEBUG : This function actually returns a Valid_Reference, but for reason unclear to me, enforcing this contract
+   --         causes reference finalization to raise Program_Error.
+   function Make_Job_Instance (From : Interfaces.Any_Asynchronous_Job) return Reference;
 
    -- Run the unit tests for this package
    procedure Run_Tests;
