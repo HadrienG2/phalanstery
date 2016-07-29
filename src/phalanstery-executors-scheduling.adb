@@ -99,12 +99,14 @@ package body Phalanstery.Executors.Scheduling is
       use type Ada.Containers.Count_Type;
       use type Valid_Job_Instance;
 
+      subtype Nullable_Job_Instance is Job_Instances.References.Reference;
+
       T : Null_Job_With_Handler;
       Queue : Valid_Job_Queue;
 
       procedure Test_Pending_Wait_List is
          Instance : constant Valid_Job_Instance := Job_Instances.References.Make_Job_Instance (T);
-         New_Instance : Valid_Job_Instance;
+         New_Instance : Nullable_Job_Instance;
          Server : Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Client : constant Interfaces.Valid_Outcome_Client := Server.Make_Client;
          Instance_Client : constant Interfaces.Valid_Outcome_Client := Instance.Get.Outcome.Make_Client;
@@ -140,7 +142,7 @@ package body Phalanstery.Executors.Scheduling is
          Instance : constant Valid_Job_Instance := Job_Instances.References.Make_Job_Instance (T);
          Server : Interfaces.Valid_Outcome_Server := Outcomes.Servers.Make_Outcome;
          Client : constant Interfaces.Valid_Outcome_Client := Server.Make_Client;
-         New_Instance : Job_Instances.References.Reference;
+         New_Instance : Nullable_Job_Instance;
       begin
 
          Server.Mark_Done;
