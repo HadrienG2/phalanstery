@@ -22,5 +22,6 @@ package Phalanstery.Examples with Pure is
    --
    -- The following example packages currently exist:
    --    - Examples.Trivial_Jobs provides very basic asynchronous jobs, intended for benchmarking and testing purposes.
+   --    - Examples.Scheduler_Benchmarks uses these jobs to microbenchmark some aspects of scheduler performance
 
 end Phalanstery.Examples;
