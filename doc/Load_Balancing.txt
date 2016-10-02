@@ -1,0 +1,49 @@
+Load balancer pseudocode:
+
+Select
+   Fetch local work-item
+then abort
+   Wait for work to be available somewhere else
+   Steal work-item
+
+
+The tricky bit here is the part where we wait for work to steal, because this is hard to do in a scalable manner. We could, like TBB and HPX, poll other workers repeatedly until work is found, but doing so is wasteful on many levels:
+
+- It is a waste of CPU cycles when no worker has work to do (e.g. when waiting for IO or user interctions)
+- The cycles that are burned up in this way are potentially stolen from more useful processes running concurrently on the same host
+
+To avoid this, we would rather use our OS' idle waiting facility, by having a condition variable or protected object to wait on. For scalability reasons, we would also like to avoid use of a single centralized protected object, instead favoring synchronization between a small and finite number of threads, such as nearest neighbour interaction.
+
+The difficult part here is that we would like the system to work even in the highly unfavorable case where one task got all the work (e.g. when using the equivalent of TBB's parallel_for algorithm), but not at the price of killing its scalability and performance during normal operation.
+
+      X
+      X
+      X
+      X
+      X
+      X
+      X
+      X
+   Worker1   Worker2   Worker3   Worker4
+
+
+In this scenario, we should make sure that there is always a path for work items to flow from one worker to another, however slowly. For example, we would prefer a single work stealing dependency chain such as...
+
+   Worker1 <- Worker2 <- Worker3 <- Worker4 <- [Worker1]
+
+...over a set of multiple depenency chains such as
+
+   Worker1 <-> Worker2   Worker3 <-> Woker4
+
+We should also make sure that enough work items flow from one worker to another that a reasonable work redistribution is possible.
+
+For example, in the above scenario, the classic "steal-1" algorithm from TBB where Worker2 steals items from Worker1 would starve Worker3 and Worker4. A "steal-half" variant where a thief steals half of the work-items from its neighbour, although not ideal would fare a lot better already:
+
+      X
+      X
+      X         X
+      X         X         X         X
+   Worker1   Worker2   Worker3   Worker4
+
+
+Because the resulting (1/2)^N law decays fairly quickly, for large numbers of workers and significant load imbalances, stealing even higher fractions of the work could be beneficial. This deserves studying once enough infrastructure is in place for performance testing.
