@@ -25,6 +25,9 @@ package Phalanstery.Executors.Work_Distribution.Regular is
 
    overriding function Next_Worker (According_To : in out Method) return Worker_Index;
 
+   -- Run the unit tests for this package
+   procedure Run_Tests;
+
 private
 
    type Method is new Method_Interface with
