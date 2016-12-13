@@ -56,7 +56,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
       -- termination using a signal object, and acknowledges it using a group wait object.
       Stop_Request : Utilities.Signals.Signal;
-      Worker_Wait : Utilities.Group_Waits.Group_Wait (Natural (Number_Of_Workers));
+      Worker_Wait  : Utilities.Group_Waits.Group_Wait (Natural (Number_Of_Workers));
 
       -- Work items are executed by a flock of worker threads, which are defined as follows
       task type Worker (Index : Worker_Index) with Priority => System.Priority'Last;
@@ -169,6 +169,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
             end Schedule_Job;
          or
             accept Stop do
+               -- WARNING: This will stop working once we add work stealing. What prevents a queue from filling up again as we flush other queues???
                for Queue of Worker_Job_Queues loop
                   Queue.Set.Flush;
                end loop;
