@@ -29,6 +29,8 @@ with Phalanstery.Executors.Job_Queues;
 with Phalanstery.Executors.Job_Queues.References;
 with Phalanstery.Executors.SMP.Executor_Objects;
 with Phalanstery.Executors.SMP.Specific_Interfaces;
+with Phalanstery.Executors.Work_Distribution;
+with Phalanstery.Executors.Work_Distribution.Regular;
 with Phalanstery.Outcome_Composition;
 with Phalanstery.Outcome_Composition.And_Gates;
 with Phalanstery.Outcome_Composition.Shorthands;

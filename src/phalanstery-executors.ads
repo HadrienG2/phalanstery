@@ -44,5 +44,6 @@ package Phalanstery.Executors with Pure is
    --    - Executors.Job_Queues provides a thread-safe FIFO queue, used to store scheduled jobs.
    --    - Executors.Scheduling defines the job scheduling logic internally used by executors.
    --    - Executors.SMP holds the current executor object implementation, which is SMP specific.
+   --    - Executors.Work_Distribution provides methods for distributing work across a pool of numbered workers.
 
 end Phalanstery.Executors;

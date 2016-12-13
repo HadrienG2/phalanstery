@@ -23,6 +23,8 @@ with Phalanstery.Outcomes.Servers;
 with Phalanstery.Executors.Scheduling;
 with Phalanstery.Executors.Job_Instances.References;
 with Phalanstery.Executors.Job_Queues.References;
+with Phalanstery.Executors.Work_Distribution;
+with Phalanstery.Executors.Work_Distribution.Regular;
 with Phalanstery.Utilities.Debug;
 with Phalanstery.Utilities.Group_Waits;
 with Phalanstery.Utilities.Signals;
@@ -43,8 +45,12 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
 
       -- Executor tasks distribute ready jobs on a set of FIFO queues, one per worker thread
       type Job_Queue_Array is array (Worker_Index) of Valid_Job_Queue;
-      Worker_Job_Queues : Job_Queue_Array;  -- DEBUG: Separated from array type declaration to work around GNAT bug
-      Next_Worker : Worker_Index := 1;
+      Worker_Job_Queues : Job_Queue_Array;  -- DEBUG: Avoided anonymous array type to work around GNAT bug
+
+      -- To do so, they use a work distribution scheme that is selected here
+      package Worker_Distribution is new Work_Distribution (Worker_Index);
+      package Worker_Distribution_Implementation is new Worker_Distribution.Regular;
+      Worker_Distribution_Method : Worker_Distribution_Implementation.Method;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
@@ -133,7 +139,7 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       end Worker;
 
       -- We define the following flock of workers
-      Workers : array (Worker_Index) of access Worker with Unreferenced;
+      Workers : array (Worker_Index) of access Worker;
 
       -- Executor tasks will wait for work until this flag goes to False
       Executor_Active : Boolean := True;
@@ -152,13 +158,13 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
                                  After   : Interfaces.Valid_Outcome_Client;
                                  Outcome : out Interfaces.Valid_Outcome_Client) do
                declare
-                  Work_Item : constant Valid_Job_Instance := Job_Instances.References.Make_Job_Instance (What);
+                  Work_Item   : constant Valid_Job_Instance := Job_Instances.References.Make_Job_Instance (What);
+                  Next_Worker : constant Worker_Index := Worker_Distribution_Method.Next_Worker;
                begin
                   Outcome := Work_Item.Get.Outcome.Make_Client;
                   Scheduling.Schedule_Job (Who   => Work_Item,
                                            After => After,
                                            On    => Worker_Job_Queues (Next_Worker));
-                  Next_Worker := (Next_Worker mod Number_Of_Workers) + 1;
                end;
             end Schedule_Job;
          or

@@ -41,9 +41,9 @@ private package Phalanstery.Executors.SMP.Executor_Tasks is
 
 private
 
-   -- Job executors can currently operate according to one of two statically selected scheduling policies:
-   --    - In batch mode, executors run jobs as long as they can, which maximizes computational performance.
-   --    - In round-robin mode, executors switch between jobs in a cyclic FIFO fashion, which minimizes starvation.
+   -- Executor worker threads can currently operate according to one of two statically selected scheduling policies:
+   --    - In batch mode, workers run jobs as long as they can, which maximizes computational performance.
+   --    - In round-robin mode, workers switch between jobs in a cyclic FIFO fashion, which minimizes starvation.
    type Scheduling_Policy is (Batch, Round_Robin);
    Active_Scheduling_Policy : constant Scheduling_Policy := Batch;
 
