@@ -37,8 +37,14 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
 
    task body Executor_Task is
 
-      -- Executor tasks hold ready jobs on a FIFO queue
-      Job_Queue : Valid_Job_Queue;
+      -- On the inside, an executor task manages a pool of worker threads
+      subtype Worker_Index is Specific_Interfaces.Worker_Count range 1 .. Number_Of_Workers;
+      use type Worker_Index;
+
+      -- Executor tasks distribute ready jobs on a set of FIFO queues, one per worker thread
+      type Job_Queue_Array is array (Worker_Index) of Valid_Job_Queue;
+      Worker_Job_Queues : Job_Queue_Array;  -- DEBUG: Separated from array type declaration to work around GNAT bug
+      Next_Worker : Worker_Index := 1;
 
       -- Because worker threads are commanded using protected objects rather than task entries, terminate alternatives
       -- cannot be used. Instead, we go through a manual termination procedure: the executor task requests worker
@@ -47,8 +53,11 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       Worker_Wait : Utilities.Group_Waits.Group_Wait (Natural (Number_Of_Workers));
 
       -- Work items are executed by a flock of worker threads, which are defined as follows
-      task type Worker with Priority => System.Priority'Last;
+      task type Worker (Index : Worker_Index) with Priority => System.Priority'Last;
       task body Worker is
+
+         -- Each worker has a private work queue to draw from
+         Job_Queue : Valid_Job_Queue renames Worker_Job_Queues (Index);
 
          -- This function runs a work item and tells whether it is yielding or not
          function Run_Work_Item (What : Valid_Job_Instance) return Boolean is
@@ -124,13 +133,17 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
       end Worker;
 
       -- We define the following flock of workers
-      type Worker_Array is array (Specific_Interfaces.Worker_Count range <>) of Worker;
-      Workers : Worker_Array (1 .. Number_Of_Workers) with Unreferenced;
+      Workers : array (Worker_Index) of access Worker with Unreferenced;
 
       -- Executor tasks will wait for work until this flag goes to False
       Executor_Active : Boolean := True;
 
    begin
+
+      -- Initialize worker threads
+      for I in Worker_Index loop
+         Workers (I) := new Worker (Index => I);
+      end loop;
 
       -- Accept requests from the outside world until requested to stop
       while Executor_Active loop
@@ -144,12 +157,15 @@ package body Phalanstery.Executors.SMP.Executor_Tasks is
                   Outcome := Work_Item.Get.Outcome.Make_Client;
                   Scheduling.Schedule_Job (Who   => Work_Item,
                                            After => After,
-                                           On    => Job_Queue);
+                                           On    => Worker_Job_Queues (Next_Worker));
+                  Next_Worker := (Next_Worker mod Number_Of_Workers) + 1;
                end;
             end Schedule_Job;
          or
             accept Stop do
-               Job_Queue.Set.Flush;
+               for Queue of Worker_Job_Queues loop
+                  Queue.Set.Flush;
+               end loop;
                Stop_Request.Send;
                Executor_Active := False;
                Worker_Wait.Wait_All;
